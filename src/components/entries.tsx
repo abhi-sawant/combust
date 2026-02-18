@@ -26,9 +26,11 @@ import {
   ArrowDown01Icon,
   PencilEdit01Icon,
   Delete01Icon,
+  Delete02Icon,
 } from '@hugeicons/core-free-icons';
 
 type Entry = {
+  id?: number;
   date: string;
   amountPaid: number;
   odometerReading: number;
@@ -38,10 +40,14 @@ type Entry = {
 
 type EntriesProps = {
   entries: Entry[];
-  setEntries: React.Dispatch<React.SetStateAction<Entry[]>>;
+  addEntry: (entry: Omit<Entry, 'id'>) => Promise<number>;
+  updateEntry: (entry: Entry) => Promise<void>;
+  deleteEntry: (id: number) => Promise<void>;
+  moveEntry: (fromIndex: number, toIndex: number) => void;
+  clearAllEntries: () => Promise<void>;
 };
 
-function Entries({ entries, setEntries }: EntriesProps) {
+function Entries({ entries, addEntry, updateEntry, deleteEntry, moveEntry, clearAllEntries }: EntriesProps) {
   const [date, setDate] = useState<Date>();
   const [selectedStation, setSelectedStation] = useState<string>('');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -66,7 +72,8 @@ function Entries({ entries, setEntries }: EntriesProps) {
       odometerReading: parseFloat(formData.get('odometerReading') as string),
       fuelStation: stationName,
     };
-    setEntries((prevEntries) => [newEntry, ...prevEntries]);
+    
+    addEntry(newEntry);
     
     event.currentTarget.reset();
     setDate(undefined);
@@ -87,20 +94,20 @@ function Entries({ entries, setEntries }: EntriesProps) {
 
     const formData = new FormData(event.currentTarget);
     const stationName = formData.get('editFuelStation') as string;
+    const entry = entries[editingIndex];
     
     const updatedEntry = {
-      date: editDate ? format(editDate, 'yyyy/MM/dd') : entries[editingIndex].date,
+      id: entry.id,
+      date: editDate ? format(editDate, 'yyyy/MM/dd') : entry.date,
       fuelFilled: parseFloat(formData.get('editFuelFilled') as string),
       amountPaid: parseFloat(formData.get('editAmountPaid') as string),
       odometerReading: parseFloat(formData.get('editOdometerReading') as string),
       fuelStation: stationName,
     };
 
-    setEntries((prevEntries) => {
-      const newEntries = [...prevEntries];
-      newEntries[editingIndex] = updatedEntry;
-      return newEntries;
-    });
+    if (updatedEntry.id !== undefined) {
+      updateEntry(updatedEntry as Entry);
+    }
 
     setEditDialogOpen(false);
     setEditingIndex(null);
@@ -109,28 +116,36 @@ function Entries({ entries, setEntries }: EntriesProps) {
   }
 
   function handleDelete(index: number) {
-    if (confirm('Are you sure you want to delete this entry?')) {
-      setEntries((prevEntries) => prevEntries.filter((_, i) => i !== index));
+    const entry = entries[index];
+    if (entry.id !== undefined && confirm('Are you sure you want to delete this entry?')) {
+      deleteEntry(entry.id);
     }
   }
 
   function handleMoveUp(index: number) {
     if (index === 0) return;
-    setEntries((prevEntries) => {
-      const newEntries = [...prevEntries];
-      [newEntries[index - 1], newEntries[index]] = [newEntries[index], newEntries[index - 1]];
-      return newEntries;
-    });
+    moveEntry(index, index - 1);
   }
 
   function handleMoveDown(index: number) {
     if (index === entries.length - 1) return;
-    setEntries((prevEntries) => {
-      const newEntries = [...prevEntries];
-      [newEntries[index], newEntries[index + 1]] = [newEntries[index + 1], newEntries[index]];
-      return newEntries;
-    });
+    moveEntry(index, index + 1);
   }
+
+  async function handleDeleteAll() {
+    if (entries.length === 0) return;
+    
+    const confirmMessage = `Are you sure you want to delete all ${entries.length} entries? This action cannot be undone.`;
+    if (confirm(confirmMessage)) {
+      try {
+        await clearAllEntries();
+      } catch (error) {
+        console.error('Error deleting all entries:', error);
+        alert('Failed to delete entries. Please try again.');
+      }
+    }
+  }
+
   return (
     <div className='space-y-8'>
       <section className='rounded-xl border bg-card shadow-sm'>
@@ -238,6 +253,17 @@ function Entries({ entries, setEntries }: EntriesProps) {
             <h2 className='text-lg font-semibold'>Your Entries</h2>
             <p className='text-sm text-muted-foreground mt-1'>{entries.length} total entries</p>
           </div>
+          {entries.length > 0 && (
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleDeleteAll}
+              className='text-destructive hover:text-destructive gap-2'
+            >
+              <HugeiconsIcon icon={Delete02Icon} className='size-4' />
+              <span className='hidden sm:inline'>Delete All</span>
+            </Button>
+          )}
         </div>
 
         {entries.length === 0 ? (

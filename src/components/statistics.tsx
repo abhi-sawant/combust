@@ -22,6 +22,7 @@ import {
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 type Entry = {
+  id?: number;
   date: string;
   amountPaid: number;
   odometerReading: number;
@@ -34,7 +35,7 @@ type StatisticsProps = {
 };
 
 function Statistics({ entries }: StatisticsProps) {
-  const [selectedStation, setSelectedStation] = useState<string>('all');
+  const [selectedStation, setSelectedStation] = useState<string>('All');
   
   // Sort entries by date (oldest to newest)
   const sortedEntries = useMemo(() => {
@@ -80,7 +81,7 @@ function Statistics({ entries }: StatisticsProps) {
 
   // Filter entries based on selected station
   const filteredEntriesWithCalculations = useMemo(() => {
-    return selectedStation === 'all' 
+    return selectedStation === 'All' 
       ? entriesWithCalculations 
       : entriesWithCalculations.filter((entry) => entry.fuelStation === selectedStation);
   }, [entriesWithCalculations, selectedStation]);
@@ -163,7 +164,7 @@ function Statistics({ entries }: StatisticsProps) {
 
   // Chart data: Station comparison (only when viewing all stations)
   const stationComparisonData = useMemo(() => {
-    if (selectedStation !== 'all') return [];
+    if (selectedStation !== 'All') return [];
     
     return allStations.map((station) => {
       const stationEntries = entriesWithCalculations.filter(e => e.fuelStation === station);
@@ -232,12 +233,12 @@ function Statistics({ entries }: StatisticsProps) {
         </div>
         <Field className="w-full sm:w-72">
           <FieldLabel htmlFor="station-filter" className="sr-only">Filter by Station</FieldLabel>
-          <Select value={selectedStation} onValueChange={(value) => setSelectedStation(value || 'all')}>
+          <Select value={selectedStation} onValueChange={(value) => setSelectedStation(value || 'All')}>
             <SelectTrigger id="station-filter">
               <SelectValue placeholder="Filter by station" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Stations</SelectItem>
+              <SelectItem value="All">All Stations</SelectItem>
               {allStations.map((station) => (
                 <SelectItem key={station} value={station}>
                   {station}
@@ -393,8 +394,8 @@ function Statistics({ entries }: StatisticsProps) {
           </CardContent>
         </Card>
 
-        {/* Station Comparison (only shown when "all" is selected) */}
-        {selectedStation === 'all' && stationComparisonData.length > 0 && (
+        {/* Station Comparison (only shown when "All" is selected) */}
+        {selectedStation === 'All' && stationComparisonData.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="overflow-hidden py-0">
               <CardHeader className="border-b bg-muted/50 py-4">

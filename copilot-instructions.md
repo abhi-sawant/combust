@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Combust** is a fuel tracking application for vehicles built with React and TypeScript. It allows users to record and view fuel entries including date, amount paid, fuel filled (liters), odometer reading, and fuel station name. The application is designed for personal vehicle fuel management and mileage tracking.
+**Combust** is a Progressive Web App (PWA) for tracking vehicle fuel consumption built with React and TypeScript. It allows users to record and view fuel entries including date, amount paid, fuel filled (liters), odometer reading, and fuel station name. The application features offline support, persistent storage via IndexedDB, and can be installed on mobile and desktop devices.
 
 ## Technology Stack
 
@@ -11,6 +11,8 @@
 - **TypeScript**: 5.9.3
 - **Build Tool**: Vite 7.2.4
 - **Package Manager**: npm (though pnpm or yarn can be used)
+- **PWA**: vite-plugin-pwa 1.2.0 with Workbox for service worker management
+- **Data Storage**: IndexedDB (browser-native persistent storage)
 
 ### UI & Styling
 - **UI Library**: shadcn/ui with Base UI (@base-ui/react 1.2.0)
@@ -38,6 +40,8 @@
 ```
 combust/
 ├── public/              # Static assets
+│   ├── manifest.json    # PWA manifest
+│   └── vite.svg         # App icon (placeholder)
 ├── src/
 │   ├── components/
 │   │   ├── ui/         # shadcn/ui component library
@@ -56,17 +60,20 @@ combust/
 │   │   │   ├── table.tsx
 │   │   │   ├── tabs.tsx
 │   │   │   └── textarea.tsx
-│   │   └── entries.tsx  # Main entries component
+│   │   ├── entries.tsx    # Entries management component
+│   │   └── statistics.tsx # Statistics dashboard component
 │   ├── lib/
-│   │   └── utils.ts     # Utility functions (cn helper)
+│   │   ├── db.ts          # IndexedDB operations
+│   │   ├── useIndexedDB.ts # Custom hook for IndexedDB state
+│   │   └── utils.ts        # Utility functions (cn helper)
 │   ├── assets/          # Application assets
 │   ├── App.tsx          # Main application component
 │   ├── main.tsx         # React entry point
 │   ├── index.css        # Global styles & Tailwind setup
-│   └── data.ts          # Static fuel entry data
+│   └── data.ts          # Sample data for database seeding
 ├── components.json      # shadcn/ui configuration
 ├── tsconfig.json        # TypeScript configuration
-├── vite.config.ts       # Vite configuration
+├── vite.config.ts       # Vite configuration (includes PWA plugin)
 ├── eslint.config.js     # ESLint configuration
 └── package.json         # Dependencies and scripts
 ```
@@ -86,8 +93,9 @@ combust/
 
 ### State Management
 - **Local State**: Uses React's `useState` hook
-- **No Global State**: Currently no Redux, Zustand, or Context API
-- **Data Source**: Static data array in `data.ts` (will need migration to persistent storage)
+- **Persistent Storage**: IndexedDB via custom `useIndexedDBEntries` hook
+- **Data Source**: IndexedDB with automatic seeding from `data.ts` on first load
+- **No Global State**: No Redux, Zustand, or Context API (IndexedDB serves as source of truth)
 
 ### Form Handling
 - Uses native HTML form with `FormData` API
@@ -102,37 +110,70 @@ combust/
    - Fuel filled input (liters, decimal values)
    - Amount paid input (INR currency, decimal values)
    - Odometer reading input (kilometers, decimal values)
-   - Fuel station selection (searchable combobox)
+   - Fuel station selection (datalist with autocomplete)
 
 2. **Dynamic Station Management**: 
-   - Add new fuel stations via dialog modal
-   - Station list dynamically updates when new stations are added
-   - Combobox with search/filter functionality
+   - Auto-suggest fuel stations from existing entries
+   - Accept custom/new fuel station names
+   - Station list dynamically updates as entries are added
 
-3. **Entry Display**: 
-   - Table view of all fuel entries
+3. **Entry Management**: 
+   - Table view (desktop) and card view (mobile) of all fuel entries
    - Shows date, fuel, amount, odometer, and station
+   - Edit existing entries via dialog modal
+   - Delete entries with confirmation
+   - Reorder entries (move up/down arrows)
    - Entries displayed in reverse chronological order (newest first)
 
-4. **UI/UX**:
-   - Responsive header with app branding
-   - Tab navigation (Entries and Statistics tabs)
-   - Upload/Download buttons (UI placeholders, not functional)
-   - Clean, accessible design with proper ARIA labels
+4. **Statistics Dashboard**:
+   - Six metric cards: Total Spent, Total Distance, Avg Fuel Efficiency, Avg Cost/km, Total Fuel, Avg Price/Liter
+   - Filter statistics by fuel station or view all
+   - Four charts: Spending Over Time, Fuel Efficiency Trend, Spending by Station, Efficiency by Station
+   - Proper fuel efficiency calculations: (next_odometer - current_odometer) / next_fuelFilled
+   - Responsive chart layouts with proper sizing and margins
 
-### Placeholder/Not Implemented
-1. **Statistics Tab**: UI exists but content is placeholder
-2. **Data Persistence**: Data is in-memory only, resets on page reload
-3. **Upload/Download Functionality**: Buttons present but no implementation
-4. **Entry Editing/Deletion**: No ability to modify or remove entries
-5. **Charts/Analytics**: recharts is installed but not yet used
-6. **Fuel Efficiency Calculations**: No mileage/efficiency metrics calculated
+5. **Data Import/Export**:
+   - Export data as CSV file
+   - Import data from CSV or JSON files
+   - Import data by pasting CSV text directly into textarea
+   - Replace all entries when importing
+
+6. **Progressive Web App (PWA)**:
+   - Installable on mobile and desktop devices
+   - Offline support via service worker
+   - App manifest with proper metadata
+   - Auto-updates when new version is deployed
+
+7. **Persistent Storage**:
+   - All data stored in IndexedDB (browser-native database)
+   - Data persists across sessions and browser restarts
+   - Starts with empty database (users add their own data)
+   - Custom React hook (`useIndexedDBEntries`) for database operations
+
+8. **UI/UX**:
+   - Responsive design with mobile-first approach
+   - Professional gradient backgrounds and card layouts
+   - Smooth shadows and typography
+   - Tab navigation (Entries and Statistics tabs)
+   - Clean, accessible design with proper ARIA labels
+   - Loading states during data fetch
+   - Mobile-responsive card view for entries
+
+### Future Enhancements
+1. **Multi-vehicle Support**: Track multiple vehicles separately
+2. **Advanced Filtering**: Filter entries by date range, station, etc.
+3. **Data Export Options**: Export to additional formats (Excel, PDF)
+4. **Fuel Price Tracking**: Track price-per-liter trends over time
+5. **Anomaly Detection**: Alert on unusual fuel efficiency or prices
+6. **Cloud Sync**: Optional cloud backup/sync across devices
+7. **Custom Icons**: Replace placeholder SVG with proper app icons
 
 ## Data Structure
 
 ### Fuel Entry Type
 ```typescript
 {
+  id?: number;            // Auto-generated by IndexedDB
   date: string;           // Format: 'YYYY/MM/DD'
   amountPaid: number;     // In INR (Indian Rupees)
   odometerReading: number; // In kilometers
@@ -141,8 +182,81 @@ combust/
 }
 ```
 
+### IndexedDB Schema
+- **Database Name**: `CombustDB`
+- **Version**: 1
+- **Object Store**: `entries`
+- **Key Path**: `id` (auto-increment)
+- **Indexes**: 
+  - `date` (non-unique)
+  - `fuelStation` (non-unique)
+
 ### Example Data
-See `src/data.ts` for sample entries. Data contains 14 historical fuel entries from July 2025 to February 2026.
+See `src/data.ts` for sample entries used for database seeding. Data contains 14 historical fuel entries from July 2025 to February 2026.
+
+## IndexedDB Operations
+
+### Database Utilities (`src/lib/db.ts`)
+The app uses a custom IndexedDB wrapper with the following functions:
+
+- **`openDB()`**: Opens or creates the database with proper schema
+- **`getAllEntries()`**: Retrieves all fuel entries
+- **`addEntry(entry)`**: Adds a new entry and returns the generated ID
+- **`updateEntry(entry)`**: Updates an existing entry by ID
+- **`deleteEntry(id)`**: Deletes an entry by ID
+- **`clearAllEntries()`**: Removes all entries from the database
+- **`bulkAddEntries(entries[])`**: Adds multiple entries at once
+- **`replaceAllEntries(entries[])`**: Clears database and adds new entries (used for import)
+
+### Custom Hook (`src/lib/useIndexedDB.ts`)
+The `useIndexedDBEntries` hook provides a React-friendly interface to IndexedDB:
+
+```typescript
+const {
+  entries,           // Array of all entries
+  isLoading,         // Boolean loading state
+  addEntry,          // Add new entry function
+  updateEntry,       // Update existing entry
+  deleteEntry,       // Delete entry by ID
+  replaceAllEntries, // Replace all entries (import)
+  moveEntry          // Reorder entries (in-memory only)
+} = useIndexedDBEntries();
+```
+
+**Key Behaviors:**
+- Automatically loads entries from IndexedDB on mount
+- Starts with empty database (no auto-seeding)
+- All CRUD operations automatically sync with IndexedDB
+- Provides loading state for better UX
+- moveEntry is in-memory only (not persisted to DB)
+
+## Progressive Web App (PWA)
+
+### Configuration (`vite.config.ts`)
+The app uses `vite-plugin-pwa` with the following settings:
+
+- **Register Type**: `autoUpdate` (automatically updates service worker)
+- **Manifest**: Embedded in Vite config and generated at build time
+- **Workbox**: Precaches all static assets (JS, CSS, HTML, images)
+- **Runtime Caching**: Caches Google Fonts with cache-first strategy
+
+### Service Worker
+Generated automatically during build (`npm run build`):
+- **File**: `dist/sw.js` (service worker)
+- **Workbox**: `dist/workbox-*.js` (Workbox runtime)
+- **Registration**: `dist/registerSW.js` (auto-registration script)
+
+### Manifest (`public/manifest.json`)
+- **Name**: Combust - Fuel Tracker
+- **Theme Color**: #3b82f6 (blue)
+- **Display**: standalone (app-like experience)
+- **Icons**: Uses vite.svg as placeholder (should be replaced with proper icons)
+
+### Installing the App
+Users can install Combust as a PWA:
+1. **Desktop**: Click install prompt in browser address bar
+2. **Mobile**: Use "Add to Home Screen" from browser menu
+3. **Offline**: App works offline after first visit
 
 ## Development Guidelines
 
@@ -259,22 +373,36 @@ npx shadcn@latest add [component-name]
 ```
 This will automatically add the component to `src/components/ui/` with proper configuration.
 
-### Adding Persistent Storage
-1. Create a custom hook (e.g., `useLocalStorage.ts` or `useIndexedDB.ts`)
-2. Replace the `useState` calls in `entries.tsx` with the persistent hook
-3. Add data migration logic for existing entries
+### Working with IndexedDB (Already Implemented)
+The app uses a custom `useIndexedDBEntries` hook that provides:
+- Automatic loading and persistence
+- CRUD operations (addEntry, updateEntry, deleteEntry)
+- Bulk operations (replaceAllEntries for import)
+- Loading states
 
-### Implementing Statistics
-1. Calculate derived metrics in a useMemo hook
-2. Use recharts components (BarChart, LineChart, etc.)
-3. Display in the Statistics tab content
-4. Consider adding date range selectors
+To modify database behavior:
+1. Update `src/lib/db.ts` for low-level IndexedDB operations
+2. Update `src/lib/useIndexedDB.ts` for React hook interface
+3. Ensure all state changes call the appropriate database function
 
-### Adding Entry Edit/Delete
-1. Add state for editing mode
-2. Create edit dialog similar to add station dialog
-3. Add edit/delete buttons to table rows
-4. Implement confirmation dialog for deletions
+### Implementing Statistics (Already Implemented)
+The Statistics tab includes:
+- Six metric cards with calculations
+- Four responsive charts (line and bar charts)
+- Fuel efficiency calculation formula: `(nextOdometer - currentOdometer) / nextFuelFilled`
+- Station-based filtering for all metrics
+
+To add new statistics:
+1. Calculate metrics in `useMemo` hooks in `statistics.tsx`
+2. Add new Card components for display
+3. Use recharts for visualizations (LineChart, BarChart, PieChart, etc.)
+
+### Adding New Features
+Examples of potential additions:
+- **Price Alerts**: Track fuel price changes over time
+- **Budget Tracking**: Set monthly fuel budgets
+- **Trip Tracking**: Associate entries with specific trips
+- **Vehicle Profiles**: Support multiple vehicles with different characteristics
 
 ## Important Notes
 
@@ -307,12 +435,18 @@ This will automatically add the component to `src/components/ui/` with proper co
 2. **Tailwind classes not working**: Check that `@import "tailwindcss"` is first in index.css
 3. **Component styling issues**: Verify theme variables are defined in both light and dark modes
 4. **Date picker not showing**: Ensure Popover is properly positioned with `align` prop
+5. **IndexedDB not persisting**: Check browser console for quota errors or private browsing mode
+6. **Service worker not updating**: Clear browser cache and unregister old service worker from DevTools
+7. **PWA not installing**: Ensure HTTPS is enabled (or using localhost for development)
+8. **Data lost after import**: Verify import file format matches expected CSV/JSON structure
 
 ### Development Tips
 - Use React DevTools to inspect component state
 - Check browser console for TypeScript errors (Vite shows them in overlay)
 - Hot Module Replacement (HMR) is enabled - changes reflect immediately
 - If styles are broken, clear Vite cache: `rm -rf node_modules/.vite`
+- Use Chrome DevTools > Application tab to inspect IndexedDB data
+- Use Chrome DevTools > Application > Service Workers to debug PWA
 
 ## Code Style Preferences
 
@@ -354,10 +488,18 @@ The project can be deployed to:
 - **GitHub Pages**: Requires base path configuration in vite.config.ts
 - **Any static host**: Just upload the `dist/` folder after `npm run build`
 
+### PWA Deployment Considerations
+- **HTTPS Required**: PWAs require HTTPS in production (automatic on Vercel/Netlify)
+- **Service Worker Scope**: Deployed at root path by default
+- **Cache Strategy**: Workbox precaches all assets on first visit
+- **Updates**: Service worker auto-updates when new version is deployed
+- **Icons**: Replace vite.svg with proper app icons (192x192 and 512x512 PNG)
+
 Remember to set appropriate environment variables if adding backend integration.
 
 ---
 
 **Last Updated**: February 18, 2026
 **Project Version**: 0.0.0 (initial development)
+**Status**: PWA with IndexedDB persistence fully implemented
 **Maintainer**: Refer to package.json for author information
