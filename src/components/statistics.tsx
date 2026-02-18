@@ -194,7 +194,8 @@ function Statistics({ entries }: StatisticsProps) {
         : 0;
       
       return {
-        station: station.length > 15 ? station.substring(0, 15) + '...' : station,
+        station: station.length > 12 ? station.substring(0, 12) + '...' : station,
+        fullStation: station,
         spent: totalSpent,
         distance: totalDistance,
         efficiency: avgEfficiency,
@@ -206,19 +207,19 @@ function Statistics({ entries }: StatisticsProps) {
   const chartConfig = {
     amount: {
       label: "Amount Paid",
-      color: "hsl(var(--chart-1))",
+      color: "#3b82f6", // Blue
     },
     cumulative: {
       label: "Cumulative Spending",
-      color: "hsl(var(--chart-2))",
+      color: "#8b5cf6", // Purple
     },
     efficiency: {
       label: "Fuel Efficiency",
-      color: "hsl(var(--chart-3))",
+      color: "#10b981", // Green
     },
     spent: {
       label: "Total Spent",
-      color: "hsl(var(--chart-4))",
+      color: "#f59e0b", // Amber
     },
   };
 
@@ -249,7 +250,7 @@ function Statistics({ entries }: StatisticsProps) {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden gap-0 py-4">
           <CardHeader className="pb-3">
             <CardDescription className="text-xs font-medium">Total Money Spent</CardDescription>
           </CardHeader>
@@ -259,7 +260,7 @@ function Statistics({ entries }: StatisticsProps) {
           </CardContent>
         </Card>
         
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden gap-0 py-4">
           <CardHeader className="pb-3">
             <CardDescription className="text-xs font-medium">Total Distance</CardDescription>
           </CardHeader>
@@ -269,7 +270,7 @@ function Statistics({ entries }: StatisticsProps) {
           </CardContent>
         </Card>
         
-        <Card className="overflow-hidden border-primary/20 bg-primary/5">
+        <Card className="overflow-hidden gap-0 py-4 border-primary/20 bg-primary/5">
           <CardHeader className="pb-3">
             <CardDescription className="text-xs font-medium">Avg Fuel Efficiency</CardDescription>
           </CardHeader>
@@ -281,7 +282,7 @@ function Statistics({ entries }: StatisticsProps) {
           </CardContent>
         </Card>
         
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden gap-0 py-4">
           <CardHeader className="pb-3">
             <CardDescription className="text-xs font-medium">Avg Cost per Kilometer</CardDescription>
           </CardHeader>
@@ -291,7 +292,7 @@ function Statistics({ entries }: StatisticsProps) {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden gap-0 py-4">
           <CardHeader className="pb-3">
             <CardDescription className="text-xs font-medium">Total Fuel Filled</CardDescription>
           </CardHeader>
@@ -301,7 +302,7 @@ function Statistics({ entries }: StatisticsProps) {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden gap-0 py-4">
           <CardHeader className="pb-3">
             <CardDescription className="text-xs font-medium">Avg Price per Liter</CardDescription>
           </CardHeader>
@@ -313,25 +314,27 @@ function Statistics({ entries }: StatisticsProps) {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Spending Over Time */}
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b bg-muted/50">
+        <Card className="overflow-hidden py-0">
+          <CardHeader className="border-b bg-muted/50 py-4">
             <CardTitle className="text-base">Spending Over Time</CardTitle>
             <CardDescription className="text-xs">Amount paid per refuel and cumulative spending</CardDescription>
           </CardHeader>
-          <CardContent className="pt-6">
-            <ChartContainer config={chartConfig} className="h-80">
-              <LineChart data={spendingChartData}>
+          <CardContent >
+            <ChartContainer config={chartConfig} className="h-75 w-full">
+              <LineChart data={spendingChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis 
                   dataKey="date" 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 11 }}
                   tickLine={false}
+                  interval="preserveStartEnd"
                 />
                 <YAxis 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 11 }}
                   tickLine={false}
+                  width={60}
                 />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Line 
@@ -339,7 +342,7 @@ function Statistics({ entries }: StatisticsProps) {
                   dataKey="amount" 
                   stroke="var(--color-amount)" 
                   strokeWidth={2.5}
-                  dot={{ fill: "var(--color-amount)", r: 4 }}
+                  dot={{ fill: "var(--color-amount)", r: 3 }}
                   name="Amount Paid"
                 />
                 <Line 
@@ -347,7 +350,7 @@ function Statistics({ entries }: StatisticsProps) {
                   dataKey="cumulative" 
                   stroke="var(--color-cumulative)" 
                   strokeWidth={2.5}
-                  dot={{ fill: "var(--color-cumulative)", r: 4 }}
+                  dot={{ fill: "var(--color-cumulative)", r: 3 }}
                   name="Cumulative"
                 />
               </LineChart>
@@ -356,23 +359,25 @@ function Statistics({ entries }: StatisticsProps) {
         </Card>
 
         {/* Fuel Efficiency Over Time */}
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b bg-muted/50">
+        <Card className="overflow-hidden py-0">
+          <CardHeader className="border-b bg-muted/50 py-4">
             <CardTitle className="text-base">Fuel Efficiency Trend</CardTitle>
             <CardDescription className="text-xs">Kilometers per liter between refuels</CardDescription>
           </CardHeader>
-          <CardContent className="pt-6">
-            <ChartContainer config={chartConfig} className="h-80">
-              <LineChart data={efficiencyChartData}>
+          <CardContent >
+            <ChartContainer config={chartConfig} className="h-75 w-full">
+              <LineChart data={efficiencyChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis 
                   dataKey="date" 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 11 }}
                   tickLine={false}
+                  interval="preserveStartEnd"
                 />
                 <YAxis 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 11 }}
                   tickLine={false}
+                  width={60}
                 />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Line 
@@ -380,7 +385,7 @@ function Statistics({ entries }: StatisticsProps) {
                   dataKey="efficiency" 
                   stroke="var(--color-efficiency)" 
                   strokeWidth={2.5}
-                  dot={{ fill: "var(--color-efficiency)", r: 4 }}
+                  dot={{ fill: "var(--color-efficiency)", r: 3 }}
                   name="km/L"
                 />
               </LineChart>
@@ -390,33 +395,35 @@ function Statistics({ entries }: StatisticsProps) {
 
         {/* Station Comparison (only shown when "all" is selected) */}
         {selectedStation === 'all' && stationComparisonData.length > 0 && (
-          <>
-            <Card className="overflow-hidden">
-              <CardHeader className="border-b bg-muted/50">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="overflow-hidden py-0">
+              <CardHeader className="border-b bg-muted/50 py-4">
                 <CardTitle className="text-base">Spending by Station</CardTitle>
                 <CardDescription className="text-xs">Total money spent at each fuel station</CardDescription>
               </CardHeader>
-              <CardContent className="pt-6">
-                <ChartContainer config={chartConfig} className="h-80">
-                  <BarChart data={stationComparisonData}>
+              <CardContent >
+                <ChartContainer config={chartConfig} className="h-75 w-full">
+                  <BarChart data={stationComparisonData} margin={{ top: 5, right: 10, left: 0, bottom: 60 }}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis 
                       dataKey="station" 
-                      tick={{ fontSize: 11 }}
+                      tick={{ fontSize: 10 }}
                       tickLine={false}
                       angle={-45}
                       textAnchor="end"
-                      height={80}
+                      height={60}
+                      interval={0}
                     />
                     <YAxis 
-                      tick={{ fontSize: 12 }}
+                      tick={{ fontSize: 11 }}
                       tickLine={false}
+                      width={60}
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar 
                       dataKey="spent" 
                       fill="var(--color-spent)" 
-                      radius={[6, 6, 0, 0]}
+                      radius={[4, 4, 0, 0]}
                       name="Total Spent (₹)"
                     />
                   </BarChart>
@@ -424,39 +431,41 @@ function Statistics({ entries }: StatisticsProps) {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden">
-              <CardHeader className="border-b bg-muted/50">
+            <Card className="overflow-hidden py-0">
+              <CardHeader className="border-b bg-muted/50 py-4">
                 <CardTitle className="text-base">Efficiency by Station</CardTitle>
                 <CardDescription className="text-xs">Average fuel efficiency at each station</CardDescription>
               </CardHeader>
-              <CardContent className="pt-6">
-                <ChartContainer config={chartConfig} className="h-80">
-                  <BarChart data={stationComparisonData}>
+              <CardContent >
+                <ChartContainer config={chartConfig} className="h-75 w-full">
+                  <BarChart data={stationComparisonData} margin={{ top: 5, right: 10, left: 0, bottom: 60 }}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis 
                       dataKey="station" 
-                      tick={{ fontSize: 11 }}
+                      tick={{ fontSize: 10 }}
                       tickLine={false}
                       angle={-45}
                       textAnchor="end"
-                      height={80}
+                      height={60}
+                      interval={0}
                     />
                     <YAxis 
-                      tick={{ fontSize: 12 }}
+                      tick={{ fontSize: 11 }}
                       tickLine={false}
+                      width={60}
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar 
                       dataKey="efficiency" 
                       fill="var(--color-efficiency)" 
-                      radius={[6, 6, 0, 0]}
+                      radius={[4, 4, 0, 0]}
                       name="Efficiency (km/L)"
                     />
                   </BarChart>
                 </ChartContainer>
               </CardContent>
             </Card>
-          </>
+          </div>
         )}
       </div>
     </div>
