@@ -1,7 +1,9 @@
 // IndexedDB utility for storing fuel entries
+import { openDB, STORES } from './database';
 
 export type Entry = {
   id?: number;
+  userId: number;
   date: string;
   amountPaid: number;
   odometerReading: number;
@@ -9,44 +11,17 @@ export type Entry = {
   fuelStation: string;
 };
 
-const DB_NAME = 'CombustDB';
-const DB_VERSION = 1;
-const STORE_NAME = 'entries';
+const STORE_NAME = STORES.ENTRIES;
 
-// Open or create the database
-function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      
-      // Create object store if it doesn't exist
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const objectStore = db.createObjectStore(STORE_NAME, { 
-          keyPath: 'id', 
-          autoIncrement: true 
-        });
-        
-        // Create indexes for efficient querying
-        objectStore.createIndex('date', 'date', { unique: false });
-        objectStore.createIndex('fuelStation', 'fuelStation', { unique: false });
-      }
-    };
-  });
-}
-
-// Get all entries
-export async function getAllEntries(): Promise<Entry[]> {
+// Get all entries for a specific user
+export async function getAllEntries(userId: number): Promise<Entry[]> {
   const db = await openDB();
   
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, 'readonly');
     const store = transaction.objectStore(STORE_NAME);
-    const request = store.getAll();
+    const index = store.index('userId');
+    const request = index.getAll(userId);
 
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
@@ -95,17 +70,26 @@ export async function deleteEntry(id: number): Promise<void> {
   });
 }
 
-// Clear all entries
-export async function clearAllEntries(): Promise<void> {
+// Clear all entries for a specific user
+export async function clearAllEntries(userId: number): Promise<void> {
   const db = await openDB();
   
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
-    const request = store.clear();
-
+    const index = store.index('userId');
+    const request = index.openCursor(IDBKeyRange.only(userId));
+    
     request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
+    request.onsuccess = (event) => {
+      const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+      if (cursor) {
+        cursor.delete();
+        cursor.continue();
+      } else {
+        resolve();
+      }
+    };
   });
 }
 
@@ -130,10 +114,12 @@ export async function bulkAddEntries(entries: Omit<Entry, 'id'>[]): Promise<void
   });
 }
 
-// Replace all entries (clear and add new ones)
-export async function replaceAllEntries(entries: Omit<Entry, 'id'>[]): Promise<void> {
-  await clearAllEntries();
+// Replace all entries for a user (clear and add new ones)
+export async function replaceAllEntries(userId: number, entries: Omit<Entry, 'id'>[]): Promise<void> {
+  await clearAllEntries(userId);
   if (entries.length > 0) {
-    await bulkAddEntries(entries);
+    // Ensure all entries have the correct userId
+    const entriesWithUserId = entries.map(entry => ({ ...entry, userId }));
+    await bulkAddEntries(entriesWithUserId);
   }
 }

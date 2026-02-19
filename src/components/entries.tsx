@@ -31,6 +31,7 @@ import {
 
 type Entry = {
   id?: number;
+  userId: number;
   date: string;
   amountPaid: number;
   odometerReading: number;
@@ -40,7 +41,7 @@ type Entry = {
 
 type EntriesProps = {
   entries: Entry[];
-  addEntry: (entry: Omit<Entry, 'id'>) => Promise<number>;
+  addEntry: (entry: Omit<Entry, 'id' | 'userId'>) => Promise<number>;
   updateEntry: (entry: Entry) => Promise<void>;
   deleteEntry: (id: number) => Promise<void>;
   moveEntry: (fromIndex: number, toIndex: number) => void;
@@ -98,6 +99,7 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, moveEntry, clear
     
     const updatedEntry = {
       id: entry.id,
+      userId: entry.userId,
       date: editDate ? format(editDate, 'yyyy/MM/dd') : entry.date,
       fuelFilled: parseFloat(formData.get('editFuelFilled') as string),
       amountPaid: parseFloat(formData.get('editAmountPaid') as string),
@@ -299,7 +301,7 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, moveEntry, clear
                       <div>
                         <div className='text-xs text-muted-foreground mb-1'>Distance</div>
                         <div className='font-semibold'>
-                          {(entry.odometerReading - (entries[index + 1]?.odometerReading || 0)).toLocaleString()} km
+                          {entries[index + 1]?.odometerReading ? (entry.odometerReading - entries[index + 1].odometerReading).toLocaleString() : '-'} km
                         </div>
                       </div>
                     </div>

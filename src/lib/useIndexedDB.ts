@@ -4,6 +4,7 @@ import * as db from './db';
 
 export type Entry = {
   id?: number;
+  userId: number;
   date: string;
   amountPaid: number;
   odometerReading: number;
@@ -11,7 +12,7 @@ export type Entry = {
   fuelStation: string;
 };
 
-export function useIndexedDBEntries() {
+export function useIndexedDBEntries(userId: number) {
   const [entries, setEntriesState] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -19,7 +20,7 @@ export function useIndexedDBEntries() {
   useEffect(() => {
     async function loadEntries() {
       try {
-        const loadedEntries = await db.getAllEntries();
+        const loadedEntries = await db.getAllEntries(userId);
         setEntriesState(loadedEntries);
       } catch (error) {
         console.error('Error loading entries from IndexedDB:', error);
@@ -28,19 +29,20 @@ export function useIndexedDBEntries() {
       }
     }
     loadEntries();
-  }, []);
+  }, [userId]);
 
   // Add a new entry
-  const addEntry = useCallback(async (entry: Omit<Entry, 'id'>) => {
+  const addEntry = useCallback(async (entry: Omit<Entry, 'id' | 'userId'>) => {
     try {
-      const id = await db.addEntry(entry);
-      setEntriesState(prev => [{ ...entry, id }, ...prev]);
+      const entryWithUser = { ...entry, userId };
+      const id = await db.addEntry(entryWithUser);
+      setEntriesState(prev => [{ ...entryWithUser, id }, ...prev]);
       return id;
     } catch (error) {
       console.error('Error adding entry:', error);
       throw error;
     }
-  }, []);
+  }, [userId]);
 
   // Update an existing entry
   const updateEntry = useCallback(async (entry: Entry) => {
@@ -67,17 +69,19 @@ export function useIndexedDBEntries() {
   }, []);
 
   // Replace all entries (useful for import)
-  const replaceAllEntries = useCallback(async (newEntries: Omit<Entry, 'id'>[]) => {
+  const replaceAllEntries = useCallback(async (newEntries: Omit<Entry, 'id' | 'userId'>[]) => {
     try {
-      await db.replaceAllEntries(newEntries);
+      // Add userId to all entries
+      const entriesWithUserId = newEntries.map(entry => ({ ...entry, userId }));
+      await db.replaceAllEntries(userId, entriesWithUserId);
       // Reload from DB to get IDs
-      const loadedEntries = await db.getAllEntries();
+      const loadedEntries = await db.getAllEntries(userId);
       setEntriesState(loadedEntries);
     } catch (error) {
       console.error('Error replacing entries:', error);
       throw error;
     }
-  }, []);
+  }, [userId]);
 
   // Move entry (reorder)
   const moveEntry = useCallback((fromIndex: number, toIndex: number) => {
@@ -95,13 +99,13 @@ export function useIndexedDBEntries() {
   // Clear all entries
   const clearAllEntries = useCallback(async () => {
     try {
-      await db.clearAllEntries();
+      await db.clearAllEntries(userId);
       setEntriesState([]);
     } catch (error) {
       console.error('Error clearing entries:', error);
       throw error;
     }
-  }, []);
+  }, [userId]);
 
   return {
     entries,

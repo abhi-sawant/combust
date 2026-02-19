@@ -5,6 +5,7 @@ import {
   Download01Icon,
   FuelStationIcon,
   Upload01Icon,
+  Logout01Icon,
 } from '@hugeicons/core-free-icons';
 import { Button } from './components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './components/ui/dialog';
@@ -13,9 +14,14 @@ import { Field, FieldLabel } from './components/ui/field';
 import { Entries } from './components/entries';
 import { Statistics } from './components/statistics';
 import { useIndexedDBEntries, type Entry } from './lib/useIndexedDB';
+import { useAuth } from './contexts/AuthContext';
+import { SignIn } from './components/auth/SignIn';
+import { SignUp } from './components/auth/SignUp';
 
 export function App() {
-  const { entries, isLoading, replaceAllEntries, addEntry, updateEntry, deleteEntry, moveEntry, clearAllEntries } = useIndexedDBEntries();
+  const { user, isLoading: authLoading, signOut } = useAuth();
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const { entries, isLoading, replaceAllEntries, addEntry, updateEntry, deleteEntry, moveEntry, clearAllEntries } = useIndexedDBEntries(user?.id || 0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [csvText, setCsvText] = useState('');
@@ -61,7 +67,7 @@ export function App() {
     fileInputRef.current?.click();
   }
 
-  function parseCsvText(content: string): Omit<Entry, 'id'>[] {
+  function parseCsvText(content: string): Omit<Entry, 'id' | 'userId'>[] {
     const lines = content.split('\n').filter(line => line.trim());
     if (lines.length === 0) return [];
     
@@ -116,7 +122,7 @@ export function App() {
     reader.onload = async (e) => {
       const content = e.target?.result as string;
       try {
-        let parsedEntries: Omit<Entry, 'id'>[] = [];
+        let parsedEntries;
 
         if (file.name.endsWith('.json')) {
           // Parse JSON
@@ -156,6 +162,28 @@ export function App() {
     // Reset input so the same file can be uploaded again
     event.target.value = '';
   }
+
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-background via-background to-muted/20">
+        <div className="text-center space-y-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show authentication screens if user is not logged in
+  if (!user) {
+    return authMode === 'signin' ? (
+      <SignIn onSwitchToSignUp={() => setAuthMode('signup')} />
+    ) : (
+      <SignUp onSwitchToSignIn={() => setAuthMode('signin')} />
+    );
+  }
+
   return (
     <div className='min-h-screen bg-linear-to-br from-background via-background to-muted/20'>
       <header className='border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50 shadow-sm'>
@@ -175,6 +203,9 @@ export function App() {
               </div>
             </div>
             <div className='flex items-center gap-2'>
+              <div className='hidden sm:block text-sm text-muted-foreground mr-2'>
+                {user.name}
+              </div>
               <Button
                 variant='outline'
                 size='sm'
@@ -192,6 +223,16 @@ export function App() {
               >
                 <HugeiconsIcon icon={Download01Icon} className='size-4' />
                 <span className='hidden sm:inline'>Export</span>
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                className='gap-2'
+                onClick={signOut}
+                title="Sign Out"
+              >
+                <HugeiconsIcon icon={Logout01Icon} className='size-4' />
+                <span className='hidden sm:inline'>Sign Out</span>
               </Button>
             </div>
           </div>
