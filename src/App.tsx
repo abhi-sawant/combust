@@ -241,7 +241,7 @@ export function App() {
                 value={csvText}
                 onChange={(e) => setCsvText(e.target.value)}
                 rows={8}
-                className="font-mono text-sm"
+                className="font-mono text-sm max-h-70 overflow-auto"
               />
             </Field>
 
@@ -275,7 +275,7 @@ export function App() {
           </div>
         ) : (
           <Tabs defaultValue='entries' className='space-y-2'>
-            <TabsList className='grid w-full max-w-md mx-auto grid-cols-2'>
+            <TabsList className='grid w-full max-w-md mx-auto grid-cols-2 h-auto!'>
               <TabsTrigger value='entries' className='text-base'>
                 Entries
               </TabsTrigger>
