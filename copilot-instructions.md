@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Combust** is a Progressive Web App (PWA) for tracking vehicle fuel consumption built with React and TypeScript. It allows users to record and view fuel entries including date, amount paid, fuel filled (liters), odometer reading, and fuel station name. The application features offline support, persistent storage via IndexedDB, and can be installed on mobile and desktop devices.
+**Combust** is a Progressive Web App (PWA) for tracking vehicle fuel consumption built with React and TypeScript. It allows users to create accounts, sign in, and record and view their personal fuel entries including date, amount paid, fuel filled (liters), odometer reading, and fuel station name. The application features user authentication, offline support, persistent storage via IndexedDB, and can be installed on mobile and desktop devices. Each user's data is completely isolated and only accessible when logged in.
 
 ## Technology Stack
 
@@ -41,10 +41,22 @@
 combust/
 ├── public/              # Static assets
 │   ├── manifest.json    # PWA manifest
-│   └── vite.svg         # App icon (placeholder)
+│   ├── site.webmanifest # Web app manifest
+│   ├── favicon.ico      # Favicon
+│   ├── favicon.svg      # SVG favicon
+│   ├── favicon-96x96.png # PNG favicon
+│   ├── apple-touch-icon.png # iOS icon
+│   ├── icon-192.svg     # PWA icon
+│   ├── web-app-manifest-192x192.png # PWA icon 192x192
+│   ├── web-app-manifest-512x512.png # PWA icon 512x512
+│   └── vite.svg         # Vite logo
 ├── src/
 │   ├── components/
+│   │   ├── auth/       # Authentication components
+│   │   │   ├── SignIn.tsx   # Sign in form
+│   │   │   └── SignUp.tsx   # Sign up form
 │   │   ├── ui/         # shadcn/ui component library
+│   │   │   ├── alert-dialog.tsx
 │   │   │   ├── button.tsx
 │   │   │   ├── calendar.tsx
 │   │   │   ├── card.tsx
@@ -52,6 +64,7 @@ combust/
 │   │   │   ├── combobox.tsx
 │   │   │   ├── dialog.tsx
 │   │   │   ├── field.tsx
+│   │   │   ├── input-group.tsx
 │   │   │   ├── input.tsx
 │   │   │   ├── label.tsx
 │   │   │   ├── popover.tsx
@@ -62,23 +75,29 @@ combust/
 │   │   │   └── textarea.tsx
 │   │   ├── entries.tsx    # Entries management component
 │   │   └── statistics.tsx # Statistics dashboard component
+│   ├── contexts/
+│   │   └── AuthContext.tsx # Authentication context provider
 │   ├── lib/
-│   │   ├── db.ts          # IndexedDB operations
+│   │   ├── database.ts     # Shared IndexedDB initialization
+│   │   ├── db.ts           # IndexedDB operations for entries
+│   │   ├── auth.ts         # Authentication & user management
 │   │   ├── useIndexedDB.ts # Custom hook for IndexedDB state
 │   │   └── utils.ts        # Utility functions (cn helper)
 │   ├── assets/          # Application assets
 │   ├── App.tsx          # Main application component
 │   ├── main.tsx         # React entry point
 │   ├── index.css        # Global styles & Tailwind setup
-│   └── data.ts          # Sample data for database seeding
+│   └── data.ts          # Sample data (historical reference)
 ├── components.json      # shadcn/ui configuration
 ├── tsconfig.json        # TypeScript configuration
 ├── vite.config.ts       # Vite configuration (includes PWA plugin)
 ├── eslint.config.js     # ESLint configuration
 └── package.json         # Dependencies and scripts
 ```
-
-## Key Architectural Patterns
+Authentication State**: React Context API (`AuthContext`) for user session management
+- **Session Persistence**: localStorage for maintaining user sessions across page reloads
+- **Data Source**: IndexedDB with user-specific data isolation
+- **Minimal Global State**: Only authentication state in Context; all other data in IndexedDB
 
 ### Component Organization
 - **UI Components**: Located in `src/components/ui/`, these are shadcn/ui components built on Base UI primitives
@@ -86,13 +105,26 @@ combust/
 - **Path Aliases**: `@/` points to `src/` directory (configured in both tsconfig.json and vite.config.ts)
 
 ### Styling Conventions
-- Use the `cn()` utility from `@/lib/utils` for conditional className merging
+
+1. **User Authentication**:
+   - Sign up with email, password, and name
+   - Email validation and password strength requirements (min 6 characters)
+   - Password confirmation matching
+   - Sign in with email and password
+   - Password hashing using Web Crypto API (SHA-256)
+   - Session persistence using localStorage
+   - Sign out functionality
+   - User-specific data isolation (each user only sees their own entries)
+   - Auto-login on page reload if session exists
+
+2 Use the `cn()` utility from `@/lib/utils` for conditional className merging
 - Components use `class-variance-authority` (cva) for type-safe variants
 - CSS variables are defined in `index.css` with light/dark theme support
 - All colors use OKLCH format for better color consistency across themes
 
 ### State Management
 - **Local State**: Uses React's `useState` hook
+   - User-specific entries (only shows logged-in user's data)
 - **Persistent Storage**: IndexedDB via custom `useIndexedDBEntries` hook
 - **Data Source**: IndexedDB with automatic seeding from `data.ts` on first load
 - **No Global State**: No Redux, Zustand, or Context API (IndexedDB serves as source of truth)
@@ -132,46 +164,111 @@ combust/
    - Proper fuel efficiency calculations: (next_odometer - current_odometer) / next_fuelFilled
    - Responsive chart layouts with proper sizing and margins
 
-5. **Data Import/Export**:
+5. **User data and fuel entries in separate object stores
+   - User sessions persist in localStorage
+   - Each user has isolated data storage
    - Export data as CSV file
    - Import data from CSV or JSON files
    - Import data by pasting CSV text directly into textarea
    - Replace all entries when importing
 
 6. **Progressive Web App (PWA)**:
-   - Installable on mobile and desktop devices
-   - Offline support via service worker
-   - App manifest with proper metadata
-   - Auto-updates when new version is deployed
-
-7. **Persistent Storage**:
-   - All data stored in IndexedDB (browser-native database)
-   - Data persists across sessions and browser restarts
-   - Starts with empty database (users add their own data)
-   - Custom React hook (`useIndexedDBEntries`) for database operations
-
-8. **UI/UX**:
-   - Responsive design with mobile-first approach
-   - Professional gradient backgrounds and card layouts
-   - Smooth shadows and typography
-   - Tab navigation (Entries and Statistics tabs)
-   - Clean, accessible design with proper ARIA labels
-   - Loading states during data fetch
+   - Installable on mobile authentication and data fetch
    - Mobile-responsive card view for entries
-
-### Future Enhancements
-1. **Multi-vehicle Support**: Track multiple vehicles separately
+   - Dedicated authentication screens (Sign In / Sign Up)
+   - User name display in header
+   - Sign out button in header per user
 2. **Advanced Filtering**: Filter entries by date range, station, etc.
 3. **Data Export Options**: Export to additional formats (Excel, PDF)
 4. **Fuel Price Tracking**: Track price-per-liter trends over time
 5. **Anomaly Detection**: Alert on unusual fuel efficiency or prices
-6. **Cloud Sync**: Optional cloud backup/sync across devices
-7. **Custom Icons**: Replace placeholder SVG with proper app icons
+6. **Cloud Sync**: Backend integration for cross-device sync
+7. **Password Reset**: Email-based password recovery
+8. **Profile Management**: Edit user profile, change password
+9. **Data Sharing**: Export/import data between users
+10. **Remember Me**: Optional persistent login option
+   - Starts with empty database (users add their own data)
+   - Custom React hook (`useIndexedDBEntries`) for database operations
 
-## Data Structure
+8. **UI/UX**:
+  userId: number;         // Foreign key to users table
+  date: string;           // Format: 'YYYY/MM/DD'
+  amountPaid: number;     // In INR (Indian Rupees)
+  odometerReading: number; // In kilometers
+  fuelFilled: number;     // In liters
+  fuelStation: string;    // Station name
+}
+```
 
-### Fuel Entry Type
+### User Type
 ```typescript
+{
+  id?: number;            // Auto-generated by IndexedDB
+  email: string;          // Unique email address
+  passwordHash: string;   // SHA-256 hashed password
+  name: string;           // User's display name
+  createdAt: string;      // ISO timestamp of account creation
+}
+```
+
+### IndexedDB Schemahistorical reference data. The app no longer auto-seeds data - users create their own entries after signing up
+- **Database Name**: `CombustDB`
+- **Version**: 2
+- **Object Stores**: 
+  - Shared Database Initialization (`src/lib/database.ts`)
+Centralized database initialization that creates all object stores:
+- **`openDB()`**: Opens or creates CombustDB with version 2 schema
+- **`STORES`**: Object containing store names (`ENTRIES`, `USERS`)
+- Creates both `entries` and `users` object stores with proper indexes
+- Handles database upgrades from version 1 to 2
+
+### Entry Database Utilities (`src/lib/db.ts`)
+Custom IndexedDB wrapper for fuel entries:
+- **`getAllEntries(userId)`**: Retrieves all fuel entries for a specific user
+- **`addEntry(entry)`**: Adds a new entry (must include userId)
+- **`updateEntry(entry)`**: Updates an existing entry by ID
+- **`deleteEntry(id)`**: Deletes an entry by ID
+- **`clearAllEntries(userId)`**: Removes all entries for a specific user
+- **`bulkAddEntries(entries[])`**: Adds multiple entries at once
+- **`replaceAllEntries(userId, entries[])`**: Clears user's entries and adds new ones (import)
+
+### Authentication Utilities (`sruser's entries
+  isLoading,         // Boolean loading state
+  addEntry,          // Add new entry (auto-adds userId)
+  updateEntry,       // Update existing entry
+  deleteEntry,       // Delete entry by ID
+  replaceAllEntries, // Replace all user entries (import)
+  moveEntry,         // Reorder entries (in-memory only)
+  clearAllEntries    // Delete all user entries
+} = useIndexedDBEntries(userId);
+```
+
+**Key Behaviors:**
+- Takes `userId` as parameter for data isolation
+- Automatically loads user's entries from IndexedDB on mount
+- All CRUD operations automatically sync with IndexedDB
+- Automatically associates new entries with current user
+- Provides loading state for better UX
+- moveEntry is in-memory only (not persisted to DB)
+
+### Authentication Context (`src/contexts/AuthContext.tsx`)
+React Context for managing authentication state:
+
+```typescript
+const {
+  user,              // Current user object or null
+  isLoading,         // Boolean loading state during session check
+  signIn,            // Function to sign in user
+  signOut            // Function to sign out user
+} = useAuth();
+```
+
+**Key Behaviors:**
+- Provides user session state across entire app
+- Automatically restores session from localStorage on app load
+- Persists session to localStorage on sign in
+- Clears session from localStorage on sign out
+- Must wrap app with `<AuthProvider>` in main.tsx
 {
   id?: number;            // Auto-generated by IndexedDB
   date: string;           // Format: 'YYYY/MM/DD'
@@ -259,37 +356,67 @@ Users can install Combust as a PWA:
 3. **Offline**: App works offline after first visit
 
 ## Development Guidelines
-
-### Adding New Components
-1. UI components (shadcn) should go in `src/components/ui/`
-2. Feature components should go in `src/components/`
-3. Use the shadcn CLI to add new UI components: `npx shadcn@latest add [component]`
-4. Always use Base UI primitives as the foundation (this project uses base-vega style)
-
-### Styling Guidelines
-1. Use Tailwind utility classes for styling
-2. Use `cn()` helper for conditional classes
-3. Define color variables in `index.css` using OKLCH format
-4. Support both light and dark modes by defining colors in both `:root` and `.dark`
-5. Use the predefined semantic color tokens (primary, secondary, muted, accent, destructive, etc.)
-
-### TypeScript Guidelines
-1. Enable strict mode (already configured)
+Backend Integration** (Optional):
+   - REST API for cloud sync
+   - PostgreSQL or MongoDB for server-side storage
+   - JWT-based authentication instead of client-side only
+   - Enhanced Authentication**:
+   - Email verification on signup
+   - Password reset functionality
+   - Two-factor authentication
+   - OAuth login (Google, Facebook)
+   - Remember me functionality
+### SUser Profile Management**:
+   - Edit profile (name, email)
+   - Change password
+   - Delete account
+   - Profile picture upload configured)
 2. Use proper typing for all props and state
 3. Avoid `any` type unless absolutely necessary
 4. Define interfaces/types for data structures
 5. Use React 19's built-in types (@types/react 19.2.5)
 
 ### Component Patterns
-1. **Buttons**: Use variant prop (default, outline, secondary, ghost, destructive, link)
-2. **Sizes**: Components support size variants (xs, sm, default, lg, icon)
-3. **Forms**: Use Field + FieldLabel for form fields
-4. **Modals**: Use Dialog component with DialogContent, DialogHeader, DialogFooter
-5. **Date Selection**: Use Popover + Calendar combination
-6. **Searchable Selects**: Use Combobox components
+1. **Buttons**: Use  Enhancements**:
+   - Advanced date range filtering
+   - Search across all fields
+   - Saved filter presets
+   
+2. **Data Validation**:
+   - Strict odometer reading sequence validation
+   - Detect anomalies in fuel efficiency
+   - Alert on unusual data patterns
+   
+3. **Multi-vehicle Support**:
+   - Add vehicle management per user
+   - Track multiple vehicles separately
+   - Vehicle-specific statistics
 
-### File Naming
-- Use kebab-case for file names (button.tsx, input-group.tsx)
+### Low Priority
+1. **Social Features**:
+   - Share statistics with friends
+   - Compare fuel efficiency with other users
+   - Leaderboards for fuel efficiency
+   
+2. **Mobile Native App**: React Native version
+3. **Receipt Scanning**: OCR to auto-fill entries
+4. **API for Third-party Apps**: Public API for integration
+- CRUD operations (addEntry, updateEntry, deleteEntry)
+- Bulk operations (replaceAllEntries for import)
+- Loading states
+
+To modify database behavior:
+1. Update `src/lib/database.ts` if changing database schema or adding/removing stores
+2. Update `src/lib/db.ts` for entry-related IndexedDB operations
+3. Update `src/lib/auth.ts` for user-related operations
+4. Update `src/lib/useIndexedDB.ts` for React hook interface
+5. Ensure all state changes call the appropriate database function
+6. Remember to increment DB_VERSION in `database.ts` for schema changes
+- Always pass `userId` to `useIndexedDBEntries(userId)`
+- New entries automatically get userId attached
+- Queries are automatically filtered by userId
+
+### e kebab-case for file names (button.tsx, input-group.tsx)
 - Use PascalCase for component names (Button, InputGroup)
 - Use camelCase for utility functions and variables
 
@@ -343,6 +470,10 @@ npm run lint         # Run ESLint
 4. **CSV Import/Export**:
    - Implement upload button functionality
    - Implement download button to export data as CSV
+9. **"Object store not found" error**: Clear IndexedDB and reload (database schema may have partially initialized)
+10. **User can't sign in**: Check browser console for errors; may need to clear localStorage and IndexedDB
+11. **Authentication not persisting**: Verify localStorage is enabled in browser settings
+12. **Seeing another user's data**: This should never happen - report as critical bug if encountered
    - Data validation on import
 
 ### Medium Priority
@@ -394,8 +525,47 @@ The Statistics tab includes:
 
 To add new statistics:
 1. Calculate metrics in `useMemo` hooks in `statistics.tsx`
-2. Add new Card components for display
-3. Use recharts for visualizations (LineChart, BarChart, PieChart, etc.)
+2. Add new CaProper app icons configured (favicon, apple-touch-icon, PWA manifests)
+
+### Security Considerations
+- **Client-side Auth**: Currently uses client-side authentication only
+- **Password Storage**: Passwords hashed with SHA-256 (better than plaintext, but not bcrypt)
+- **Session Storage**: Sessions stored in localStorage (accessible to JavaScript)
+- **XSS Protection**: Ensure9, 2026
+**Project Version**: 0.0.0 (initial development)
+**Status**: PWA with user authentication and IndexedDB persistence fully implemented
+**Authentication**: Client-side authentication with password hashing and session management
+**Data Storage**: User-specific data isolation in IndexedDB
+**Maintainer**: Refer to package.json for author information
+
+## Security & Privacy Notes
+
+### Current Implementation
+- **Authentication**: Client-side only (no backend server)
+- **Password Hashing**: SHA-256 via Web Crypto API
+- **Session Management**: localStorage with userId storage
+- **Data Storage**: All data in browser's IndexedDB (local only)
+- **Data Isolation**: Each user's entries filtered by userId
+- **No Cloud Sync**: All data remains on the local device
+
+### Important Limitations
+1. **No Password Recovery**: If user forgets password, data is inaccessible
+2. **Device-Specific**: Data doesn't sync across devices
+3. **Browser Clearing**: Clearing browser data will delete all user accounts and entries
+4. **Shared Devices**: Multiple users can create accounts on same browser
+5. **No Email Verification**: Accounts created without email validation
+6. **Client-Side Security**: Auth implementation is not suitable for sensitive data
+
+### Recommendations for Production
+Consider implementing:
+- Backend authentication server with proper password hashing (bcrypt/argon2)
+- JWT token-based sessions instead of localStorage
+- Email verification on signup
+- Password reset via email
+- Cloud database for data backup and sync
+- HTTPS enforcement
+- Rate limiting on authentication attempts
+- Session timeout and refresh tokensChart, etc.)
 
 ### Adding New Features
 Examples of potential additions:
