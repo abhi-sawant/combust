@@ -5,15 +5,15 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Field, FieldLabel } from '../ui/field';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { registerUser } from '../../lib/auth';
 import { useAuth } from '../../contexts/AuthContext';
 
 type SignUpProps = {
   onSwitchToSignIn: () => void;
+  onNeedsConfirmation: (email: string) => void;
 };
 
-export function SignUp({ onSwitchToSignIn }: SignUpProps) {
-  const { signIn } = useAuth();
+export function SignUp({ onSwitchToSignIn, onNeedsConfirmation }: SignUpProps) {
+  const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -54,8 +54,14 @@ export function SignUp({ onSwitchToSignIn }: SignUpProps) {
         return;
       }
 
-      const user = await registerUser(email, password, name);
-      signIn(user);
+      const result = await signUp(email, password, name);
+      
+      if (result.needsConfirmation) {
+        onNeedsConfirmation(email);
+      } else if (result.error) {
+        setError(result.error);
+      }
+      // If successful without confirmation needed, auth state change will handle navigation
     } catch (err) {
       console.error('Sign up error:', err);
       if (err instanceof Error) {

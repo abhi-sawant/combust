@@ -5,14 +5,14 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Field, FieldLabel } from '../ui/field';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { verifyCredentials } from '../../lib/auth';
 import { useAuth } from '../../contexts/AuthContext';
 
 type SignInProps = {
   onSwitchToSignUp: () => void;
+  onNeedsConfirmation: (email: string) => void;
 };
 
-export function SignIn({ onSwitchToSignUp }: SignInProps) {
+export function SignIn({ onSwitchToSignUp, onNeedsConfirmation }: SignInProps) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,13 +31,14 @@ export function SignIn({ onSwitchToSignUp }: SignInProps) {
         return;
       }
 
-      const user = await verifyCredentials(email, password);
+      const result = await signIn(email, password);
       
-      if (user) {
-        signIn(user);
-      } else {
-        setError('Invalid email or password');
+      if (result.needsConfirmation) {
+        onNeedsConfirmation(email);
+      } else if (result.error) {
+        setError(result.error);
       }
+      // If successful, auth state change will handle navigation
     } catch (err) {
       console.error('Sign in error:', err);
       setError('An error occurred. Please try again.');

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import {
@@ -13,18 +13,175 @@ import { Textarea } from './components/ui/textarea';
 import { Field, FieldLabel } from './components/ui/field';
 import { Entries } from './components/entries';
 import { Statistics } from './components/statistics';
-import { useIndexedDBEntries, type Entry } from './lib/useIndexedDB';
 import { useAuth } from './contexts/AuthContext';
 import { SignIn } from './components/auth/SignIn';
 import { SignUp } from './components/auth/SignUp';
+import { EmailConfirmation } from './components/auth/EmailConfirmation';
+import * as fuelService from './services/fuelService';
+import { type FuelEntry } from './services/fuelService';
+
+// Entry type for UI components (matching the original interface)
+type Entry = {
+  id?: number;
+  supabaseId?: string;
+  userId: number;
+  date: string;
+  amountPaid: number;
+  odometerReading: number;
+  fuelFilled: number;
+  fuelStation: string;
+};
 
 export function App() {
-  const { user, isLoading: authLoading, signOut } = useAuth();
+  const { user, isLoading: authLoading, signOut, authState, clearAwaitingConfirmation } = useAuth();
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const { entries, isLoading, replaceAllEntries, addEntry, updateEntry, deleteEntry, moveEntry, clearAllEntries } = useIndexedDBEntries(user?.id || 0);
+  const [confirmationEmail, setConfirmationEmail] = useState<string>('');
+  
+  // Entries state
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [csvText, setCsvText] = useState('');
+
+  // Load entries when user changes
+  useEffect(() => {
+    async function loadEntries() {
+      if (!user?.id) {
+        setEntries([]);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const loadedEntries = await fuelService.getAllEntries(user.id, user.supabaseId);
+        setEntries(loadedEntries as Entry[]);
+      } catch (error) {
+        console.error('Error loading entries:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadEntries();
+  }, [user?.id, user?.supabaseId]);
+
+  // Listen for online status changes to sync
+  useEffect(() => {
+    const handleOnline = async () => {
+      if (user?.id && user?.supabaseId) {
+        console.log('Back online, syncing...');
+        try {
+          await fuelService.fullSync(user.id, user.supabaseId);
+          const loadedEntries = await fuelService.getAllEntries(user.id, user.supabaseId);
+          setEntries(loadedEntries as Entry[]);
+        } catch (error) {
+          console.error('Error syncing on reconnect:', error);
+        }
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [user?.id, user?.supabaseId]);
+
+  // Entry CRUD operations
+  const addEntry = useCallback(async (entry: Omit<Entry, 'id' | 'userId'>) => {
+    if (!user?.id) return -1;
+    
+    try {
+      const newEntry = await fuelService.createEntry(entry, user.id, user.supabaseId);
+      setEntries(prev => [newEntry as Entry, ...prev]);
+      return newEntry.id || -1;
+    } catch (error) {
+      console.error('Error adding entry:', error);
+      throw error;
+    }
+  }, [user?.id, user?.supabaseId]);
+
+  const updateEntry = useCallback(async (entry: Entry) => {
+    if (!user?.id) return;
+    
+    try {
+      await fuelService.updateEntry(entry as FuelEntry, user.supabaseId);
+      setEntries(prev => prev.map(e => e.id === entry.id ? entry : e));
+    } catch (error) {
+      console.error('Error updating entry:', error);
+      throw error;
+    }
+  }, [user?.supabaseId]);
+
+  const deleteEntry = useCallback(async (id: number) => {
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return;
+    
+    try {
+      await fuelService.deleteEntry(id, entry.supabaseId, user?.supabaseId);
+      setEntries(prev => prev.filter(e => e.id !== id));
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+      throw error;
+    }
+  }, [entries, user?.supabaseId]);
+
+  const moveEntry = useCallback((fromIndex: number, toIndex: number) => {
+    setEntries(prev => {
+      const newEntries = [...prev];
+      const [removed] = newEntries.splice(fromIndex, 1);
+      newEntries.splice(toIndex, 0, removed);
+      return newEntries;
+    });
+  }, []);
+
+  const clearAllEntries = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      // Delete each entry (this will soft delete in Supabase)
+      for (const entry of entries) {
+        if (entry.id !== undefined) {
+          await fuelService.deleteEntry(entry.id, entry.supabaseId, user.supabaseId);
+        }
+      }
+      setEntries([]);
+    } catch (error) {
+      console.error('Error clearing entries:', error);
+      throw error;
+    }
+  }, [entries, user?.id, user?.supabaseId]);
+
+  const replaceAllEntries = useCallback(async (newEntries: Omit<Entry, 'id' | 'userId'>[]) => {
+    if (!user?.id) return;
+    
+    try {
+      // Clear existing entries
+      await clearAllEntries();
+      
+      // Add new entries
+      const addedEntries: Entry[] = [];
+      for (const entry of newEntries) {
+        const newEntry = await fuelService.createEntry(entry, user.id, user.supabaseId);
+        addedEntries.push(newEntry as Entry);
+      }
+      setEntries(addedEntries);
+    } catch (error) {
+      console.error('Error replacing entries:', error);
+      throw error;
+    }
+  }, [user?.id, user?.supabaseId, clearAllEntries]);
+
+  // Handle email confirmation callback
+  const handleNeedsConfirmation = (email: string) => {
+    setConfirmationEmail(email);
+  };
+
+  const handleBackFromConfirmation = () => {
+    setConfirmationEmail('');
+    clearAwaitingConfirmation();
+    setAuthMode('signin');
+  };
 
   // Download entries as CSV
   function handleDownload() {
@@ -175,12 +332,24 @@ export function App() {
     );
   }
 
+  // Show email confirmation screen
+  if (confirmationEmail || authState.status === 'awaiting_confirmation') {
+    const email = confirmationEmail || (authState.status === 'awaiting_confirmation' ? authState.email : '');
+    return <EmailConfirmation email={email} onBack={handleBackFromConfirmation} />;
+  }
+
   // Show authentication screens if user is not logged in
   if (!user) {
     return authMode === 'signin' ? (
-      <SignIn onSwitchToSignUp={() => setAuthMode('signup')} />
+      <SignIn 
+        onSwitchToSignUp={() => setAuthMode('signup')} 
+        onNeedsConfirmation={handleNeedsConfirmation}
+      />
     ) : (
-      <SignUp onSwitchToSignIn={() => setAuthMode('signin')} />
+      <SignUp 
+        onSwitchToSignIn={() => setAuthMode('signin')} 
+        onNeedsConfirmation={handleNeedsConfirmation}
+      />
     );
   }
 

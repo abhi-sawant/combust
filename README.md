@@ -88,6 +88,51 @@ src/
   - Upload CSV or JSON files, or
   - Paste CSV data directly into the textarea
 
+## Supabase Backend
+
+This app uses Supabase for authentication and cloud data storage, with IndexedDB as a local cache for offline support.
+
+### Environment Variables
+
+Create a `.env` file with your Supabase credentials:
+
+```bash
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+### Row Level Security (RLS)
+
+**IMPORTANT:** The following RLS policies must be enabled in your Supabase dashboard for security:
+
+#### `fuel_entries` table:
+```sql
+-- Enable RLS
+ALTER TABLE fuel_entries ENABLE ROW LEVEL SECURITY;
+
+-- Users can only read their own entries
+CREATE POLICY "Users can view own entries" ON fuel_entries
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Users can insert their own entries
+CREATE POLICY "Users can insert own entries" ON fuel_entries
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Users can update their own entries
+CREATE POLICY "Users can update own entries" ON fuel_entries
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Users can delete their own entries (soft delete)
+CREATE POLICY "Users can delete own entries" ON fuel_entries
+  FOR DELETE USING (auth.uid() = user_id);
+```
+
+### Sync Strategy
+
+- **Online-first**: When online, reads/writes go to Supabase first, then sync to IndexedDB
+- **Offline fallback**: If Supabase is unreachable, operations fall back to IndexedDB and queue for sync
+- **On reconnect**: Queued operations are processed and remote changes are pulled
+
 ## Deployment
 
 Deploy to any static hosting service:
