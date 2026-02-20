@@ -372,7 +372,7 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, moveEntry, clear
                         <TableCell>₹{entry.amountPaid.toFixed(2)}</TableCell>
                         <TableCell>{entry.odometerReading.toLocaleString()}</TableCell>
                         <TableCell className='font-medium'>
-                          {(entry.odometerReading - (entries[index + 1]?.odometerReading || 0)).toLocaleString()}
+                          {entries[index + 1]?.odometerReading ? (entry.odometerReading - entries[index + 1].odometerReading).toLocaleString() : '-'} 
                         </TableCell>
                         <TableCell>
                           <span className='inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary'>
