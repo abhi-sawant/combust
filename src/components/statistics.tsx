@@ -53,7 +53,6 @@ function Statistics({ entries }: StatisticsProps) {
   // - costPerKm = next_amountPaid / distanceTravelled
   // - efficiency = distanceTravelled / next_fuelFilled
   // Latest entry has no values (no next entry)
-  // Invalid values (negative/zero distance) are set to null
   const entriesWithCalculations = useMemo(() => {
     return sortedEntries.map((entry, index) => {
       if (index === sortedEntries.length - 1) {
@@ -68,17 +67,6 @@ function Statistics({ entries }: StatisticsProps) {
       
       const nextEntry = sortedEntries[index + 1];
       const distanceTravelled = nextEntry.odometerReading - entry.odometerReading;
-      
-      // If distance is invalid (negative or zero), don't calculate derived values
-      if (distanceTravelled <= 0) {
-        return { 
-          ...entry, 
-          distanceTravelled: null,
-          costPerKm: null,
-          efficiency: null 
-        };
-      }
-      
       const costPerKm = nextEntry.amountPaid / distanceTravelled;
       const efficiency = distanceTravelled / nextEntry.fuelFilled;
       
