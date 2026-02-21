@@ -54,7 +54,6 @@ function Statistics({ entries }: StatisticsProps) {
         }
       }
 
-      const nextEntry = sortedEntries[index + 1]
       const prevEntry = index > 0 ? sortedEntries[index - 1] : null
       const distanceTravelled = prevEntry ? prevEntry.odometerReading - entry.odometerReading : null
       // const costPerKm = nextEntry.amountPaid / distanceTravelled;
