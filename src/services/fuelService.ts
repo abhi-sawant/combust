@@ -108,6 +108,7 @@ export async function getAllEntries(
   // Try Supabase first if online and authenticated
   if (isOnline() && supabaseUserId) {
     try {
+      // Fetch active entries
       const { data, error } = await supabase
         .from('fuel_entries')
         .select('*')
@@ -117,9 +118,21 @@ export async function getAllEntries(
 
       if (error) throw error;
 
+      // Also fetch deleted entries to sync deletions across devices
+      const { data: deletedData } = await supabase
+        .from('fuel_entries')
+        .select('*')
+        .eq('user_id', supabaseUserId)
+        .eq('is_deleted', true);
+
       if (data) {
-        // Update local cache with remote data
-        await syncToLocal(data, localUserId);
+        // Sync deletions first - remove locally any entries that are deleted in Supabase
+        if (deletedData && deletedData.length > 0) {
+          await syncDeletionsToLocal(deletedData, localUserId);
+        }
+        
+        // Then sync active entries to local cache
+        await syncToLocal(data, localUserId, supabaseUserId);
         return data.map((entry: FuelEntryDB) => supabaseToLocal(entry, localUserId));
       }
     } catch (error) {
@@ -290,8 +303,58 @@ export async function deleteEntry(
   }
 }
 
+// Sync deletions from Supabase to local IndexedDB
+async function syncDeletionsToLocal(deletedEntries: FuelEntryDB[], localUserId: number): Promise<void> {
+  const db = await openDB();
+  
+  // Get all local entries for this user
+  const localEntries: LocalEntry[] = await new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORES.ENTRIES, 'readonly');
+    const store = transaction.objectStore(STORES.ENTRIES);
+    const index = store.index('userId');
+    const request = index.getAll(localUserId);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result as LocalEntry[]);
+  });
+
+  for (const deletedEntry of deletedEntries) {
+    // Find matching local entry by supabaseId
+    let localToDelete = localEntries.find(e => e.supabaseId === deletedEntry.id);
+    
+    // If not found by supabaseId, try matching by data (for entries that were synced before supabaseId was stored)
+    if (!localToDelete) {
+      localToDelete = localEntries.find(e => 
+        !e.supabaseId &&
+        e.date === deletedEntry.date &&
+        e.amountPaid === deletedEntry.amount_paid &&
+        e.odometerReading === deletedEntry.odometer_reading &&
+        e.fuelFilled === deletedEntry.fuel_filled
+      );
+    }
+    
+    if (localToDelete && localToDelete.id) {
+      // Delete the local entry
+      await localDb.deleteEntry(localToDelete.id);
+    }
+  }
+}
+
 // Sync remote data to local IndexedDB
-async function syncToLocal(remoteEntries: FuelEntryDB[], localUserId: number): Promise<void> {
+async function syncToLocal(remoteEntries: FuelEntryDB[], localUserId: number, supabaseUserId: string): Promise<void> {
+  // Get all deleted entries to avoid re-creating them
+  const { data: deletedEntries } = await supabase
+    .from('fuel_entries')
+    .select('date, amount_paid, odometer_reading, fuel_filled')
+    .eq('user_id', supabaseUserId)
+    .eq('is_deleted', true);
+  
+  const deletedSet = new Set(
+    (deletedEntries || []).map(e => 
+      `${e.date}|${e.amount_paid}|${e.odometer_reading}|${e.fuel_filled}`
+    )
+  );
+
   for (const remoteEntry of remoteEntries) {
     const localEntry = supabaseToLocal(remoteEntry, localUserId);
     
@@ -312,9 +375,12 @@ async function syncToLocal(remoteEntries: FuelEntryDB[], localUserId: number): P
         syncedAt: remoteEntry.synced_at,
       });
     } else {
-      // Entry doesn't exist locally by supabaseId, create it
-      // Note: We ignore local_id from remote as it's device-specific
-      await createLocalFromRemote(localEntry, remoteEntry.id, localUserId);
+      // Only create if not in deleted set
+      const key = `${remoteEntry.date}|${remoteEntry.amount_paid}|${remoteEntry.odometer_reading}|${remoteEntry.fuel_filled}`;
+      if (!deletedSet.has(key)) {
+        // Entry doesn't exist locally by supabaseId, create it
+        await createLocalFromRemote(localEntry, remoteEntry.id, localUserId);
+      }
     }
   }
 }
@@ -537,9 +603,28 @@ async function pushUnsyncedEntries(
 
   for (const entry of unsyncedEntries) {
     try {
-      // Check if this entry already exists in Supabase by matching data
-      // Use unique combination of date, amount, odometer, fuel filled
-      // This handles multi-device scenarios where local_id differs
+      // First check if this entry was DELETED in Supabase (from another device)
+      // If so, delete it locally and skip pushing
+      const { data: deletedData } = await supabase
+        .from('fuel_entries')
+        .select('id')
+        .eq('user_id', supabaseUserId)
+        .eq('date', entry.date)
+        .eq('amount_paid', entry.amountPaid)
+        .eq('odometer_reading', entry.odometerReading)
+        .eq('fuel_filled', entry.fuelFilled)
+        .eq('is_deleted', true)
+        .maybeSingle();
+
+      if (deletedData) {
+        // Entry was deleted on another device, delete locally too
+        if (entry.id) {
+          await localDb.deleteEntry(entry.id);
+        }
+        continue;
+      }
+
+      // Check if this entry already exists (active) in Supabase
       const { data: existingData } = await supabase
         .from('fuel_entries')
         .select('id, synced_at')
