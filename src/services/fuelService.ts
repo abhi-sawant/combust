@@ -311,17 +311,16 @@ async function syncToLocal(remoteEntries: FuelEntryDB[], localUserId: number): P
       });
     } else if (remoteEntry.local_id) {
       // Try to match by local_id
-      try {
-        const localById = await getLocalById(remoteEntry.local_id);
-        if (localById) {
-          await updateLocalWithSupabaseId(remoteEntry.local_id, remoteEntry.id, remoteEntry.synced_at);
-        }
-      } catch {
-        // If local_id doesn't exist, create new entry
+      const localById = await getLocalById(remoteEntry.local_id);
+      if (localById) {
+        // Found by local_id, update with supabaseId
+        await updateLocalWithSupabaseId(remoteEntry.local_id, remoteEntry.id, remoteEntry.synced_at);
+      } else {
+        // Entry doesn't exist locally, create it
         await createLocalFromRemote(localEntry, remoteEntry.id, localUserId);
       }
     } else {
-      // Create new local entry
+      // No local_id, create new local entry
       await createLocalFromRemote(localEntry, remoteEntry.id, localUserId);
     }
   }
@@ -545,6 +544,25 @@ async function pushUnsyncedEntries(
 
   for (const entry of unsyncedEntries) {
     try {
+      // First check if this entry already exists in Supabase by local_id
+      // This prevents duplicates when supabaseId wasn't stored locally
+      const { data: existingData } = await supabase
+        .from('fuel_entries')
+        .select('id, synced_at')
+        .eq('user_id', supabaseUserId)
+        .eq('local_id', entry.id)
+        .eq('is_deleted', false)
+        .maybeSingle();
+
+      if (existingData) {
+        // Entry already exists in Supabase, just update local with the supabaseId
+        if (entry.id) {
+          await updateLocalWithSupabaseId(entry.id, existingData.id, existingData.synced_at);
+        }
+        continue;
+      }
+
+      // Entry doesn't exist, insert it
       const supabaseData = localToSupabase(entry, supabaseUserId);
       
       const { data, error } = await supabase
