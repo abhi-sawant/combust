@@ -299,8 +299,8 @@ async function syncToLocal(remoteEntries: FuelEntryDB[], localUserId: number): P
     const existingLocal = await findLocalBySupabaseId(remoteEntry.id);
     
     if (existingLocal) {
-      // Update existing local entry
-      await localDb.updateEntry({
+      // Update existing local entry, preserving supabaseId and syncedAt
+      await updateLocalEntryFull({
         id: existingLocal.id!,
         userId: localUserId,
         date: localEntry.date,
@@ -308,22 +308,29 @@ async function syncToLocal(remoteEntries: FuelEntryDB[], localUserId: number): P
         odometerReading: localEntry.odometerReading,
         fuelFilled: localEntry.fuelFilled,
         fuelStation: localEntry.fuelStation,
+        supabaseId: remoteEntry.id,
+        syncedAt: remoteEntry.synced_at,
       });
-    } else if (remoteEntry.local_id) {
-      // Try to match by local_id
-      const localById = await getLocalById(remoteEntry.local_id);
-      if (localById) {
-        // Found by local_id, update with supabaseId
-        await updateLocalWithSupabaseId(remoteEntry.local_id, remoteEntry.id, remoteEntry.synced_at);
-      } else {
-        // Entry doesn't exist locally, create it
-        await createLocalFromRemote(localEntry, remoteEntry.id, localUserId);
-      }
     } else {
-      // No local_id, create new local entry
+      // Entry doesn't exist locally by supabaseId, create it
+      // Note: We ignore local_id from remote as it's device-specific
       await createLocalFromRemote(localEntry, remoteEntry.id, localUserId);
     }
   }
+}
+
+// Update local entry preserving all fields including supabaseId
+async function updateLocalEntryFull(entry: LocalEntry): Promise<void> {
+  const db = await openDB();
+  
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORES.ENTRIES, 'readwrite');
+    const store = transaction.objectStore(STORES.ENTRIES);
+    const request = store.put(entry);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
 }
 
 // Find local entry by Supabase ID (stored in extended metadata)
@@ -349,20 +356,6 @@ async function findLocalBySupabaseId(supabaseId: string): Promise<LocalEntry | n
         resolve(null);
       }
     };
-  });
-}
-
-// Get local entry by ID
-async function getLocalById(id: number): Promise<LocalEntry | null> {
-  const db = await openDB();
-  
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORES.ENTRIES, 'readonly');
-    const store = transaction.objectStore(STORES.ENTRIES);
-    const request = store.get(id);
-    
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result || null);
   });
 }
 
@@ -544,13 +537,17 @@ async function pushUnsyncedEntries(
 
   for (const entry of unsyncedEntries) {
     try {
-      // First check if this entry already exists in Supabase by local_id
-      // This prevents duplicates when supabaseId wasn't stored locally
+      // Check if this entry already exists in Supabase by matching data
+      // Use unique combination of date, amount, odometer, fuel filled
+      // This handles multi-device scenarios where local_id differs
       const { data: existingData } = await supabase
         .from('fuel_entries')
         .select('id, synced_at')
         .eq('user_id', supabaseUserId)
-        .eq('local_id', entry.id)
+        .eq('date', entry.date)
+        .eq('amount_paid', entry.amountPaid)
+        .eq('odometer_reading', entry.odometerReading)
+        .eq('fuel_filled', entry.fuelFilled)
         .eq('is_deleted', false)
         .maybeSingle();
 
