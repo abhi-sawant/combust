@@ -299,9 +299,9 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, moveEntry, clear
                         <div className='font-semibold'>{entry.odometerReading.toLocaleString()} km</div>
                       </div>
                       <div>
-                        <div className='text-xs text-muted-foreground mb-1'>Distance</div>
-                        <div className='font-semibold'>
-                          {entries[index + 1]?.odometerReading ? (entry.odometerReading - entries[index + 1].odometerReading).toLocaleString() : '-'} km
+                        <div className='text-xs text-muted-foreground mb-1'>Average</div>
+                        <div className='font-semibold text-primary'>
+                          {entries[index - 1]?.odometerReading ? ((entries[index - 1].odometerReading - entry.odometerReading) / entry.fuelFilled).toFixed(2) : '-'}  km/L
                         </div>
                       </div>
                     </div>
@@ -359,7 +359,7 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, moveEntry, clear
                       <TableHead className='font-semibold'>Fuel (L)</TableHead>
                       <TableHead className='font-semibold'>Amount (₹)</TableHead>
                       <TableHead className='font-semibold'>Odometer (km)</TableHead>
-                      <TableHead className='font-semibold'>Distance (km)</TableHead>
+                      <TableHead className='font-semibold'>Average (km/L)</TableHead>
                       <TableHead className='font-semibold'>Station</TableHead>
                       <TableHead className='font-semibold text-right'>Actions</TableHead>
                     </TableRow>
@@ -372,7 +372,7 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, moveEntry, clear
                         <TableCell>₹{entry.amountPaid.toFixed(2)}</TableCell>
                         <TableCell>{entry.odometerReading.toLocaleString()}</TableCell>
                         <TableCell className='font-medium'>
-                          {entries[index + 1]?.odometerReading ? (entry.odometerReading - entries[index + 1].odometerReading).toLocaleString() : '-'} 
+                          {entries[index - 1]?.odometerReading ? ((entries[index - 1].odometerReading - entry.odometerReading) / entry.fuelFilled).toFixed(2) : '-'} 
                         </TableCell>
                         <TableCell>
                           <span className='inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary'>
