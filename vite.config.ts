@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/combust/',
+  base: '/',
   plugins: [
     react(), 
     tailwindcss(),
@@ -20,8 +20,8 @@ export default defineConfig({
         theme_color: '#3b82f6',
         background_color: '#ffffff',
         display: 'standalone',
-        start_url: '/combust/',
-        scope: '/combust/',
+        start_url: '/',
+        scope: '/',
         orientation: 'portrait-primary',
         categories: ['utilities', 'productivity'],
         icons: [
