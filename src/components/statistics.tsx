@@ -20,24 +20,25 @@ type StatisticsProps = {
 
 function Statistics({ entries }: StatisticsProps) {
   const [selectedStation, setSelectedStation] = useState<string>('All')
-  console.log({ entries })
   // Sort entries by date (oldest to newest)
-  // Sanitize date string to ISO format (yyyy-MM-dd) for reliable cross-browser parsing
-  const parseDate = (dateStr: string) => new Date(dateStr.replace(/\s/g, '').replace(/\//g, '-'))
+  // Parse date string in local time to avoid UTC midnight timezone shift issues.
+  // Handles both 'yyyy/MM/dd' (local IndexedDB) and 'yyyy-MM-dd' (Supabase) formats.
+  const parseDate = (dateStr: string) => {
+    const parts = dateStr.trim().replace(/\//g, '-').split('-').map(Number)
+    return new Date(parts[0], parts[1] - 1, parts[2]) // local time, not UTC
+  }
 
   const sortedEntries = useMemo(() => {
     return [...entries].sort((a, b) => parseDate(b.date).getTime() - parseDate(a.date).getTime())
     // return [...entries]
   }, [entries])
 
-  console.log({ sortedEntries, entries })
 
   // Get unique stations
   const allStations = useMemo(() => {
     return Array.from(new Set(sortedEntries.map((entry) => entry.fuelStation)))
   }, [sortedEntries])
 
-  console.log({ allStations })
 
   // Calculate efficiency, distance, and cost per km for each entry
   // Formulas:
@@ -73,7 +74,6 @@ function Statistics({ entries }: StatisticsProps) {
     })
   }, [sortedEntries])
 
-  console.log({ entriesWithCalculations })
 
   // Filter entries based on selected station
   const filteredEntriesWithCalculations = useMemo(() => {
@@ -82,7 +82,6 @@ function Statistics({ entries }: StatisticsProps) {
       : entriesWithCalculations.filter((entry) => entry.fuelStation === selectedStation)
   }, [entriesWithCalculations, selectedStation])
 
-  console.log(filteredEntriesWithCalculations)
   // Calculate overall statistics
   const stats = useMemo(() => {
     if (filteredEntriesWithCalculations.length === 0) {
@@ -120,7 +119,6 @@ function Statistics({ entries }: StatisticsProps) {
       .filter((e) => e.efficiency !== null)
       .map((e) => e.efficiency as number)
 
-      console.log({ validEfficiencies })
 
     const avgFuelEfficiency =
       validEfficiencies.length > 0 ? validEfficiencies.reduce((sum, eff) => sum + eff, 0) / validEfficiencies.length : 0
