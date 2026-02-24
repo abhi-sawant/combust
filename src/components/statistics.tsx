@@ -149,7 +149,7 @@ function Statistics({ entries }: StatisticsProps) {
       const cumulative = filteredEntriesWithCalculations.slice(0, index + 1).reduce((sum, e) => sum + e.amountPaid, 0)
 
       return {
-        date: parseDate(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        date: entry.date,
         amount: entry.amountPaid,
         cumulative,
       }
@@ -161,7 +161,7 @@ function Statistics({ entries }: StatisticsProps) {
     return filteredEntriesWithCalculations
       .filter((entry) => entry.efficiency !== null)
       .map((entry) => ({
-        date: parseDate(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        date: entry.date,
         efficiency: entry.efficiency as number,
       }))
   }, [filteredEntriesWithCalculations])
