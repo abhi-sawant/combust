@@ -22,8 +22,11 @@ function Statistics({ entries }: StatisticsProps) {
   const [selectedStation, setSelectedStation] = useState<string>('All')
   console.log({ entries })
   // Sort entries by date (oldest to newest)
+  // Sanitize date string to ISO format (yyyy-MM-dd) for reliable cross-browser parsing
+  const parseDate = (dateStr: string) => new Date(dateStr.replace(/\s/g, '').replace(/\//g, '-'))
+
   const sortedEntries = useMemo(() => {
-    return [...entries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    return [...entries].sort((a, b) => parseDate(b.date).getTime() - parseDate(a.date).getTime())
     // return [...entries]
   }, [entries])
 
@@ -148,7 +151,7 @@ function Statistics({ entries }: StatisticsProps) {
       const cumulative = filteredEntriesWithCalculations.slice(0, index + 1).reduce((sum, e) => sum + e.amountPaid, 0)
 
       return {
-        date: new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        date: parseDate(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         amount: entry.amountPaid,
         cumulative,
       }
@@ -160,7 +163,7 @@ function Statistics({ entries }: StatisticsProps) {
     return filteredEntriesWithCalculations
       .filter((entry) => entry.efficiency !== null)
       .map((entry) => ({
-        date: new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        date: parseDate(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         efficiency: entry.efficiency as number,
       }))
   }, [filteredEntriesWithCalculations])
