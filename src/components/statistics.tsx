@@ -20,7 +20,7 @@ type StatisticsProps = {
 
 function Statistics({ entries }: StatisticsProps) {
   const [selectedStation, setSelectedStation] = useState<string>('All')
-
+  console.log({ entries })
   // Sort entries by date (oldest to newest)
   const sortedEntries = useMemo(() => {
     return [...entries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -116,6 +116,8 @@ function Statistics({ entries }: StatisticsProps) {
     const validEfficiencies = filteredEntriesWithCalculations
       .filter((e) => e.efficiency !== null)
       .map((e) => e.efficiency as number)
+
+      console.log({ validEfficiencies })
 
     const avgFuelEfficiency =
       validEfficiencies.length > 0 ? validEfficiencies.reduce((sum, eff) => sum + eff, 0) / validEfficiencies.length : 0
