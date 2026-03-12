@@ -13,7 +13,7 @@ src/
 
 Combust is a cross-platform app for tracking vehicle fuel consumption, spending, and efficiency. It includes:
 - **PWA (Web)**: React, TypeScript, Vite, IndexedDB, shadcn/ui, Tailwind
-- **Native App (Expo/React Native)**: Expo, React Native, SQLite, Supabase, platform theming
+- **Native App (Expo/React Native)**: Expo, React Native, Supabase, platform theming
 
 ## Features (Both Platforms)
 - User authentication (sign up, sign in, email confirmation, sign out)
@@ -46,7 +46,7 @@ combust/
 │   │   ├── (tabs)/index.tsx, explore.tsx
 │   ├── components/ # ThemedView, ThemedText, Collapsible, etc.
 │   ├── contexts/   # AuthContext
-│   ├── lib/        # SQLite, auth, supabaseClient
+│   ├── lib/        # auth, supabaseClient
 │   ├── services/   # fuelService
 │   ├── constants/  # theme.ts
 │   ├── assets/     # Icons, splash
@@ -104,7 +104,7 @@ combust/
 ## Authentication & Storage
 
 - **PWA**: IndexedDB for entries/users, localStorage for session, password hashing via Web Crypto
-- **Native**: SQLite for entries/users, session, password hashing via expo-crypto
+- **Native**: Supabase for entries/users, session, password hashing via expo-crypto
 - **Supabase**: Optional cloud sync for both platforms, email confirmation, session management
 - **User data isolation**: Each user only sees their own entries
 
@@ -115,8 +115,8 @@ combust/
 
 ## Troubleshooting
 
-- IndexedDB/SQLite errors: clear storage, restart app
-- Auth/session issues: check localStorage/SQLite, Supabase session
+- IndexedDB errors: clear storage, restart app
+- Auth/session issues: check localStorage, Supabase session
 - PWA install: check HTTPS, manifest, icons
 - Native install: check Expo config, icons, splash
 
