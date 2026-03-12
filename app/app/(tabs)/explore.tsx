@@ -200,9 +200,7 @@ export default function StatisticsScreen() {
       totalKm =
         filteredEntries.length > 1
           ? filteredEntries[0].odometerReading - filteredEntries[filteredEntries.length - 1].odometerReading
-          : filteredEntries.length === 1
-            ? filteredEntries[0].odometerReading
-            : 0;
+          : 0;
     } else {
       totalKm = filteredEntries
         .filter((e) => e.distanceTravelled !== null)
