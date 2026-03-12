@@ -1,14 +1,3 @@
-src/
-├── components/
-│   ├── ui/           # shadcn/ui components
-│   ├── entries.tsx   # Entry management
-│   └── statistics.tsx # Statistics dashboard
-├── lib/
-│   ├── db.ts         # IndexedDB operations
-│   └── useIndexedDB.ts # React hook for database
-├── App.tsx           # Main app component
-└── data.ts           # Sample data for seeding
-
 # Combust - Cross-Platform Fuel Tracker
 
 Combust is a cross-platform app for tracking vehicle fuel consumption, spending, and efficiency. It includes:
