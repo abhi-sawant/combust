@@ -1,60 +1,3 @@
-# Combust - Fuel Tracker PWA
-
-A Progressive Web App for tracking vehicle fuel consumption, expenses, and efficiency. Built with React, TypeScript, and IndexedDB for offline-first data persistence.
-
-## Features
-
-- 📱 **Progressive Web App** - Install on mobile and desktop, works offline
-- 💾 **Persistent Storage** - All data stored locally in IndexedDB
-- 📊 **Statistics Dashboard** - Fuel efficiency, spending trends, and station comparisons
-- 📈 **Visual Charts** - Interactive charts for spending and efficiency trends
-- 📂 **Import/Export** - CSV and JSON file support, plus paste CSV data directly
-- ✏️ **Full CRUD** - Add, edit, delete, and reorder fuel entries
-- 📱 **Responsive Design** - Mobile-first with card and table views
-
-## Tech Stack
-
-- **React 19** with TypeScript
-- **Vite** for fast builds
-- **Tailwind CSS 4** for styling
-- **shadcn/ui** component library
-- **IndexedDB** for data persistence
-- **Recharts** for data visualization
-- **Workbox** for service worker
-
-## Getting Started
-
-### Installation
-
-```bash
-npm install
-```
-
-### Development
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173) to view the app.
-
-### Build
-
-```bash
-npm run build
-```
-
-Outputs to `dist/` directory with service worker and PWA manifest.
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-## Project Structure
-
-```
 src/
 ├── components/
 │   ├── ui/           # shadcn/ui components
@@ -65,89 +8,129 @@ src/
 │   └── useIndexedDB.ts # React hook for database
 ├── App.tsx           # Main app component
 └── data.ts           # Sample data for seeding
+
+# Combust - Cross-Platform Fuel Tracker
+
+Combust is a cross-platform app for tracking vehicle fuel consumption, spending, and efficiency. It includes:
+- **PWA (Web)**: React, TypeScript, Vite, IndexedDB, shadcn/ui, Tailwind
+- **Native App (Expo/React Native)**: Expo, React Native, Supabase, platform theming
+
+## Features (Both Platforms)
+- User authentication (sign up, sign in, email confirmation, sign out)
+- Add/edit/delete/reorder fuel entries
+- Import/export (CSV, JSON, file/text)
+- Statistics dashboard: total spent, distance, avg efficiency, cost/km, price/liter, charts
+- Filter by station/date
+- Responsive UI: card/table views, mobile/desktop
+- Offline-first: works without internet
+- Installable: PWA (Add to Home Screen), Native (App Store/Play Store)
+- Cloud sync: Supabase (optional)
+- Accessibility: ARIA labels, keyboard navigation, semantic HTML/native widgets
+
+## Project Structure
+
 ```
+combust/
+├── src/           # PWA (web)
+│   ├── components/
+│   │   ├── auth/  # SignIn, SignUp, EmailConfirmation
+│   │   ├── ui/    # shadcn/ui components
+│   │   ├── entries.tsx
+│   │   └── statistics.tsx
+│   ├── contexts/  # AuthContext
+│   ├── lib/       # IndexedDB, auth, utils
+│   ├── App.tsx, main.tsx, index.css
+├── app/           # Native (Expo/React Native)
+│   ├── app/       # File-based routing
+│   │   ├── (auth)/sign-in.tsx, sign-up.tsx, email-confirmation.tsx
+│   │   ├── (tabs)/index.tsx, explore.tsx
+│   ├── components/ # ThemedView, ThemedText, Collapsible, etc.
+│   ├── contexts/   # AuthContext
+│   ├── lib/        # auth, supabaseClient
+│   ├── services/   # fuelService
+│   ├── constants/  # theme.ts
+│   ├── assets/     # Icons, splash
+│   ├── app.json    # Expo config
+├── public/        # PWA static assets
+├── vite.config.ts # PWA config
+├── package.json   # Shared dependencies
+```
+
+## Getting Started
+
+### PWA (Web)
+
+1. Install dependencies
+   ```bash
+   npm install
+   ```
+2. Start development server
+   ```bash
+   npm run dev
+   ```
+3. Open [http://localhost:5173](http://localhost:5173)
+
+### Native App (Expo/React Native)
+
+1. Install dependencies
+   ```bash
+   npm install
+   ```
+2. Start Expo
+   ```bash
+   npx expo start
+   ```
+3. Open in Expo Go, iOS Simulator, or Android Emulator
+
+## Build & Deployment
+
+### PWA
+- `npm run build` → outputs to `dist/` with service worker and manifest
+- Deploy to Vercel, Netlify, GitHub Pages
+- HTTPS required for install
+
+### Native App
+- Build with Expo, deploy to App Store/Play Store
+- Adaptive icons, splash, edge-to-edge UI
 
 ## Usage
 
-### Adding Entries
+- Add entries: date, fuel amount, cost, odometer, station
+- View statistics: efficiency, spending, charts
+- Import/export: CSV, JSON, file/text
+- Filter by station/date
+- Cloud sync (optional)
 
-1. Navigate to the **Entries** tab
-2. Fill in the form with date, fuel amount, cost, odometer, and station
-3. Click **Add Entry** to save
+## Authentication & Storage
 
-### Viewing Statistics
+- **PWA**: IndexedDB for entries/users, localStorage for session, password hashing via Web Crypto
+- **Native**: Supabase for entries/users, session, password hashing via expo-crypto
+- **Supabase**: Optional cloud sync for both platforms, email confirmation, session management
+- **User data isolation**: Each user only sees their own entries
 
-1. Navigate to the **Statistics** tab
-2. View overall metrics or filter by station
-3. Explore charts for trends and comparisons
+## UI & Styling
 
-### Import/Export
+- **PWA**: shadcn/ui, Tailwind, OKLCH colors, Inter font, cva variants, cn utility, light/dark mode via CSS variables
+- **Native**: ThemedView/ThemedText, platform colors/fonts, light/dark mode, adaptive icons, splash
 
-- **Export**: Click the Export button to download data as CSV
-- **Import**: Click Import to:
-  - Upload CSV or JSON files, or
-  - Paste CSV data directly into the textarea
+## Troubleshooting
 
-## Supabase Backend
+- IndexedDB errors: clear storage, restart app
+- Auth/session issues: check localStorage, Supabase session
+- PWA install: check HTTPS, manifest, icons
+- Native install: check Expo config, icons, splash
 
-This app uses Supabase for authentication and cloud data storage, with IndexedDB as a local cache for offline support.
+## Testing
 
-### Environment Variables
-
-Create a `.env` file with your Supabase credentials:
-
-```bash
-VITE_SUPABASE_URL=your-supabase-url
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-```
-
-### Row Level Security (RLS)
-
-**IMPORTANT:** The following RLS policies must be enabled in your Supabase dashboard for security:
-
-#### `fuel_entries` table:
-```sql
--- Enable RLS
-ALTER TABLE fuel_entries ENABLE ROW LEVEL SECURITY;
-
--- Users can only read their own entries
-CREATE POLICY "Users can view own entries" ON fuel_entries
-  FOR SELECT USING (auth.uid() = user_id);
-
--- Users can insert their own entries
-CREATE POLICY "Users can insert own entries" ON fuel_entries
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- Users can update their own entries
-CREATE POLICY "Users can update own entries" ON fuel_entries
-  FOR UPDATE USING (auth.uid() = user_id);
-
--- Users can delete their own entries (soft delete)
-CREATE POLICY "Users can delete own entries" ON fuel_entries
-  FOR DELETE USING (auth.uid() = user_id);
-```
-
-### Sync Strategy
-
-- **Online-first**: When online, reads/writes go to Supabase first, then sync to IndexedDB
-- **Offline fallback**: If Supabase is unreachable, operations fall back to IndexedDB and queue for sync
-- **On reconnect**: Queued operations are processed and remote changes are pulled
-
-## Deployment
-
-Deploy to any static hosting service:
-
-- **Vercel** (recommended)
-- **Netlify**
-- **GitHub Pages**
-- Any static file host
-
-HTTPS is required for PWA features in production.
-
-## Documentation
-
-See [copilot-instructions.md](./copilot-instructions.md) for comprehensive project documentation.
+- Use Vitest (PWA), Expo tests (native)
+- React Testing Library for components
+- Mock date picker, calendar, file import/export
 
 ## License
 
-MIT
+See package.json for license and author info.
+
+---
+
+**Last Updated**: March 12, 2026
+**Project Version**: 1.0.0

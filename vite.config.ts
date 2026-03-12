@@ -17,7 +17,7 @@ export default defineConfig({
         name: 'Combust - Fuel Tracker',
         short_name: 'Combust',
         description: 'Track your fuel consumption, spending, and vehicle efficiency',
-        theme_color: '#3b82f6',
+        theme_color: '#7f22fe',
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
