@@ -27,7 +27,7 @@ const chartConfig = {
   color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
   labelColor: (opacity = 1) => `rgba(107, 114, 128, ${opacity})`,
   strokeWidth: 2,
-  propsForDots: { r: '3', strokeWidth: '2', stroke: '#3b82f6' },
+  propsForDots: { r: '3', strokeWidth: '2', stroke: '#7f22fe' },
   propsForBackgroundLines: { stroke: '#f3f4f6', strokeDasharray: '' },
 };
 
@@ -106,7 +106,7 @@ function StationPicker({
               <Text style={[styles.pickerItemText, selected === 'All' && styles.pickerItemTextActive]}>
                 All Stations
               </Text>
-              {selected === 'All' && <Ionicons name="checkmark" size={16} color="#3b82f6" />}
+              {selected === 'All' && <Ionicons name="checkmark" size={16} color="#7f22fe" />}
             </TouchableOpacity>
             {stations.map((s) => (
               <TouchableOpacity
@@ -120,7 +120,7 @@ function StationPicker({
                 >
                   {s}
                 </Text>
-                {selected === s && <Ionicons name="checkmark" size={16} color="#3b82f6" />}
+                {selected === s && <Ionicons name="checkmark" size={16} color="#7f22fe" />}
               </TouchableOpacity>
             ))}
           </View>
@@ -146,9 +146,9 @@ export default function StatisticsScreen() {
       .finally(() => setIsLoading(false));
   }, [user?.id]);
 
-  // Sort oldest → newest for chart data
+  // Sort newest → oldest for calculations (descending)
   const sortedEntries = useMemo(
-    () => [...entries].sort((a, b) => parseEntryDate(a.date).getTime() - parseEntryDate(b.date).getTime()),
+    () => [...entries].sort((a, b) => parseEntryDate(b.date).getTime() - parseEntryDate(a.date).getTime()),
     [entries]
   );
 
@@ -157,18 +157,27 @@ export default function StatisticsScreen() {
     [sortedEntries]
   );
 
-  // Entries with calc (newest-first for display, oldest-first for calcs)
+  // Calculate efficiency, distance, and cost per km for each entry
+  // Formulas:
+  // - distanceTravelled = next_odometer - current_odometer
+  // - costPerKm = next_amountPaid / distanceTravelled
+  // - efficiency = distanceTravelled / next_fuelFilled
+  // Latest entry has no values (no next entry)
   const entriesWithCalc = useMemo(() => {
     return sortedEntries.map((entry, index) => {
-      if (index === 0) return { ...entry, distanceTravelled: null, costPerKm: null, efficiency: null };
-      const prev = sortedEntries[index - 1];
-      const distanceTravelled = entry.odometerReading - prev.odometerReading;
-      const costPerKm = distanceTravelled > 0 ? entry.amountPaid / distanceTravelled : null;
-      const efficiency = distanceTravelled > 0 ? distanceTravelled / entry.fuelFilled : null;
+      if (index === sortedEntries.length - 1) {
+        // Latest entry - no calculations possible
+        return { ...entry, distanceTravelled: null, costPerKm: null, efficiency: null };
+      }
+      const nextEntry = sortedEntries[index + 1];
+      const distanceTravelled = nextEntry ? nextEntry.odometerReading - entry.odometerReading : null;
+      const costPerKm = nextEntry && distanceTravelled ? nextEntry.amountPaid / distanceTravelled : null;
+      const efficiency = nextEntry && distanceTravelled ? distanceTravelled / nextEntry.fuelFilled : null;
       return { ...entry, distanceTravelled, costPerKm, efficiency };
     });
   }, [sortedEntries]);
 
+  // Filter entries based on selected station
   const filteredEntries = useMemo(
     () =>
       selectedStation === 'All'
@@ -181,23 +190,38 @@ export default function StatisticsScreen() {
     if (filteredEntries.length === 0)
       return { totalSpent: 0, totalKm: 0, avgFuelEfficiency: 0, avgCostPerKm: 0, totalFuel: 0, avgPricePerLiter: 0 };
 
-    const totalSpent = filteredEntries.reduce((s, e) => s + e.amountPaid, 0);
-    const totalFuel = filteredEntries.reduce((s, e) => s + e.fuelFilled, 0);
+    const totalSpent = filteredEntries.reduce((sum, entry) => sum + entry.amountPaid, 0);
+    const totalFuel = filteredEntries.reduce((sum, entry) => sum + entry.fuelFilled, 0);
 
     let totalKm = 0;
-    if (selectedStation === 'All' && filteredEntries.length > 1) {
-      totalKm = filteredEntries[filteredEntries.length - 1].odometerReading - filteredEntries[0].odometerReading;
+    if (selectedStation === 'All') {
+      totalKm =
+        filteredEntries.length > 1
+          ? filteredEntries[0].odometerReading - filteredEntries[filteredEntries.length - 1].odometerReading
+          : filteredEntries.length === 1
+            ? filteredEntries[0].odometerReading
+            : 0;
     } else {
       totalKm = filteredEntries
         .filter((e) => e.distanceTravelled !== null)
-        .reduce((s, e) => s + (e.distanceTravelled as number), 0);
+        .reduce((sum, e) => sum + (e.distanceTravelled as number), 0);
     }
 
-    const validEff = filteredEntries.filter((e) => e.efficiency !== null).map((e) => e.efficiency as number);
-    const avgFuelEfficiency = validEff.length > 0 ? validEff.reduce((s, v) => s + v, 0) / validEff.length : 0;
+    // Average efficiency = average of all individual efficiencies (excluding null)
+    const validEfficiencies = filteredEntries
+      .filter((e) => e.efficiency !== null)
+      .map((e) => e.efficiency as number);
 
-    const validCost = filteredEntries.filter((e) => e.costPerKm !== null).map((e) => e.costPerKm as number);
-    const avgCostPerKm = validCost.length > 0 ? validCost.reduce((s, v) => s + v, 0) / validCost.length : 0;
+    const avgFuelEfficiency =
+      validEfficiencies.length > 0 ? validEfficiencies.reduce((sum, eff) => sum + eff, 0) / validEfficiencies.length : 0;
+
+    // Average cost per km = average of all individual cost per km (excluding null)
+    const validCostPerKm = filteredEntries
+      .filter((e) => e.costPerKm !== null)
+      .map((e) => e.costPerKm as number);
+
+    const avgCostPerKm =
+      validCostPerKm.length > 0 ? validCostPerKm.reduce((sum, cost) => sum + cost, 0) / validCostPerKm.length : 0;
 
     const avgPricePerLiter = totalFuel > 0 ? totalSpent / totalFuel : 0;
 
@@ -252,7 +276,7 @@ export default function StatisticsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color="#7f22fe" />
       </View>
     );
   }
@@ -458,7 +482,7 @@ const styles = StyleSheet.create({
   },
   pickerItemActive: { backgroundColor: '#eff6ff' },
   pickerItemText: { fontSize: 15, color: '#374151', flex: 1 },
-  pickerItemTextActive: { color: '#3b82f6', fontWeight: '600' },
+  pickerItemTextActive: { color: '#7f22fe', fontWeight: '600' },
   // Stats grid
   statsGrid: {
     flexDirection: 'row',
@@ -485,7 +509,7 @@ const styles = StyleSheet.create({
   },
   statLabel: { fontSize: 11, fontWeight: '500', color: '#6b7280', marginBottom: 6 },
   statValue: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  statValueHighlight: { color: '#3b82f6' },
+  statValueHighlight: { color: '#7f22fe' },
   statSub: { fontSize: 11, color: '#9ca3af', marginTop: 3 },
   // Charts
   chartCard: {

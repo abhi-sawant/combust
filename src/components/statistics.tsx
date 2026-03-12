@@ -208,7 +208,7 @@ function Statistics({ entries }: StatisticsProps) {
   const chartConfig = {
     amount: {
       label: 'Amount Paid',
-      color: '#3b82f6', // Blue
+      color: '#7f22fe', // Blue
     },
     cumulative: {
       label: 'Cumulative Spending',

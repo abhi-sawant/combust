@@ -278,7 +278,7 @@ function EntryCard({ entry, index, totalEntries, prevEntry, onEdit, onDelete, on
           <Ionicons name="chevron-down" size={16} color={index === totalEntries - 1 ? '#d1d5db' : '#6b7280'} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtn} onPress={onEdit}>
-          <Ionicons name="pencil-outline" size={16} color="#3b82f6" />
+          <Ionicons name="pencil-outline" size={16} color="#7f22fe" />
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionBtn, styles.actionBtnDestructive]} onPress={onDelete}>
           <Ionicons name="trash-outline" size={16} color="#ef4444" />
@@ -362,7 +362,7 @@ function EditModal({ visible, entry, stations, onSave, onClose }: EditModalProps
           <Text style={styles.modalTitle}>Edit Entry</Text>
           <TouchableOpacity onPress={handleSave} disabled={isSaving}>
             {isSaving ? (
-              <ActivityIndicator size="small" color="#3b82f6" />
+              <ActivityIndicator size="small" color="#7f22fe" />
             ) : (
               <Text style={styles.modalSaveText}>Save</Text>
             )}
@@ -623,7 +623,7 @@ export default function EntriesScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color="#7f22fe" />
       </View>
     );
   }
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
   suggestionText: { fontSize: 14, color: '#374151' },
   primaryButton: {
     height: 46,
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#7f22fe',
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -840,12 +840,12 @@ const styles = StyleSheet.create({
   },
   entryDate: { fontSize: 13, fontWeight: '600', color: '#374151' },
   stationBadge: { backgroundColor: '#eff6ff', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3, maxWidth: 160 },
-  stationBadgeText: { fontSize: 11, fontWeight: '600', color: '#3b82f6' },
+  stationBadgeText: { fontSize: 11, fontWeight: '600', color: '#7f22fe' },
   entryGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 12, gap: 8 },
   entryGridItem: { width: '48%' },
   entryGridLabel: { fontSize: 11, color: '#9ca3af', marginBottom: 2 },
   entryGridValue: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  efficiencyValue: { color: '#3b82f6' },
+  efficiencyValue: { color: '#7f22fe' },
   entryActions: {
     flexDirection: 'row',
     borderTopWidth: 1,
@@ -878,6 +878,6 @@ const styles = StyleSheet.create({
   },
   modalTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
   modalCancelText: { fontSize: 15, color: '#6b7280' },
-  modalSaveText: { fontSize: 15, fontWeight: '600', color: '#3b82f6' },
+  modalSaveText: { fontSize: 15, fontWeight: '600', color: '#7f22fe' },
   modalBody: { flex: 1, padding: 20 },
 });

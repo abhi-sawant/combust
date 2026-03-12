@@ -39,7 +39,6 @@
 
 ```
 combust/
-├── public/              # Static assets
 │   ├── manifest.json    # PWA manifest
 │   ├── site.webmanifest # Web app manifest
 │   ├── favicon.ico      # Favicon
@@ -49,29 +48,8 @@ combust/
 │   ├── icon-192.svg     # PWA icon
 │   ├── web-app-manifest-192x192.png # PWA icon 192x192
 │   ├── web-app-manifest-512x512.png # PWA icon 512x512
-│   └── vite.svg         # Vite logo
-├── src/
-│   ├── components/
-│   │   ├── auth/       # Authentication components
-│   │   │   ├── SignIn.tsx   # Sign in form
-│   │   │   └── SignUp.tsx   # Sign up form
-│   │   ├── ui/         # shadcn/ui component library
-│   │   │   ├── alert-dialog.tsx
-│   │   │   ├── button.tsx
-│   │   │   ├── calendar.tsx
-│   │   │   ├── card.tsx
 │   │   │   ├── chart.tsx
 │   │   │   ├── combobox.tsx
-│   │   │   ├── dialog.tsx
-│   │   │   ├── field.tsx
-│   │   │   ├── input-group.tsx
-│   │   │   ├── input.tsx
-│   │   │   ├── label.tsx
-│   │   │   ├── popover.tsx
-│   │   │   ├── select.tsx
-│   │   │   ├── separator.tsx
-│   │   │   ├── table.tsx
-│   │   │   ├── tabs.tsx
 │   │   │   └── textarea.tsx
 │   │   ├── entries.tsx    # Entries management component
 │   │   └── statistics.tsx # Statistics dashboard component
@@ -104,77 +82,31 @@ Authentication State**: React Context API (`AuthContext`) for user session manag
 - **Custom Components**: Feature-specific components like `entries.tsx` are in `src/components/`
 - **Path Aliases**: `@/` points to `src/` directory (configured in both tsconfig.json and vite.config.ts)
 
-### Styling Conventions
-
-1. **User Authentication**:
-   - Sign up with email, password, and name
    - Email validation and password strength requirements (min 6 characters)
    - Password confirmation matching
    - Sign in with email and password
-   - Password hashing using Web Crypto API (SHA-256)
-   - Session persistence using localStorage
-   - Sign out functionality
-   - User-specific data isolation (each user only sees their own entries)
-   - Auto-login on page reload if session exists
-
-2 Use the `cn()` utility from `@/lib/utils` for conditional className merging
-- Components use `class-variance-authority` (cva) for type-safe variants
-- CSS variables are defined in `index.css` with light/dark theme support
-- All colors use OKLCH format for better color consistency across themes
 
 ### State Management
 - **Local State**: Uses React's `useState` hook
-   - User-specific entries (only shows logged-in user's data)
-- **Persistent Storage**: IndexedDB via custom `useIndexedDBEntries` hook
 - **Data Source**: IndexedDB with automatic seeding from `data.ts` on first load
 - **No Global State**: No Redux, Zustand, or Context API (IndexedDB serves as source of truth)
 
-### Form Handling
-- Uses native HTML form with `FormData` API
-- Controlled components for inputs (date, station selection)
-- Form validation via HTML5 attributes (required, min, step, etc.)
-
-## Current Features
 
 ### Implemented
 1. **Fuel Entry Form**: Add new fuel entries with:
    - Date picker (using Popover + Calendar)
-   - Fuel filled input (liters, decimal values)
-   - Amount paid input (INR currency, decimal values)
-   - Odometer reading input (kilometers, decimal values)
-   - Fuel station selection (datalist with autocomplete)
-
 2. **Dynamic Station Management**: 
    - Auto-suggest fuel stations from existing entries
-   - Accept custom/new fuel station names
-   - Station list dynamically updates as entries are added
-
-3. **Entry Management**: 
-   - Table view (desktop) and card view (mobile) of all fuel entries
-   - Shows date, fuel, amount, odometer, and station
    - Edit existing entries via dialog modal
    - Delete entries with confirmation
    - Reorder entries (move up/down arrows)
-   - Entries displayed in reverse chronological order (newest first)
-
-4. **Statistics Dashboard**:
-   - Six metric cards: Total Spent, Total Distance, Avg Fuel Efficiency, Avg Cost/km, Total Fuel, Avg Price/Liter
    - Filter statistics by fuel station or view all
    - Four charts: Spending Over Time, Fuel Efficiency Trend, Spending by Station, Efficiency by Station
    - Proper fuel efficiency calculations: (next_odometer - current_odometer) / next_fuelFilled
-   - Responsive chart layouts with proper sizing and margins
-
-5. **User data and fuel entries in separate object stores
    - User sessions persist in localStorage
    - Each user has isolated data storage
    - Export data as CSV file
-   - Import data from CSV or JSON files
-   - Import data by pasting CSV text directly into textarea
-   - Replace all entries when importing
-
-6. **Progressive Web App (PWA)**:
    - Installable on mobile authentication and data fetch
-   - Mobile-responsive card view for entries
    - Dedicated authentication screens (Sign In / Sign Up)
    - User name display in header
    - Sign out button in header per user
@@ -345,7 +277,7 @@ Generated automatically during build (`npm run build`):
 
 ### Manifest (`public/manifest.json`)
 - **Name**: Combust - Fuel Tracker
-- **Theme Color**: #3b82f6 (blue)
+- **Theme Color**: #7f22fe (blue)
 - **Display**: standalone (app-like experience)
 - **Icons**: Uses vite.svg as placeholder (should be replaced with proper icons)
 

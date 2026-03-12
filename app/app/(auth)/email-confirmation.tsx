@@ -37,7 +37,7 @@ export default function EmailConfirmationScreen() {
     <View style={styles.container}>
       <View style={styles.card}>
         <View style={styles.iconContainer}>
-          <Ionicons name="mail-outline" size={48} color="#3b82f6" />
+          <Ionicons name="mail-outline" size={48} color="#7f22fe" />
         </View>
         <Text style={styles.title}>Check Your Email</Text>
         <Text style={styles.subtitle}>
@@ -60,7 +60,7 @@ export default function EmailConfirmationScreen() {
           disabled={isResending}
         >
           {isResending ? (
-            <ActivityIndicator color="#3b82f6" size="small" />
+            <ActivityIndicator color="#7f22fe" size="small" />
           ) : (
             <Text style={styles.resendButtonText}>Resend Confirmation Email</Text>
           )}
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   email: {
-    color: '#3b82f6',
+    color: '#7f22fe',
     fontWeight: '600',
   },
   instruction: {
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   messageText: {
-    color: '#3b82f6',
+    color: '#7f22fe',
     fontSize: 13,
     textAlign: 'center',
   },
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 44,
     borderWidth: 1.5,
-    borderColor: '#3b82f6',
+    borderColor: '#7f22fe',
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   resendButtonText: {
-    color: '#3b82f6',
+    color: '#7f22fe',
     fontSize: 15,
     fontWeight: '600',
   },

@@ -10,7 +10,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#3b82f6',
+        tabBarActiveTintColor: '#7f22fe',
         tabBarInactiveTintColor: '#9ca3af',
         tabBarStyle: {
           borderTopColor: '#e5e7eb',
@@ -28,7 +28,7 @@ export default function TabLayout() {
         },
         headerLeft: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16 }}>
-            <Ionicons name="flame" size={22} color="#3b82f6" />
+            <Ionicons name="flame" size={22} color="#7f22fe" />
             <Text style={{ fontSize: 17, fontWeight: '700', color: '#111827', marginLeft: 6 }}>
               Combust
             </Text>
