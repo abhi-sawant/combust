@@ -158,21 +158,23 @@ export default function StatisticsScreen() {
   );
 
   // Calculate efficiency, distance, and cost per km for each entry
-  // Formulas:
-  // - distanceTravelled = next_odometer - current_odometer
-  // - costPerKm = next_amountPaid / distanceTravelled
-  // - efficiency = distanceTravelled / next_fuelFilled
-  // Latest entry has no values (no next entry)
+  // Formulas (for a list ordered newest → oldest, where nextEntry is older):
+  // - distanceTravelled = current_odometer - next_odometer
+  // - costPerKm = current_amountPaid / distanceTravelled
+  // - efficiency = distanceTravelled / current_fuelFilled
+  // Entry without a next (older) entry has no values
   const entriesWithCalc = useMemo(() => {
     return sortedEntries.map((entry, index) => {
       if (index === sortedEntries.length - 1) {
-        // Latest entry - no calculations possible
+        // No older entry to compare against - no calculations possible
         return { ...entry, distanceTravelled: null, costPerKm: null, efficiency: null };
       }
       const nextEntry = sortedEntries[index + 1];
-      const distanceTravelled = nextEntry ? nextEntry.odometerReading - entry.odometerReading : null;
-      const costPerKm = nextEntry && distanceTravelled ? nextEntry.amountPaid / distanceTravelled : null;
-      const efficiency = nextEntry && distanceTravelled ? distanceTravelled / nextEntry.fuelFilled : null;
+      const distanceTravelled = nextEntry ? entry.odometerReading - nextEntry.odometerReading : null;
+      const costPerKm =
+        nextEntry && distanceTravelled ? entry.amountPaid / distanceTravelled : null;
+      const efficiency =
+        nextEntry && distanceTravelled ? distanceTravelled / entry.fuelFilled : null;
       return { ...entry, distanceTravelled, costPerKm, efficiency };
     });
   }, [sortedEntries]);
