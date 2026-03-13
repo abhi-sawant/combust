@@ -1,607 +1,517 @@
-# Combust - Project Instructions for AI Agents
+# Combust — Project Instructions for AI Agents
 
 ## Project Overview
 
-**Combust** is a Progressive Web App (PWA) for tracking vehicle fuel consumption built with React and TypeScript. It allows users to create accounts, sign in, and record and view their personal fuel entries including date, amount paid, fuel filled (liters), odometer reading, and fuel station name. The application features user authentication, offline support, persistent storage via IndexedDB, and can be installed on mobile and desktop devices. Each user's data is completely isolated and only accessible when logged in.
+**Combust** is a cross-platform fuel consumption tracker with two independent, fully-functional frontends sharing the same Supabase cloud backend:
 
-## Technology Stack
+| Platform | Location | Stack |
+|---|---|---|
+| **PWA (Web)** | `src/` | React 19, TypeScript, Vite, Tailwind CSS 4, shadcn/ui, IndexedDB + Supabase |
+| **Native App** | `app/` | Expo 54, React Native 0.81.5, expo-router, Supabase |
 
-### Core Framework
-- **React**: 19.2.0 (latest)
-- **TypeScript**: 5.9.3
-- **Build Tool**: Vite 7.2.4
-- **Package Manager**: npm (though pnpm or yarn can be used)
-- **PWA**: vite-plugin-pwa 1.2.0 with Workbox for service worker management
-- **Data Storage**: IndexedDB (browser-native persistent storage)
-
-### UI & Styling
-- **UI Library**: shadcn/ui with Base UI (@base-ui/react 1.2.0)
-- **Design System**: base-vega style variant from shadcn/ui
-- **CSS Framework**: Tailwind CSS 4.1.17 with Vite plugin
-- **Icon Library**: Hugeicons (@hugeicons/react 1.1.5)
-- **Font**: Inter Variable (@fontsource-variable/inter)
-- **Color Space**: OKLCH (modern color space with better perceptual uniformity)
-- **Theme**: Supports both light and dark modes via CSS variables
-
-### Supporting Libraries
-- **date-fns**: Date formatting and manipulation
-- **react-day-picker**: Calendar component for date selection
-- **recharts**: Chart library (for future statistics feature)
-- **class-variance-authority**: Type-safe component variants
-- **tailwind-merge & clsx**: Conditional CSS class merging utility
-- **tw-animate-css**: Animation utilities for Tailwind
-
-### Developer Tools
-- **ESLint**: Code linting with React-specific plugins
-- **TypeScript ESLint**: TypeScript-aware linting rules
-
-## Project Structure
-
-```
-combust/
-│   ├── manifest.json    # PWA manifest
-│   ├── site.webmanifest # Web app manifest
-│   ├── favicon.ico      # Favicon
-│   ├── favicon.svg      # SVG favicon
-│   ├── favicon-96x96.png # PNG favicon
-│   ├── apple-touch-icon.png # iOS icon
-│   ├── icon-192.svg     # PWA icon
-│   ├── web-app-manifest-192x192.png # PWA icon 192x192
-│   ├── web-app-manifest-512x512.png # PWA icon 512x512
-│   │   │   ├── chart.tsx
-│   │   │   ├── combobox.tsx
-│   │   │   └── textarea.tsx
-│   │   ├── entries.tsx    # Entries management component
-│   │   └── statistics.tsx # Statistics dashboard component
-│   ├── contexts/
-│   │   └── AuthContext.tsx # Authentication context provider
-│   ├── lib/
-│   │   ├── database.ts     # Shared IndexedDB initialization
-│   │   ├── db.ts           # IndexedDB operations for entries
-│   │   ├── auth.ts         # Authentication & user management
-│   │   ├── useIndexedDB.ts # Custom hook for IndexedDB state
-│   │   └── utils.ts        # Utility functions (cn helper)
-│   ├── assets/          # Application assets
-│   ├── App.tsx          # Main application component
-│   ├── main.tsx         # React entry point
-│   ├── index.css        # Global styles & Tailwind setup
-│   └── data.ts          # Sample data (historical reference)
-├── components.json      # shadcn/ui configuration
-├── tsconfig.json        # TypeScript configuration
-├── vite.config.ts       # Vite configuration (includes PWA plugin)
-├── eslint.config.js     # ESLint configuration
-└── package.json         # Dependencies and scripts
-```
-Authentication State**: React Context API (`AuthContext`) for user session management
-- **Session Persistence**: localStorage for maintaining user sessions across page reloads
-- **Data Source**: IndexedDB with user-specific data isolation
-- **Minimal Global State**: Only authentication state in Context; all other data in IndexedDB
-
-### Component Organization
-- **UI Components**: Located in `src/components/ui/`, these are shadcn/ui components built on Base UI primitives
-- **Custom Components**: Feature-specific components like `entries.tsx` are in `src/components/`
-- **Path Aliases**: `@/` points to `src/` directory (configured in both tsconfig.json and vite.config.ts)
-
-   - Email validation and password strength requirements (min 6 characters)
-   - Password confirmation matching
-   - Sign in with email and password
-
-### State Management
-- **Local State**: Uses React's `useState` hook
-- **Data Source**: IndexedDB with automatic seeding from `data.ts` on first load
-- **No Global State**: No Redux, Zustand, or Context API (IndexedDB serves as source of truth)
-
-
-### Implemented
-1. **Fuel Entry Form**: Add new fuel entries with:
-   - Date picker (using Popover + Calendar)
-2. **Dynamic Station Management**: 
-   - Auto-suggest fuel stations from existing entries
-   - Edit existing entries via dialog modal
-   - Delete entries with confirmation
-   - Reorder entries (move up/down arrows)
-   - Filter statistics by fuel station or view all
-   - Four charts: Spending Over Time, Fuel Efficiency Trend, Spending by Station, Efficiency by Station
-   - Proper fuel efficiency calculations: (next_odometer - current_odometer) / next_fuelFilled
-   - User sessions persist in localStorage
-   - Each user has isolated data storage
-   - Export data as CSV file
-   - Installable on mobile authentication and data fetch
-   - Dedicated authentication screens (Sign In / Sign Up)
-   - User name display in header
-   - Sign out button in header per user
-2. **Advanced Filtering**: Filter entries by date range, station, etc.
-3. **Data Export Options**: Export to additional formats (Excel, PDF)
-4. **Fuel Price Tracking**: Track price-per-liter trends over time
-5. **Anomaly Detection**: Alert on unusual fuel efficiency or prices
-6. **Cloud Sync**: Backend integration for cross-device sync
-7. **Password Reset**: Email-based password recovery
-8. **Profile Management**: Edit user profile, change password
-9. **Data Sharing**: Export/import data between users
-10. **Remember Me**: Optional persistent login option
-   - Starts with empty database (users add their own data)
-   - Custom React hook (`useIndexedDBEntries`) for database operations
-
-8. **UI/UX**:
-  userId: number;         // Foreign key to users table
-  date: string;           // Format: 'YYYY/MM/DD'
-  amountPaid: number;     // In INR (Indian Rupees)
-  odometerReading: number; // In kilometers
-  fuelFilled: number;     // In liters
-  fuelStation: string;    // Station name
-}
-```
-
-### User Type
-```typescript
-{
-  id?: number;            // Auto-generated by IndexedDB
-  email: string;          // Unique email address
-  passwordHash: string;   // SHA-256 hashed password
-  name: string;           // User's display name
-  createdAt: string;      // ISO timestamp of account creation
-}
-```
-
-### IndexedDB Schemahistorical reference data. The app no longer auto-seeds data - users create their own entries after signing up
-- **Database Name**: `CombustDB`
-- **Version**: 2
-- **Object Stores**: 
-  - Shared Database Initialization (`src/lib/database.ts`)
-Centralized database initialization that creates all object stores:
-- **`openDB()`**: Opens or creates CombustDB with version 2 schema
-- **`STORES`**: Object containing store names (`ENTRIES`, `USERS`)
-- Creates both `entries` and `users` object stores with proper indexes
-- Handles database upgrades from version 1 to 2
-
-### Entry Database Utilities (`src/lib/db.ts`)
-Custom IndexedDB wrapper for fuel entries:
-- **`getAllEntries(userId)`**: Retrieves all fuel entries for a specific user
-- **`addEntry(entry)`**: Adds a new entry (must include userId)
-- **`updateEntry(entry)`**: Updates an existing entry by ID
-- **`deleteEntry(id)`**: Deletes an entry by ID
-- **`clearAllEntries(userId)`**: Removes all entries for a specific user
-- **`bulkAddEntries(entries[])`**: Adds multiple entries at once
-- **`replaceAllEntries(userId, entries[])`**: Clears user's entries and adds new ones (import)
-
-### Authentication Utilities (`sruser's entries
-  isLoading,         // Boolean loading state
-  addEntry,          // Add new entry (auto-adds userId)
-  updateEntry,       // Update existing entry
-  deleteEntry,       // Delete entry by ID
-  replaceAllEntries, // Replace all user entries (import)
-  moveEntry,         // Reorder entries (in-memory only)
-  clearAllEntries    // Delete all user entries
-} = useIndexedDBEntries(userId);
-```
-
-**Key Behaviors:**
-- Takes `userId` as parameter for data isolation
-- Automatically loads user's entries from IndexedDB on mount
-- All CRUD operations automatically sync with IndexedDB
-- Automatically associates new entries with current user
-- Provides loading state for better UX
-- moveEntry is in-memory only (not persisted to DB)
-
-### Authentication Context (`src/contexts/AuthContext.tsx`)
-React Context for managing authentication state:
-
-```typescript
-const {
-  user,              // Current user object or null
-  isLoading,         // Boolean loading state during session check
-  signIn,            // Function to sign in user
-  signOut            // Function to sign out user
-} = useAuth();
-```
-
-**Key Behaviors:**
-- Provides user session state across entire app
-- Automatically restores session from localStorage on app load
-- Persists session to localStorage on sign in
-- Clears session from localStorage on sign out
-- Must wrap app with `<AuthProvider>` in main.tsx
-{
-  id?: number;            // Auto-generated by IndexedDB
-  date: string;           // Format: 'YYYY/MM/DD'
-  amountPaid: number;     // In INR (Indian Rupees)
-  odometerReading: number; // In kilometers
-  fuelFilled: number;     // In liters
-  fuelStation: string;    // Station name
-}
-```
-
-### IndexedDB Schema
-- **Database Name**: `CombustDB`
-- **Version**: 1
-- **Object Store**: `entries`
-- **Key Path**: `id` (auto-increment)
-- **Indexes**: 
-  - `date` (non-unique)
-  - `fuelStation` (non-unique)
-
-### Example Data
-See `src/data.ts` for sample entries used for database seeding. Data contains 14 historical fuel entries from July 2025 to February 2026.
-
-## IndexedDB Operations
-
-### Database Utilities (`src/lib/db.ts`)
-The app uses a custom IndexedDB wrapper with the following functions:
-
-- **`openDB()`**: Opens or creates the database with proper schema
-- **`getAllEntries()`**: Retrieves all fuel entries
-- **`addEntry(entry)`**: Adds a new entry and returns the generated ID
-- **`updateEntry(entry)`**: Updates an existing entry by ID
-- **`deleteEntry(id)`**: Deletes an entry by ID
-- **`clearAllEntries()`**: Removes all entries from the database
-- **`bulkAddEntries(entries[])`**: Adds multiple entries at once
-- **`replaceAllEntries(entries[])`**: Clears database and adds new entries (used for import)
-
-### Custom Hook (`src/lib/useIndexedDB.ts`)
-The `useIndexedDBEntries` hook provides a React-friendly interface to IndexedDB:
-
-```typescript
-const {
-  entries,           // Array of all entries
-  isLoading,         // Boolean loading state
-  addEntry,          // Add new entry function
-  updateEntry,       // Update existing entry
-  deleteEntry,       // Delete entry by ID
-  replaceAllEntries, // Replace all entries (import)
-  moveEntry          // Reorder entries (in-memory only)
-} = useIndexedDBEntries();
-```
-
-**Key Behaviors:**
-- Automatically loads entries from IndexedDB on mount
-- Starts with empty database (no auto-seeding)
-- All CRUD operations automatically sync with IndexedDB
-- Provides loading state for better UX
-- moveEntry is in-memory only (not persisted to DB)
-
-## Progressive Web App (PWA)
-
-### Configuration (`vite.config.ts`)
-The app uses `vite-plugin-pwa` with the following settings:
-
-- **Register Type**: `autoUpdate` (automatically updates service worker)
-- **Manifest**: Embedded in Vite config and generated at build time
-- **Workbox**: Precaches all static assets (JS, CSS, HTML, images)
-- **Runtime Caching**: Caches Google Fonts with cache-first strategy
-
-### Service Worker
-Generated automatically during build (`npm run build`):
-- **File**: `dist/sw.js` (service worker)
-- **Workbox**: `dist/workbox-*.js` (Workbox runtime)
-- **Registration**: `dist/registerSW.js` (auto-registration script)
-
-### Manifest (`public/manifest.json`)
-- **Name**: Combust - Fuel Tracker
-- **Theme Color**: #7f22fe (blue)
-- **Display**: standalone (app-like experience)
-- **Icons**: Uses vite.svg as placeholder (should be replaced with proper icons)
-
-### Installing the App
-Users can install Combust as a PWA:
-1. **Desktop**: Click install prompt in browser address bar
-2. **Mobile**: Use "Add to Home Screen" from browser menu
-3. **Offline**: App works offline after first visit
-
-## Development Guidelines
-Backend Integration** (Optional):
-   - REST API for cloud sync
-   - PostgreSQL or MongoDB for server-side storage
-   - JWT-based authentication instead of client-side only
-   - Enhanced Authentication**:
-   - Email verification on signup
-   - Password reset functionality
-   - Two-factor authentication
-   - OAuth login (Google, Facebook)
-   - Remember me functionality
-### SUser Profile Management**:
-   - Edit profile (name, email)
-   - Change password
-   - Delete account
-   - Profile picture upload configured)
-2. Use proper typing for all props and state
-3. Avoid `any` type unless absolutely necessary
-4. Define interfaces/types for data structures
-5. Use React 19's built-in types (@types/react 19.2.5)
-
-### Component Patterns
-1. **Buttons**: Use  Enhancements**:
-   - Advanced date range filtering
-   - Search across all fields
-   - Saved filter presets
-   
-2. **Data Validation**:
-   - Strict odometer reading sequence validation
-   - Detect anomalies in fuel efficiency
-   - Alert on unusual data patterns
-   
-3. **Multi-vehicle Support**:
-   - Add vehicle management per user
-   - Track multiple vehicles separately
-   - Vehicle-specific statistics
-
-### Low Priority
-1. **Social Features**:
-   - Share statistics with friends
-   - Compare fuel efficiency with other users
-   - Leaderboards for fuel efficiency
-   
-2. **Mobile Native App**: React Native version
-3. **Receipt Scanning**: OCR to auto-fill entries
-4. **API for Third-party Apps**: Public API for integration
-- CRUD operations (addEntry, updateEntry, deleteEntry)
-- Bulk operations (replaceAllEntries for import)
-- Loading states
-
-To modify database behavior:
-1. Update `src/lib/database.ts` if changing database schema or adding/removing stores
-2. Update `src/lib/db.ts` for entry-related IndexedDB operations
-3. Update `src/lib/auth.ts` for user-related operations
-4. Update `src/lib/useIndexedDB.ts` for React hook interface
-5. Ensure all state changes call the appropriate database function
-6. Remember to increment DB_VERSION in `database.ts` for schema changes
-- Always pass `userId` to `useIndexedDBEntries(userId)`
-- New entries automatically get userId attached
-- Queries are automatically filtered by userId
-
-### e kebab-case for file names (button.tsx, input-group.tsx)
-- Use PascalCase for component names (Button, InputGroup)
-- Use camelCase for utility functions and variables
-
-## Commands
-
-### Development
-```bash
-npm run dev          # Start Vite dev server on http://localhost:5173
-npm run build        # Build for production (TypeScript check + Vite build)
-npm run preview      # Preview production build
-npm run lint         # Run ESLint
-```
-
-## Configuration Files
-
-### components.json
-- shadcn/ui configuration
-- Style: base-vega
-- Icon library: hugeicons
-- Base color: zinc
-- Uses CSS variables for theming
-- No RSC (React Server Components) - this is a client-side app
-
-### vite.config.ts
-- Vite configuration with React plugin
-- Tailwind CSS Vite plugin enabled
-- Path alias `@` → `./src`
-
-### tsconfig.json
-- TypeScript project references (app and node configs)
-- Path mapping for `@/*` imports
-
-## Future Development Considerations
-
-### High Priority Features to Implement
-1. **Persistent Storage**: 
-   - IndexedDB or localStorage for client-side persistence
-   - Or backend API with database (PostgreSQL, MongoDB)
-   
-2. **Statistics Dashboard**:
-   - Fuel efficiency (km/liter) calculations
-   - Cost per kilometer
-   - Monthly/yearly spending charts using recharts
-   - Fuel price trends
-   
-3. **Entry Management**:
-   - Edit existing entries
-   - Delete entries with confirmation
-   - Sort and filter entries
-
-4. **CSV Import/Export**:
-   - Implement upload button functionality
-   - Implement download button to export data as CSV
-9. **"Object store not found" error**: Clear IndexedDB and reload (database schema may have partially initialized)
-10. **User can't sign in**: Check browser console for errors; may need to clear localStorage and IndexedDB
-11. **Authentication not persisting**: Verify localStorage is enabled in browser settings
-12. **Seeing another user's data**: This should never happen - report as critical bug if encountered
-   - Data validation on import
-
-### Medium Priority
-1. **Search & Filter**:
-   - Filter by date range
-   - Filter by fuel station
-   - Search functionality
-   
-2. **Data Validation**:
-   - Validate odometer reading increases
-   - Detect anomalies in fuel efficiency
-   
-3. **Multi-vehicle Support**:
-   - Add vehicle management
-   - Track multiple vehicles separately
-
-### Low Priority
-1. **User Authentication**: If making it multi-user
-2. **Sync Across Devices**: Cloud storage integration
-3. **Mobile App**: React Native or PWA
-4. **Receipt Scanning**: OCR to auto-fill entries
-
-## Common Tasks for AI Agents
-
-### Adding a New UI Component from shadcn
-```bash
-npx shadcn@latest add [component-name]
-```
-This will automatically add the component to `src/components/ui/` with proper configuration.
-
-### Working with IndexedDB (Already Implemented)
-The app uses a custom `useIndexedDBEntries` hook that provides:
-- Automatic loading and persistence
-- CRUD operations (addEntry, updateEntry, deleteEntry)
-- Bulk operations (replaceAllEntries for import)
-- Loading states
-
-To modify database behavior:
-1. Update `src/lib/db.ts` for low-level IndexedDB operations
-2. Update `src/lib/useIndexedDB.ts` for React hook interface
-3. Ensure all state changes call the appropriate database function
-
-### Implementing Statistics (Already Implemented)
-The Statistics tab includes:
-- Six metric cards with calculations
-- Four responsive charts (line and bar charts)
-- Fuel efficiency calculation formula: `(nextOdometer - currentOdometer) / nextFuelFilled`
-- Station-based filtering for all metrics
-
-To add new statistics:
-1. Calculate metrics in `useMemo` hooks in `statistics.tsx`
-2. Add new CaProper app icons configured (favicon, apple-touch-icon, PWA manifests)
-
-### Security Considerations
-- **Client-side Auth**: Currently uses client-side authentication only
-- **Password Storage**: Passwords hashed with SHA-256 (better than plaintext, but not bcrypt)
-- **Session Storage**: Sessions stored in localStorage (accessible to JavaScript)
-- **XSS Protection**: Ensure9, 2026
-**Project Version**: 0.0.0 (initial development)
-**Status**: PWA with user authentication and IndexedDB persistence fully implemented
-**Authentication**: Client-side authentication with password hashing and session management
-**Data Storage**: User-specific data isolation in IndexedDB
-**Maintainer**: Refer to package.json for author information
-
-## Security & Privacy Notes
-
-### Current Implementation
-- **Authentication**: Client-side only (no backend server)
-- **Password Hashing**: SHA-256 via Web Crypto API
-- **Session Management**: localStorage with userId storage
-- **Data Storage**: All data in browser's IndexedDB (local only)
-- **Data Isolation**: Each user's entries filtered by userId
-- **No Cloud Sync**: All data remains on the local device
-
-### Important Limitations
-1. **No Password Recovery**: If user forgets password, data is inaccessible
-2. **Device-Specific**: Data doesn't sync across devices
-3. **Browser Clearing**: Clearing browser data will delete all user accounts and entries
-4. **Shared Devices**: Multiple users can create accounts on same browser
-5. **No Email Verification**: Accounts created without email validation
-6. **Client-Side Security**: Auth implementation is not suitable for sensitive data
-
-### Recommendations for Production
-Consider implementing:
-- Backend authentication server with proper password hashing (bcrypt/argon2)
-- JWT token-based sessions instead of localStorage
-- Email verification on signup
-- Password reset via email
-- Cloud database for data backup and sync
-- HTTPS enforcement
-- Rate limiting on authentication attempts
-- Session timeout and refresh tokensChart, etc.)
-
-### Adding New Features
-Examples of potential additions:
-- **Price Alerts**: Track fuel price changes over time
-- **Budget Tracking**: Set monthly fuel budgets
-- **Trip Tracking**: Associate entries with specific trips
-- **Vehicle Profiles**: Support multiple vehicles with different characteristics
-
-## Important Notes
-
-### Currency & Units
-- Currency is hardcoded to INR (Indian Rupees)
-- Fuel volume in liters
-- Distance in kilometers
-- Date format: YYYY/MM/DD (consistent with local Indian format)
-
-### Accessibility
-- ARIA labels are used on icon buttons
-- Proper semantic HTML (header, main, section)
-- Form fields have associated labels
-- Keyboard navigation supported by Base UI components
-
-### Performance
-- Small dataset currently (14 entries) so no pagination needed
-- Consider virtualization if entries exceed 100-200 items
-- React.StrictMode enabled for development checks
-
-### Browser Support
-- Modern browsers only (ES2020+ features)
-- Uses CSS features like custom properties and OKLCH colors
-- No IE11 support needed
-
-## Troubleshooting
-
-### Common Issues
-1. **Import errors**: Ensure `@/` alias is working in both TypeScript and Vite
-2. **Tailwind classes not working**: Check that `@import "tailwindcss"` is first in index.css
-3. **Component styling issues**: Verify theme variables are defined in both light and dark modes
-4. **Date picker not showing**: Ensure Popover is properly positioned with `align` prop
-5. **IndexedDB not persisting**: Check browser console for quota errors or private browsing mode
-6. **Service worker not updating**: Clear browser cache and unregister old service worker from DevTools
-7. **PWA not installing**: Ensure HTTPS is enabled (or using localhost for development)
-8. **Data lost after import**: Verify import file format matches expected CSV/JSON structure
-
-### Development Tips
-- Use React DevTools to inspect component state
-- Check browser console for TypeScript errors (Vite shows them in overlay)
-- Hot Module Replacement (HMR) is enabled - changes reflect immediately
-- If styles are broken, clear Vite cache: `rm -rf node_modules/.vite`
-- Use Chrome DevTools > Application tab to inspect IndexedDB data
-- Use Chrome DevTools > Application > Service Workers to debug PWA
-
-## Code Style Preferences
-
-### Component Structure
-```tsx
-// 1. Imports (organized: external, internal, types)
-// 2. Types/Interfaces (if component-specific)
-// 3. Component function
-// 4. Event handlers
-// 5. Render helpers (if any)
-// 6. Return JSX
-// 7. Exports
-```
-
-### State Updates
-- Use functional updates when new state depends on old state: `setState(prev => ...)`
-- Keep state close to where it's used
-- Lift state up only when needed
-
-### Props
-- Destructure props in function signature
-- Use default values in destructuring when appropriate
-- Spread remaining props when wrapping primitives
-
-## Testing (Not Yet Implemented)
-
-When implementing tests in the future:
-- Use Vitest (Vite's test framework)
-- React Testing Library for component tests
-- Test user interactions (form submissions, button clicks)
-- Test state updates and data transformations
-- Mock date picker and calendar components
-
-## Deployment
-
-The project can be deployed to:
-- **Vercel**: Zero-config deployment (recommended for Vite)
-- **Netlify**: Similar zero-config support
-- **GitHub Pages**: Requires base path configuration in vite.config.ts
-- **Any static host**: Just upload the `dist/` folder after `npm run build`
-
-### PWA Deployment Considerations
-- **HTTPS Required**: PWAs require HTTPS in production (automatic on Vercel/Netlify)
-- **Service Worker Scope**: Deployed at root path by default
-- **Cache Strategy**: Workbox precaches all assets on first visit
-- **Updates**: Service worker auto-updates when new version is deployed
-- **Icons**: Replace vite.svg with proper app icons (192x192 and 512x512 PNG)
-
-Remember to set appropriate environment variables if adding backend integration.
+Both apps allow users to sign up, sign in, and manage personal fuel entries (date, amount paid, fuel filled in litres, odometer reading, station name). Both support Supabase cloud auth with email confirmation, statistics charts, and CSV/JSON import/export.
 
 ---
 
-**Last Updated**: February 18, 2026
-**Project Version**: 0.0.0 (initial development)
-**Status**: PWA with IndexedDB persistence fully implemented
-**Maintainer**: Refer to package.json for author information
+## Repository Structure
+
+```
+combust/
+├── src/                    # PWA (React + Vite)
+│   ├── App.tsx             # Root component, route handler, sync listener
+│   ├── main.tsx            # React DOM entry point
+│   ├── index.css           # Global styles + Tailwind import
+│   ├── data.ts             # Historical sample data (reference only)
+│   ├── assets/
+│   ├── components/
+│   │   ├── auth/
+│   │   │   ├── SignIn.tsx
+│   │   │   ├── SignUp.tsx
+│   │   │   └── EmailConfirmation.tsx
+│   │   ├── ui/             # shadcn/ui + Base UI components
+│   │   ├── entries.tsx     # Fuel entries list + CRUD
+│   │   └── statistics.tsx  # Stats dashboard + recharts
+│   ├── contexts/
+│   │   └── AuthContext.tsx # Supabase auth + local IndexedDB user mapping
+│   ├── lib/
+│   │   ├── database.ts     # IndexedDB init (CombustDB v2)
+│   │   ├── db.ts           # Low-level IndexedDB CRUD for entries
+│   │   ├── auth.ts         # Local user management (IndexedDB users store)
+│   │   ├── supabaseClient.ts # Supabase client + type definitions
+│   │   ├── useIndexedDB.ts # React hook for IndexedDB CRUD
+│   │   └── utils.ts        # cn() helper (clsx + tailwind-merge)
+│   └── services/
+│       └── fuelService.ts  # Offline-first: IndexedDB + Supabase sync queue
+├── app/                    # Native App (Expo / React Native)
+│   ├── app.json            # Expo config (icons, splash, plugins)
+│   ├── package.json        # Native-specific dependencies
+│   ├── app/                # expo-router file-based routes
+│   │   ├── _layout.tsx     # Root layout: ThemeProvider + AuthProvider
+│   │   ├── modal.tsx
+│   │   ├── (auth)/
+│   │   │   ├── _layout.tsx
+│   │   │   ├── sign-in.tsx
+│   │   │   ├── sign-up.tsx
+│   │   │   └── email-confirmation.tsx
+│   │   └── (tabs)/
+│   │       ├── _layout.tsx  # Bottom tab navigator
+│   │       ├── index.tsx    # Entries screen
+│   │       └── explore.tsx  # Statistics screen
+│   ├── components/
+│   │   ├── themed-text.tsx, themed-view.tsx, haptic-tab.tsx
+│   │   └── ui/collapsible.tsx, icon-symbol.tsx
+│   ├── contexts/
+│   │   └── AuthContext.tsx # Supabase auth via supabase.auth + AsyncStorage
+│   ├── lib/
+│   │   ├── auth.ts         # Legacy SQLite auth (unused; AuthContext uses Supabase)
+│   │   └── supabaseClient.ts # Supabase client + FuelEntryDB/FuelEntry types
+│   ├── services/
+│   │   └── fuelService.ts  # Supabase CRUD for fuel_entries table
+│   ├── constants/theme.ts  # Colors + platform-aware font stacks
+│   ├── hooks/              # useColorScheme, useThemeColor
+│   └── assets/images/      # App icons, splash screen
+├── public/                 # PWA static assets (favicons, manifest icons)
+├── vite.config.ts          # Vite + PWA plugin + Tailwind + path aliases
+├── package.json            # PWA root dependencies
+├── tsconfig.json           # TypeScript project references
+├── components.json         # shadcn/ui config (base-vega, hugeicons, zinc)
+└── eslint.config.js        # ESLint config for PWA
+```
+
+---
+
+## PWA (Web — `src/`)
+
+### Technology Stack
+
+| Category | Library | Version |
+|---|---|---|
+| Framework | React | 19.2.0 |
+| Language | TypeScript | 5.9.3 |
+| Build tool | Vite | 7.2.4 |
+| PWA | vite-plugin-pwa + Workbox | 1.2.0 |
+| CSS | Tailwind CSS (Vite plugin) | 4.1.17 |
+| UI | shadcn/ui (base-vega) + @base-ui/react | 1.2.0 |
+| Icons | @hugeicons/react | 1.1.5 |
+| Font | @fontsource-variable/inter | — |
+| Charts | recharts | 2.15.x |
+| Dates | date-fns + react-day-picker | 4.x / 9.x |
+| Cloud | @supabase/supabase-js | 2.97.x |
+| Local storage | IndexedDB (browser native) | — |
+| Utilities | clsx, tailwind-merge, class-variance-authority | — |
+
+### Architecture
+
+The PWA uses an **offline-first** architecture with dual storage:
+
+1. **IndexedDB** (`CombustDB` v2) — always-available local store (entries + users)
+2. **Supabase** — cloud sync, used when online; a pending sync queue in `localStorage` handles offline writes
+
+**Auth flow:**
+- Supabase email/password auth with email confirmation
+- On sign in a local IndexedDB user ID is generated and mapped to the Supabase UUID (stored in `localStorage` as `combust_local_user_map`)
+- Sessions managed by the Supabase JS client (`persistSession: true`, `detectSessionInUrl: true`)
+- `AuthContext` listens to `supabase.auth.onAuthStateChange`
+
+**Data flow:**
+- `src/services/fuelService.ts` wraps IndexedDB + Supabase sync
+- All reads/writes go to IndexedDB first; when online, changes are pushed to Supabase
+- Offline writes are queued in `localStorage` (`combust_sync_queue`) and flushed on reconnect
+- `window.online` event in `App.tsx` triggers `fuelService.fullSync()`
+
+### Key PWA Files
+
+#### `src/lib/database.ts`
+Opens/creates `CombustDB` (IndexedDB v2). Exports `openDB()` and `STORES`.
+- `entries` store: `keyPath: 'id'` (auto-increment), indexes: `date`, `fuelStation`, `userId`
+- `users` store: `keyPath: 'id'` (auto-increment), unique index: `email`
+- Increment `DB_VERSION` here to trigger `onupgradeneeded` schema migrations.
+
+#### `src/lib/db.ts`
+Low-level IndexedDB CRUD for `entries` store:
+- `getAllEntries(userId)`, `addEntry(entry)`, `updateEntry(entry)`, `deleteEntry(id)`
+- `clearAllEntries(userId)`, `bulkAddEntries(entries[])`, `replaceAllEntries(userId, entries[])`
+
+#### `src/lib/auth.ts`
+Local user management for the IndexedDB `users` store (SHA-256 via Web Crypto API):
+- `registerUser(email, password, name)`, `verifyCredentials(email, password)`, `getUserByEmail(email)`, `getUserById(id)`
+
+#### `src/lib/supabaseClient.ts`
+Env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+Exports: `supabase` client, `FuelEntryDB` type (snake_case, includes `local_id`, `is_deleted`, `synced_at`), `isOnline()` helper.
+
+#### `src/services/fuelService.ts`
+Offline-first service. Key functions:
+- `getAllEntries(userId, supabaseUserId?)` — from IndexedDB
+- `createEntry(entry, userId, supabaseUserId?)` — IndexedDB + queue Supabase sync
+- `updateEntry(entry, supabaseUserId?)` — local + queue sync
+- `deleteEntry(entry, supabaseUserId?)` — soft delete locally + queue sync
+- `fullSync(userId, supabaseUserId)` — flush queue + pull remote
+- `replaceAllEntries(userId, entries[], supabaseUserId?)` — import
+
+#### `src/lib/useIndexedDB.ts`
+React hook `useIndexedDBEntries(userId)`:
+```typescript
+const { entries, isLoading, addEntry, updateEntry, deleteEntry,
+        replaceAllEntries, moveEntry, clearAllEntries } = useIndexedDBEntries(userId);
+```
+`moveEntry` is in-memory only (UI reorder, not persisted).
+
+#### `src/contexts/AuthContext.tsx`
+Auth states: `'loading'` | `'unauthenticated'` | `'authenticated'` | `'awaiting_confirmation'`
+Exports: `user`, `isLoading`, `authState`, `signIn`, `signUp`, `signOut`, `resendConfirmationEmail`, `setAwaitingConfirmation`, `clearAwaitingConfirmation`
+
+#### `src/App.tsx`
+- Routes between SignIn / SignUp / EmailConfirmation / main app
+- Loads entries from `fuelService` when `user` changes
+- `window.online` listener triggers sync
+- Owns import (CSV text in Dialog) and export (CSV download) logic
+- Renders `<Tabs>` with `<Entries>` and `<Statistics>`
+
+### PWA UI Components
+
+**shadcn/ui** (in `src/components/ui/`): `button`, `input`, `card`, `dialog`, `alert-dialog`, `tabs`, `popover`, `calendar`, `select`, `combobox`, `label`, `field`, `table`, `separator`, `textarea`, `chart`, `input-group`
+
+**Feature components:**
+- `entries.tsx` — table (desktop) / cards (mobile), add form, edit dialog, delete confirm, reorder, station autocomplete, import/export
+- `statistics.tsx` — 6 metric cards, 4 recharts charts (spending over time, efficiency trend, spending by station, efficiency by station), station filter
+
+### PWA Styling
+
+- **Color space**: OKLCH throughout (CSS variables in `index.css`)
+- **Theme**: light + dark via CSS custom properties
+- **Variants**: `class-variance-authority` for component variants
+- **Path alias**: `@/` → `src/`
+- **Font**: Inter Variable
+- **Animations**: `tw-animate-css`
+
+### PWA Data Types
+
+```typescript
+// src/services/fuelService.ts
+type FuelEntry = {
+  id?: number;             // IndexedDB auto-generated
+  supabaseId?: string;     // Supabase UUID
+  userId: number;          // Local IndexedDB user ID
+  supabaseUserId?: string;
+  date: string;            // 'YYYY/MM/DD'
+  amountPaid: number;      // INR
+  odometerReading: number; // km
+  fuelFilled: number;      // litres
+  fuelStation: string;
+  syncedAt?: string | null;
+  isDeleted?: boolean;
+};
+```
+
+### PWA Commands
+
+```bash
+# Run from repo root
+npm install          # install dependencies
+npm run dev          # http://localhost:5173
+npm run build        # TypeScript check + Vite build -> dist/
+npm run preview      # preview production build
+npm run lint         # ESLint
+```
+
+### PWA Deployment
+
+Deploy `dist/` to Vercel, Netlify, or GitHub Pages. **HTTPS required** for PWA install prompt and service worker. Service worker auto-updates (`autoUpdate` register type) on new deploy.
+
+### PWA Configuration Files
+
+- **`vite.config.ts`**: PWA manifest (`theme_color: '#7f22fe'`, standalone, portrait), Workbox precache all assets + runtime cache Google Fonts
+- **`components.json`**: shadcn/ui — style `base-vega`, icons `hugeicons`, base color `zinc`
+- **Env**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
+### PWA Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| "Object store not found" | Clear IndexedDB in DevTools -> Application -> Storage |
+| Service worker stale | DevTools -> Application -> Service Workers -> Skip Waiting |
+| Supabase env vars missing | Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to `.env` |
+| Tailwind classes missing | Ensure `@import "tailwindcss"` is the first line in `index.css` |
+| Sync not flushing offline writes | Check `combust_sync_queue` key in localStorage via DevTools |
+
+---
+
+## Native App (Expo / React Native — `app/`)
+
+### Technology Stack
+
+| Category | Library | Version |
+|---|---|---|
+| Framework | Expo | ~54.0.33 |
+| Runtime | React Native | 0.81.5 |
+| Language | TypeScript | ~5.9.2 |
+| Router | expo-router (file-based) | ~6.0.23 |
+| Navigation | @react-navigation/bottom-tabs | ^7.4.0 |
+| Cloud / Auth | @supabase/supabase-js + AsyncStorage | 2.99.x |
+| Charts | react-native-chart-kit | ^6.12.0 |
+| Date picker | @react-native-community/datetimepicker | 8.4.4 |
+| Icons | @expo/vector-icons (Ionicons) | ^15.0.3 |
+| File ops | expo-document-picker, expo-file-system, expo-sharing | — |
+| Animations | react-native-reanimated | ~4.1.1 |
+| Haptics | expo-haptics | ~15.0.8 |
+| Crypto | expo-crypto | ~15.0.8 |
+
+### Architecture
+
+The native app uses **Supabase as the sole backend** — no local database:
+
+- All fuel entries stored in Supabase `fuel_entries` table (soft delete via `is_deleted`)
+- Auth via `supabase.auth` (email/password + email confirmation)
+- Sessions persisted in `AsyncStorage` by the Supabase JS client
+- No offline queue — data requires connectivity
+
+**Routing (expo-router):**
+```
+app/_layout.tsx                     Root layout: ThemeProvider + AuthProvider + Stack
+app/(auth)/sign-in.tsx              Sign in screen
+app/(auth)/sign-up.tsx              Sign up screen
+app/(auth)/email-confirmation.tsx   Confirm email screen
+app/(tabs)/index.tsx                Entries screen
+app/(tabs)/explore.tsx              Statistics screen
+```
+
+Auth guard in `app/_layout.tsx` (`RootLayoutNav`): uses `useSegments` + `useRouter` to redirect unauthenticated users to `/(auth)/sign-in` and authenticated users away from auth screens.
+
+### Key Native App Files
+
+#### `app/lib/supabaseClient.ts`
+Env vars: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+- Supabase client with `AsyncStorage` session, `detectSessionInUrl: false`
+- `FuelEntryDB` (DB snake_case), `FuelEntry` (app camelCase), `dbToEntry()` converter
+
+#### `app/services/fuelService.ts`
+Supabase CRUD for `fuel_entries`:
+- `getAllEntries(userId)` — non-deleted, ordered by date desc
+- `addEntry(entry, userId)` — insert, returns `FuelEntry`
+- `updateEntry(entry)` — by `id` + `user_id`
+- `deleteEntry(entry)` — soft delete (`is_deleted: true`)
+- `deleteAllEntries(userId)`, `replaceAllEntries(userId, entries[])` — import
+
+#### `app/contexts/AuthContext.tsx`
+`user.id` is a Supabase UUID string. Exposes same interface as PWA AuthContext: `user`, `isLoading`, `authState`, `signIn`, `signUp`, `signOut`, `resendConfirmationEmail`.
+Listens to `supabase.auth.onAuthStateChange` for real-time session updates.
+
+#### `app/app/(tabs)/index.tsx` — Entries Screen
+- `AddEntryForm` — native `DateTimePicker`, station autocomplete (TextInput + FlatList), numeric inputs
+- `FlatList` card list for entries
+- Edit via `Modal`, delete via `Alert.alert` confirmation
+- Import: `expo-document-picker` + `expo-file-system` (CSV/JSON)
+- Export: `expo-sharing` share sheet
+
+#### `app/app/(tabs)/explore.tsx` — Statistics Screen
+- Fetches from Supabase on mount
+- 6 stat cards (total spent, distance, avg efficiency, cost/km, avg price/L, total fills)
+- `LineChart` (spending over time, efficiency trend) + `BarChart` (by station)
+- Station filter modal
+
+#### `app/app/(tabs)/_layout.tsx` — Tab Navigator
+- Bottom tabs, active tint `#7f22fe`
+- Header: Combust flame logo, user name, sign-out button
+- Tabs: "Entries" (list-outline) and "Statistics" (bar-chart-outline)
+
+### Native App Data Types
+
+```typescript
+// app/lib/supabaseClient.ts
+type FuelEntryDB = {
+  id: string;               // UUID primary key
+  user_id: string;          // Supabase auth UUID
+  date: string;             // 'YYYY/MM/DD'
+  amount_paid: number;      // INR
+  odometer_reading: number; // km
+  fuel_filled: number;      // litres
+  fuel_station: string;
+  is_deleted: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+type FuelEntry = {
+  id?: string;              // Supabase UUID
+  userId: string;           // Supabase auth UUID
+  date: string;
+  amountPaid: number;
+  odometerReading: number;
+  fuelFilled: number;
+  fuelStation: string;
+};
+
+// app/contexts/AuthContext.tsx
+type User = {
+  id: string;               // Supabase UUID
+  email: string;
+  name: string;             // from user_metadata.name
+  emailConfirmed: boolean;  // from email_confirmed_at
+};
+```
+
+### Native App Configuration
+
+- **`app.json`**: `scheme: "app"`, `newArchEnabled: true`, `experiments.reactCompiler: true`
+  - Plugins: `expo-router`, `expo-splash-screen`, `expo-secure-store`, `@react-native-community/datetimepicker`
+  - Android: adaptive icon (foreground/background/monochrome), edge-to-edge, `com.anonymous.combust`
+- **Env**: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` in `app/.env`
+
+### Native App Commands
+
+```bash
+# Run from app/ directory
+cd app
+npm install
+npx expo start                # Metro + Expo DevTools
+npx expo start --ios          # iOS Simulator
+npx expo start --android      # Android Emulator
+npx expo run:ios              # Full native build for iOS
+npx expo run:android          # Full native build for Android
+npx expo start --web          # Web preview
+npm run lint
+```
+
+### Native App Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| Metro cache stale | `npx expo start --clear` |
+| Supabase env vars missing | Add `EXPO_PUBLIC_*` vars to `app/.env` |
+| Email not confirmed | App redirects to `email-confirmation` screen; check Supabase email logs |
+| Android build fails | `cd android && ./gradlew clean`, then rebuild |
+| DateTimePicker not showing | Ensure `@react-native-community/datetimepicker` is in `app.json` plugins |
+
+---
+
+## Shared Backend — Supabase
+
+Both platforms use the same Supabase project.
+
+### `fuel_entries` Table Schema
+
+```sql
+CREATE TABLE fuel_entries (
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id          uuid NOT NULL REFERENCES auth.users(id),
+  date             text NOT NULL,            -- 'YYYY/MM/DD'
+  amount_paid      numeric NOT NULL,          -- INR
+  odometer_reading numeric NOT NULL,          -- km
+  fuel_filled      numeric NOT NULL,          -- litres
+  fuel_station     text NOT NULL,
+  is_deleted       boolean DEFAULT false,
+  local_id         integer,                   -- PWA IndexedDB local record id
+  synced_at        timestamptz,
+  created_at       timestamptz DEFAULT now(),
+  updated_at       timestamptz
+);
+
+ALTER TABLE fuel_entries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users see own entries" ON fuel_entries
+  FOR ALL USING (auth.uid() = user_id);
+```
+
+### Auth Flow (Both Platforms)
+
+1. Sign up — Supabase sends confirmation email
+2. User confirms email — allowed to sign in
+3. Sign in — JWT session established
+4. Session auto-refreshes via Supabase client
+5. Sign out — session cleared from storage
+
+---
+
+## Common Patterns & Conventions
+
+### TypeScript
+- No `any` — use proper types; `unknown` if type is truly unknown
+- Interfaces for all data structures passed between components/services
+- Path alias `@/` maps to `src/` (PWA) or root of `app/` (native)
+
+### Naming
+- Files: kebab-case (`fuel-service.ts`)
+- Components: PascalCase (`StatCard`, `AddEntryForm`)
+- Functions/variables: camelCase
+- Constants: SCREAMING_SNAKE_CASE
+
+### State Management
+- No Redux / Zustand — local `useState` or React Context only
+- Functional state updates: `setState(prev => ...)`
+- `useCallback` + `useMemo` for stable refs and expensive derived values
+- Keep state co-located; lift only when truly shared
+
+### Adding shadcn/ui Components (PWA only)
+```bash
+# from repo root
+npx shadcn@latest add [component-name]
+# Added to src/components/ui/
+```
+
+### Working with IndexedDB (PWA)
+1. Schema changes — increment `DB_VERSION` in `src/lib/database.ts`
+2. New stores — add to `onupgradeneeded` handler
+3. New entry operations — add to `src/lib/db.ts`
+4. Hook surface changes — update `src/lib/useIndexedDB.ts`
+
+### Working with Supabase (Both Platforms)
+1. Table schema changes — update `FuelEntryDB` in `supabaseClient.ts` on both platforms
+2. New queries — add to `fuelService.ts` in the relevant platform's `services/`
+3. Always filter by `user_id` + `is_deleted = false` for entry reads
+4. Always use soft delete (`is_deleted: true`, `updated_at: now()`) — never hard delete
+
+---
+
+## Security Requirements
+
+### PWA
+- Only use `VITE_SUPABASE_ANON_KEY` — never the service role key in client code
+- RLS must be enabled on all Supabase tables with `auth.uid() = user_id` policy
+- Local SHA-256 password hashing (Web Crypto) is acceptable for local-only fallback auth
+
+### Native App
+- Only use `EXPO_PUBLIC_SUPABASE_ANON_KEY` — never service role key
+- `expo-secure-store` is available for sensitive storage if needed
+- Supabase session in `AsyncStorage` is standard for React Native
+
+### Both Platforms
+- RLS enforced server-side — users can never access another user's data
+- Email confirmation required before accessing fuel data
+- Never log auth tokens or password hashes
+
+---
+
+## Development Units & Locale
+
+- **Currency**: INR (Rs.)
+- **Volume**: Litres (L)
+- **Distance**: Kilometres (km)
+- **Date format stored**: `YYYY/MM/DD`
+- **Efficiency formula**: `(nextOdometer - currentOdometer) / currentFuelFilled` = km/L
+
+---
+
+## Future Development
+
+### High Priority
+- Password reset via email (Supabase supports this natively)
+- Profile management (edit name, change email)
+- Multi-vehicle support (vehicle profiles per user)
+- Native offline queue (similar to PWA sync queue using AsyncStorage)
+
+### Medium Priority
+- Advanced date range filtering
+- Anomaly detection (efficiency spikes, unusual prices)
+- Push notifications for fuel reminders
+
+### Low Priority
+- OAuth (Google, Apple Sign-In)
+- Receipt OCR auto-fill
+- Social / sharing features
+
+---
+
+**Last Updated**: March 2026
+**PWA Version**: 0.0.0 | **Native App Version**: 1.0.0
+**Status**: Both platforms fully functional with Supabase cloud backend
