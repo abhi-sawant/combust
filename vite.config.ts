@@ -52,23 +52,16 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // Inter is bundled locally via @fontsource-variable and precached by
+        // globPatterns below (it's a .woff2 in the build output) — the app
+        // never requests fonts.googleapis.com, so a runtime-caching rule for
+        // it cached nothing. Supabase REST responses are deliberately left
+        // out of workbox's cache too: the app already has its own
+        // offline-first layer (IndexedDB + a sync queue in fuelService.ts)
+        // that's aware of sync state, soft-deletes, and conflict resolution.
+        // A second, dumber HTTP-cache layer over the same requests would
+        // just be a second place for the same data to go stale.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
       }
     })
   ],

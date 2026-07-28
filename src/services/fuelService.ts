@@ -2,20 +2,10 @@
 import { supabase, isOnline, type FuelEntryDB } from '../lib/supabaseClient';
 import * as localDb from '../lib/db';
 import { openDB, STORES } from '../lib/database';
+import type { Entry } from '../types';
 
-export type FuelEntry = {
-  id?: number; // local IndexedDB id
-  supabaseId?: string; // Supabase uuid
-  userId: number; // local user id (for IndexedDB)
-  supabaseUserId?: string; // Supabase user uuid
-  date: string;
-  amountPaid: number;
-  odometerReading: number;
-  fuelFilled: number;
-  fuelStation: string;
-  syncedAt?: string | null;
-  isDeleted?: boolean;
-};
+// Kept as an alias so existing call sites don't need to change their imports.
+export type FuelEntry = Entry;
 
 // Extended local entry type with sync metadata
 type LocalEntry = FuelEntry & {
@@ -28,12 +18,20 @@ type LocalEntry = FuelEntry & {
 const SYNC_QUEUE_KEY = 'combust_sync_queue';
 
 type SyncQueueItem = {
+  // Identifies this queue entry itself, distinct from localId/supabaseId which
+  // identify the fuel entry it refers to. Without its own id, removing "the
+  // create for entry 7" after it succeeds also matched — and deleted — a still
+  // -pending "update for entry 7" queued right behind it.
+  id: string;
   type: 'create' | 'update' | 'delete';
   localId?: number;
   supabaseId?: string;
   data?: Omit<FuelEntry, 'id' | 'userId'>;
   timestamp: string;
+  attempts?: number;
 };
+
+const MAX_SYNC_ATTEMPTS = 5;
 
 // Get sync queue from localStorage
 function getSyncQueue(): SyncQueueItem[] {
@@ -51,21 +49,17 @@ function saveSyncQueue(queue: SyncQueueItem[]): void {
 }
 
 // Add item to sync queue
-function addToSyncQueue(item: SyncQueueItem): void {
+function addToSyncQueue(item: Omit<SyncQueueItem, 'id'>): void {
   const queue = getSyncQueue();
-  queue.push(item);
+  queue.push({ ...item, id: crypto.randomUUID() });
   saveSyncQueue(queue);
 }
 
-// Remove item from sync queue
-function removeFromSyncQueue(localId?: number, supabaseId?: string): void {
+// Remove exactly the queue item with this id — never matched by localId or
+// supabaseId alone, since more than one queued operation can share those.
+function removeFromSyncQueue(queueItemId: string): void {
   const queue = getSyncQueue();
-  const filtered = queue.filter(item => {
-    if (localId && item.localId === localId) return false;
-    if (supabaseId && item.supabaseId === supabaseId) return false;
-    return true;
-  });
-  saveSyncQueue(filtered);
+  saveSyncQueue(queue.filter(item => item.id !== queueItemId));
 }
 
 // Convert Supabase entry to local format
@@ -73,6 +67,7 @@ function supabaseToLocal(entry: FuelEntryDB, localUserId: number): LocalEntry {
   return {
     id: entry.local_id ?? undefined,
     supabaseId: entry.id,
+    clientId: entry.client_id ?? undefined,
     userId: localUserId,
     supabaseUserId: entry.user_id,
     date: entry.date,
@@ -89,6 +84,7 @@ function supabaseToLocal(entry: FuelEntryDB, localUserId: number): LocalEntry {
 function localToSupabase(entry: FuelEntry, supabaseUserId: string): Omit<FuelEntryDB, 'id' | 'created_at' | 'updated_at'> {
   return {
     user_id: supabaseUserId,
+    client_id: entry.clientId ?? null,
     date: entry.date,
     amount_paid: entry.amountPaid,
     odometer_reading: entry.odometerReading,
@@ -142,7 +138,7 @@ export async function getAllEntries(
 
   // Fallback to local IndexedDB
   const localEntries = await localDb.getAllEntries(localUserId);
-  return localEntries.filter((e: localDb.Entry) => !(e as LocalEntry).isDeleted);
+  return localEntries.filter((e: Entry) => !(e as LocalEntry).isDeleted);
 }
 
 // Create a new entry - online first, queue if offline
@@ -151,16 +147,22 @@ export async function createEntry(
   localUserId: number,
   supabaseUserId?: string
 ): Promise<FuelEntry> {
+  // Assigned once, here, and never regenerated — this is what lets sync tell
+  // "already pushed" apart from "still needs pushing" without matching on
+  // date/amount/odometer/litres (see Entry.clientId in src/types.ts).
+  const clientId = crypto.randomUUID();
+
   // Always save to local first
   const localEntry = {
     userId: localUserId,
+    clientId,
     date: entry.date,
     amountPaid: entry.amountPaid,
     odometerReading: entry.odometerReading,
     fuelFilled: entry.fuelFilled,
     fuelStation: entry.fuelStation,
   };
-  
+
   const localId = await localDb.addEntry(localEntry);
   const savedEntry: FuelEntry = { ...localEntry, id: localId };
 
@@ -168,7 +170,7 @@ export async function createEntry(
   if (isOnline() && supabaseUserId) {
     try {
       const supabaseData = localToSupabase({ ...savedEntry, id: localId }, supabaseUserId);
-      
+
       const { data, error } = await supabase
         .from('fuel_entries')
         .insert(supabaseData)
@@ -189,7 +191,7 @@ export async function createEntry(
       addToSyncQueue({
         type: 'create',
         localId,
-        data: entry,
+        data: { ...entry, clientId },
         timestamp: new Date().toISOString(),
       });
     }
@@ -198,12 +200,83 @@ export async function createEntry(
     addToSyncQueue({
       type: 'create',
       localId,
-      data: entry,
+      data: { ...entry, clientId },
       timestamp: new Date().toISOString(),
     });
   }
 
   return savedEntry;
+}
+
+// Bulk create — used by import, so replacing N entries costs one Supabase
+// round trip instead of N. Local writes still happen per-row (IndexedDB
+// requests are cheap and this is how we get an id back for each), but the
+// network call that used to dominate the cost is now a single insert.
+export async function bulkCreateEntries(
+  entries: Omit<FuelEntry, 'id' | 'userId'>[],
+  localUserId: number,
+  supabaseUserId?: string
+): Promise<FuelEntry[]> {
+  if (entries.length === 0) return [];
+
+  const localEntries = entries.map(entry => ({
+    userId: localUserId,
+    clientId: crypto.randomUUID(),
+    date: entry.date,
+    amountPaid: entry.amountPaid,
+    odometerReading: entry.odometerReading,
+    fuelFilled: entry.fuelFilled,
+    fuelStation: entry.fuelStation,
+  }));
+
+  const localIds = await localDb.bulkAddEntriesReturningIds(localEntries);
+  const savedEntries: FuelEntry[] = localEntries.map((entry, i) => ({ ...entry, id: localIds[i] }));
+
+  if (isOnline() && supabaseUserId) {
+    try {
+      const supabaseRows = savedEntries.map(entry => localToSupabase(entry, supabaseUserId));
+
+      const { data, error } = await supabase
+        .from('fuel_entries')
+        .insert(supabaseRows)
+        .select();
+
+      if (error) throw error;
+
+      if (data) {
+        // Supabase preserves insert order in the returned rows for a single
+        // multi-row insert, so we can zip results back up positionally.
+        await Promise.all(
+          data.map((row, i) => updateLocalWithSupabaseId(savedEntries[i].id!, row.id, row.synced_at))
+        );
+        data.forEach((row, i) => {
+          savedEntries[i].supabaseId = row.id;
+          savedEntries[i].syncedAt = row.synced_at;
+        });
+      }
+    } catch (error) {
+      console.error('Error bulk-syncing to Supabase, queued for later:', error);
+      savedEntries.forEach((entry, i) => {
+        addToSyncQueue({
+          type: 'create',
+          localId: entry.id,
+          data: { ...entries[i], clientId: entry.clientId },
+          timestamp: new Date().toISOString(),
+        });
+      });
+    }
+  } else if (supabaseUserId) {
+    savedEntries.forEach((entry, i) => {
+      addToSyncQueue({
+        type: 'create',
+        localId: entry.id,
+        data: { ...entries[i], clientId: entry.clientId },
+        timestamp: new Date().toISOString(),
+      });
+    });
+  }
+
+  return savedEntries;
 }
 
 // Update an entry - online first, queue if offline
@@ -303,6 +376,59 @@ export async function deleteEntry(
   }
 }
 
+// Bulk delete (soft) — used by "delete all", so clearing N entries costs one
+// Supabase round trip instead of N.
+export async function bulkDeleteEntries(
+  entries: { id: number; supabaseId?: string }[],
+  supabaseUserId?: string
+): Promise<void> {
+  if (entries.length === 0) return;
+
+  // Delete from local first
+  await Promise.all(entries.map(entry => localDb.deleteEntry(entry.id)));
+
+  const supabaseIds = entries.map(entry => entry.supabaseId).filter((id): id is string => !!id);
+  if (supabaseIds.length === 0) return;
+
+  if (isOnline() && supabaseUserId) {
+    try {
+      const { error } = await supabase
+        .from('fuel_entries')
+        .update({
+          is_deleted: true,
+          updated_at: new Date().toISOString(),
+        })
+        .in('id', supabaseIds)
+        .eq('user_id', supabaseUserId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error bulk-deleting in Supabase, queued for later:', error);
+      entries.forEach(entry => {
+        if (entry.supabaseId) {
+          addToSyncQueue({
+            type: 'delete',
+            localId: entry.id,
+            supabaseId: entry.supabaseId,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      });
+    }
+  } else if (supabaseUserId) {
+    entries.forEach(entry => {
+      if (entry.supabaseId) {
+        addToSyncQueue({
+          type: 'delete',
+          localId: entry.id,
+          supabaseId: entry.supabaseId,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    });
+  }
+}
+
 // Sync deletions from Supabase to local IndexedDB
 async function syncDeletionsToLocal(deletedEntries: FuelEntryDB[], localUserId: number): Promise<void> {
   const db = await openDB();
@@ -342,30 +468,37 @@ async function syncDeletionsToLocal(deletedEntries: FuelEntryDB[], localUserId: 
 
 // Sync remote data to local IndexedDB
 async function syncToLocal(remoteEntries: FuelEntryDB[], localUserId: number, supabaseUserId: string): Promise<void> {
-  // Get all deleted entries to avoid re-creating them
+  // Get all deleted entries to avoid re-creating them. Prefer client_id where
+  // available (see Entry.clientId in src/types.ts) — the date/amount/odometer
+  // /litres tuple stays as a fallback only for rows created before that
+  // column existed.
   const { data: deletedEntries } = await supabase
     .from('fuel_entries')
-    .select('date, amount_paid, odometer_reading, fuel_filled')
+    .select('date, amount_paid, odometer_reading, fuel_filled, client_id')
     .eq('user_id', supabaseUserId)
     .eq('is_deleted', true);
-  
-  const deletedSet = new Set(
-    (deletedEntries || []).map(e => 
-      `${e.date}|${e.amount_paid}|${e.odometer_reading}|${e.fuel_filled}`
-    )
+
+  const deletedClientIds = new Set(
+    (deletedEntries || []).map(e => e.client_id).filter((id): id is string => !!id)
+  );
+  const deletedTupleSet = new Set(
+    (deletedEntries || [])
+      .filter(e => !e.client_id)
+      .map(e => `${e.date}|${e.amount_paid}|${e.odometer_reading}|${e.fuel_filled}`)
   );
 
   for (const remoteEntry of remoteEntries) {
     const localEntry = supabaseToLocal(remoteEntry, localUserId);
-    
+
     // Check if we already have this entry locally by supabaseId
     const existingLocal = await findLocalBySupabaseId(remoteEntry.id);
-    
+
     if (existingLocal) {
       // Update existing local entry, preserving supabaseId and syncedAt
       await updateLocalEntryFull({
         id: existingLocal.id!,
         userId: localUserId,
+        clientId: localEntry.clientId,
         date: localEntry.date,
         amountPaid: localEntry.amountPaid,
         odometerReading: localEntry.odometerReading,
@@ -375,9 +508,11 @@ async function syncToLocal(remoteEntries: FuelEntryDB[], localUserId: number, su
         syncedAt: remoteEntry.synced_at,
       });
     } else {
-      // Only create if not in deleted set
-      const key = `${remoteEntry.date}|${remoteEntry.amount_paid}|${remoteEntry.odometer_reading}|${remoteEntry.fuel_filled}`;
-      if (!deletedSet.has(key)) {
+      const isDeleted = remoteEntry.client_id
+        ? deletedClientIds.has(remoteEntry.client_id)
+        : deletedTupleSet.has(`${remoteEntry.date}|${remoteEntry.amount_paid}|${remoteEntry.odometer_reading}|${remoteEntry.fuel_filled}`);
+
+      if (!isDeleted) {
         // Entry doesn't exist locally by supabaseId, create it
         await createLocalFromRemote(localEntry, remoteEntry.id, localUserId);
       }
@@ -399,29 +534,19 @@ async function updateLocalEntryFull(entry: LocalEntry): Promise<void> {
   });
 }
 
-// Find local entry by Supabase ID (stored in extended metadata)
+// Find local entry by Supabase ID via the `supabaseId` index — a direct
+// lookup instead of a full cursor scan per call (see database.ts v3).
 async function findLocalBySupabaseId(supabaseId: string): Promise<LocalEntry | null> {
   const db = await openDB();
-  
+
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORES.ENTRIES, 'readonly');
     const store = transaction.objectStore(STORES.ENTRIES);
-    const request = store.openCursor();
-    
+    const index = store.index('supabaseId');
+    const request = index.get(supabaseId);
+
     request.onerror = () => reject(request.error);
-    request.onsuccess = (event) => {
-      const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-      if (cursor) {
-        const entry = cursor.value as LocalEntry;
-        if (entry.supabaseId === supabaseId) {
-          resolve(entry);
-          return;
-        }
-        cursor.continue();
-      } else {
-        resolve(null);
-      }
-    };
+    request.onsuccess = () => resolve((request.result as LocalEntry) ?? null);
   });
 }
 
@@ -468,6 +593,7 @@ async function createLocalFromRemote(
     
     const localEntry = {
       userId: localUserId,
+      clientId: entry.clientId,
       date: entry.date,
       amountPaid: entry.amountPaid,
       odometerReading: entry.odometerReading,
@@ -476,7 +602,7 @@ async function createLocalFromRemote(
       supabaseId,
       syncedAt: entry.syncedAt,
     };
-    
+
     const request = store.add(localEntry);
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result as number);
@@ -555,13 +681,31 @@ export async function processSyncQueue(
       }
 
       // Remove successfully processed item from queue
-      removeFromSyncQueue(item.localId, item.supabaseId);
+      removeFromSyncQueue(item.id);
     } catch (error) {
-      console.error('Error processing sync queue item:', error);
-      // Keep item in queue for retry
+      const attempts = (item.attempts ?? 0) + 1;
+      if (attempts >= MAX_SYNC_ATTEMPTS) {
+        console.error(
+          `Sync queue item ${item.id} (${item.type}) failed ${attempts} times — giving up. It will not be retried again.`,
+          error
+        );
+        removeFromSyncQueue(item.id);
+      } else {
+        console.error(`Error processing sync queue item (attempt ${attempts}/${MAX_SYNC_ATTEMPTS}):`, error);
+        // Record the attempt and keep the item in queue for retry.
+        const queue = getSyncQueue();
+        saveSyncQueue(queue.map(q => (q.id === item.id ? { ...q, attempts } : q)));
+      }
     }
   }
 }
+
+// Tracks which users currently have a sync in flight. AuthContext can call
+// fullSync from more than one place in quick succession (StrictMode's double
+// effect invocation on mount, a sign-in event following session restore) —
+// without this guard those calls run concurrently against the same
+// IndexedDB store and Supabase rows.
+const syncInFlight = new Set<string>();
 
 // Full sync - push local unsynced entries and pull remote changes
 export async function fullSync(
@@ -569,15 +713,21 @@ export async function fullSync(
   supabaseUserId: string
 ): Promise<void> {
   if (!isOnline()) return;
+  if (syncInFlight.has(supabaseUserId)) return;
 
-  // First process any queued operations
-  await processSyncQueue(localUserId, supabaseUserId);
+  syncInFlight.add(supabaseUserId);
+  try {
+    // First process any queued operations
+    await processSyncQueue(localUserId, supabaseUserId);
 
-  // Then sync local unsynced entries to Supabase
-  await pushUnsyncedEntries(localUserId, supabaseUserId);
+    // Then sync local unsynced entries to Supabase
+    await pushUnsyncedEntries(localUserId, supabaseUserId);
 
-  // Finally pull all remote entries to local
-  await getAllEntries(localUserId, supabaseUserId);
+    // Finally pull all remote entries to local
+    await getAllEntries(localUserId, supabaseUserId);
+  } finally {
+    syncInFlight.delete(supabaseUserId);
+  }
 }
 
 // Push local entries that haven't been synced to Supabase
@@ -603,6 +753,44 @@ async function pushUnsyncedEntries(
 
   for (const entry of unsyncedEntries) {
     try {
+      if (entry.clientId) {
+        // Client-generated identity is a stable, unambiguous join key — no
+        // risk of two different fill-ups colliding the way equal
+        // date/amount/odometer/litres could. One query tells us whether this
+        // entry already made it to Supabase (possibly soft-deleted from
+        // another device) or still needs inserting.
+        const { data: existing } = await supabase
+          .from('fuel_entries')
+          .select('id, synced_at, is_deleted')
+          .eq('user_id', supabaseUserId)
+          .eq('client_id', entry.clientId)
+          .maybeSingle();
+
+        if (existing) {
+          if (existing.is_deleted) {
+            if (entry.id) await localDb.deleteEntry(entry.id);
+          } else if (entry.id) {
+            await updateLocalWithSupabaseId(entry.id, existing.id, existing.synced_at);
+          }
+          continue;
+        }
+
+        const supabaseData = localToSupabase(entry, supabaseUserId);
+        const { data, error } = await supabase
+          .from('fuel_entries')
+          .insert(supabaseData)
+          .select()
+          .single();
+
+        if (error) throw error;
+        if (data && entry.id) {
+          await updateLocalWithSupabaseId(entry.id, data.id, data.synced_at);
+        }
+        continue;
+      }
+
+      // Legacy entry created before clientId existed — fall back to matching
+      // on the field tuple, same as before.
       // First check if this entry was DELETED in Supabase (from another device)
       // If so, delete it locally and skip pushing
       const { data: deletedData } = await supabase
@@ -646,7 +834,7 @@ async function pushUnsyncedEntries(
 
       // Entry doesn't exist, insert it
       const supabaseData = localToSupabase(entry, supabaseUserId);
-      
+
       const { data, error } = await supabase
         .from('fuel_entries')
         .insert(supabaseData)

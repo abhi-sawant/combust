@@ -1,11 +1,10 @@
 // Shared IndexedDB initialization for the entire application
 
 const DB_NAME = 'CombustDB';
-const DB_VERSION = 2;
+const DB_VERSION = 4;
 
 export const STORES = {
   ENTRIES: 'entries',
-  USERS: 'users',
 };
 
 // Open or create the database with all required object stores
@@ -22,33 +21,39 @@ export function openDB(): Promise<IDBDatabase> {
       
       // Create entries object store if it doesn't exist
       if (!db.objectStoreNames.contains(STORES.ENTRIES)) {
-        const entriesStore = db.createObjectStore(STORES.ENTRIES, { 
-          keyPath: 'id', 
-          autoIncrement: true 
+        const entriesStore = db.createObjectStore(STORES.ENTRIES, {
+          keyPath: 'id',
+          autoIncrement: true
         });
-        
+
         // Create indexes for efficient querying
         entriesStore.createIndex('date', 'date', { unique: false });
         entriesStore.createIndex('fuelStation', 'fuelStation', { unique: false });
         entriesStore.createIndex('userId', 'userId', { unique: false });
-      } else if (oldVersion < 2) {
-        // Add userId index if upgrading from version 1
+        entriesStore.createIndex('supabaseId', 'supabaseId', { unique: false });
+        entriesStore.createIndex('clientId', 'clientId', { unique: false });
+      } else {
         const transaction = (event.target as IDBOpenDBRequest).transaction;
         const entriesStore = transaction?.objectStore(STORES.ENTRIES);
-        if (entriesStore && !entriesStore.indexNames.contains('userId')) {
+
+        // Add userId index if upgrading from version 1
+        if (oldVersion < 2 && entriesStore && !entriesStore.indexNames.contains('userId')) {
           entriesStore.createIndex('userId', 'userId', { unique: false });
         }
-      }
-      
-      // Create users object store if it doesn't exist
-      if (!db.objectStoreNames.contains(STORES.USERS)) {
-        const usersStore = db.createObjectStore(STORES.USERS, { 
-          keyPath: 'id', 
-          autoIncrement: true 
-        });
-        
-        // Create index for email (unique)
-        usersStore.createIndex('email', 'email', { unique: true });
+
+        // Add supabaseId index if upgrading from version < 3. Sync used to find
+        // a local row's Supabase counterpart by scanning every record with a
+        // cursor — O(n) per remote row, O(n^2) per sync. This makes it a
+        // direct lookup instead.
+        if (oldVersion < 3 && entriesStore && !entriesStore.indexNames.contains('supabaseId')) {
+          entriesStore.createIndex('supabaseId', 'supabaseId', { unique: false });
+        }
+
+        // Add clientId index if upgrading from version < 4 — the join key
+        // sync now prefers over matching on date/amount/odometer/litres.
+        if (oldVersion < 4 && entriesStore && !entriesStore.indexNames.contains('clientId')) {
+          entriesStore.createIndex('clientId', 'clientId', { unique: false });
+        }
       }
     };
   });

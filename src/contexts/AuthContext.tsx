@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { getUserById } from '../lib/auth';
 import { supabase } from '../lib/supabaseClient';
-import { fullSync, clearLocalEntries } from '../services/fuelService';
+import { fullSync } from '../services/fuelService';
 import type { AuthError } from '@supabase/supabase-js';
 
 // Combined user type that works with both local and Supabase auth
@@ -100,25 +99,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fullSync(localId, session.user.id).catch(console.error);
           }
         } else {
-          // Check for legacy local session
-          const sessionData = localStorage.getItem(SESSION_KEY);
-          if (sessionData) {
-            const { userId } = JSON.parse(sessionData);
-            const localUser = await getUserById(userId);
-            if (localUser && mounted) {
-              setAuthState({ 
-                status: 'authenticated', 
-                user: {
-                  id: localUser.id!,
-                  email: localUser.email,
-                  name: localUser.name,
-                  createdAt: localUser.createdAt,
-                }
-              });
-              return;
-            }
-          }
-          
+          // Clear any leftover session marker from the pre-Supabase local-auth
+          // era (see git history — passwords used to be hashed and checked
+          // against IndexedDB directly). There's no local user store to
+          // authenticate against anymore.
+          localStorage.removeItem(SESSION_KEY);
+
           if (mounted) {
             setAuthState({ status: 'unauthenticated' });
           }
@@ -240,17 +226,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      // Clear local data first
-      if (user?.id) {
-        await clearLocalEntries(user.id);
+      // Best-effort: push anything logged offline while we still have a valid
+      // session/token. Local entries are already scoped by localUserId (mapped
+      // 1:1 from the Supabase uuid), so a different account signing in on this
+      // device never sees them — there's nothing to gain and unsynced work to
+      // lose by wiping the local cache here, so we no longer do that.
+      if (user?.id && user?.supabaseId) {
+        await fullSync(user.id, user.supabaseId).catch(err =>
+          console.error('Error flushing pending changes before sign out:', err)
+        );
       }
-      
+
       // Sign out from Supabase
       await supabase.auth.signOut();
-      
+
       // Clear local session
       localStorage.removeItem(SESSION_KEY);
-      
+
       setAuthState({ status: 'unauthenticated' });
     } catch (error) {
       console.error('Sign out error:', error);
@@ -258,7 +250,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(SESSION_KEY);
       setAuthState({ status: 'unauthenticated' });
     }
-  }, [user?.id]);
+  }, [user]);
 
   const resendConfirmationEmail = useCallback(async (email: string): Promise<{ error?: string }> => {
     try {

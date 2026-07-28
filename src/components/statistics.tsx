@@ -1,18 +1,11 @@
-import { useState, useMemo } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
-import { Field, FieldLabel } from './ui/field'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from './ui/chart'
+import { EfficiencySparkline } from './EfficiencySparkline'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
-
-type Entry = {
-  id?: number
-  date: string
-  amountPaid: number
-  odometerReading: number
-  fuelFilled: number
-  fuelStation: string
-}
+import { format } from 'date-fns'
+import { deriveLegs, parseEntryDate, type Entry } from '../types'
+import { cn } from '@/lib/utils'
 
 type StatisticsProps = {
   entries: Entry[]
@@ -20,60 +13,15 @@ type StatisticsProps = {
 
 function Statistics({ entries }: StatisticsProps) {
   const [selectedStation, setSelectedStation] = useState<string>('All')
-  // Sort entries by date (oldest to newest)
-  // Parse date string in local time to avoid UTC midnight timezone shift issues.
-  // Handles both 'yyyy/MM/dd' (local IndexedDB) and 'yyyy-MM-dd' (Supabase) formats.
-  const parseDate = (dateStr: string) => {
-    const parts = dateStr.trim().replace(/\//g, '-').split('-').map(Number)
-    return new Date(parts[0], parts[1] - 1, parts[2]) // local time, not UTC
-  }
 
-  const sortedEntries = useMemo(() => {
-    return [...entries].sort((a, b) => parseDate(b.date).getTime() - parseDate(a.date).getTime())
-    // return [...entries]
-  }, [entries])
-
+  // Single shared selector — see src/types.ts. Entries tab reads from the
+  // same function, so the two views can't disagree about the same fill-up.
+  const entriesWithCalculations = useMemo(() => deriveLegs(entries), [entries])
 
   // Get unique stations
   const allStations = useMemo(() => {
-    return Array.from(new Set(sortedEntries.map((entry) => entry.fuelStation)))
-  }, [sortedEntries])
-
-
-  // Calculate efficiency, distance, and cost per km for each entry
-  // Formulas:
-  // - distanceTravelled = next_odometer - current_odometer
-  // - costPerKm = next_amountPaid / distanceTravelled
-  // - efficiency = distanceTravelled / next_fuelFilled
-  // Latest entry has no values (no next entry)
-  const entriesWithCalculations = useMemo(() => {
-    return sortedEntries.map((entry, index) => {
-      if (index === sortedEntries.length - 1) {
-        // Latest entry - no calculations possible
-        return {
-          ...entry,
-          distanceTravelled: null,
-          costPerKm: null,
-          efficiency: null,
-        }
-      }
-
-      const prevEntry = index > 0 ? sortedEntries[index - 1] : null
-      const distanceTravelled = prevEntry ? prevEntry.odometerReading - entry.odometerReading : null
-      // const costPerKm = nextEntry.amountPaid / distanceTravelled;
-      const costPerKm = prevEntry && distanceTravelled ? prevEntry.amountPaid / distanceTravelled : null
-      // const efficiency = distanceTravelled / nextEntry.fuelFilled;
-      const efficiency = prevEntry && distanceTravelled ? distanceTravelled / prevEntry.fuelFilled : null
-
-      return {
-        ...entry,
-        distanceTravelled,
-        costPerKm,
-        efficiency,
-      }
-    })
-  }, [sortedEntries])
-
+    return Array.from(new Set(entriesWithCalculations.map((entry) => entry.fuelStation)))
+  }, [entriesWithCalculations])
 
   // Filter entries based on selected station
   const filteredEntriesWithCalculations = useMemo(() => {
@@ -143,28 +91,47 @@ function Statistics({ entries }: StatisticsProps) {
     }
   }, [filteredEntriesWithCalculations, selectedStation])
 
-  // Chart data: Spending over time
-  const spendingChartData = useMemo(() => {
-    return filteredEntriesWithCalculations.map((entry, index) => {
-      const cumulative = filteredEntriesWithCalculations.slice(0, index + 1).reduce((sum, e) => sum + e.amountPaid, 0)
+  // The range (not a delta against a trailing average, the way Entries'
+  // hero works) — Statistics' whole purpose is the complete picture, so its
+  // hero leads with the full spread rather than a recent trend.
+  const efficiencyRange = useMemo(() => {
+    const values = filteredEntriesWithCalculations
+      .filter((e) => e.efficiency !== null)
+      .map((e) => e.efficiency as number)
+    if (values.length === 0) return null
+    return { min: Math.min(...values), max: Math.max(...values), count: values.length }
+  }, [filteredEntriesWithCalculations])
 
-      return {
+  // filteredEntriesWithCalculations is newest-first (see deriveLegs); the
+  // trend chart and the sparkline both read left-to-right as "time passing",
+  // so they need the oldest fill-up first.
+  const chronological = useMemo(
+    () => [...filteredEntriesWithCalculations].reverse(),
+    [filteredEntriesWithCalculations]
+  )
+
+  const sparklinePoints = useMemo(() => {
+    return chronological
+      .filter((entry) => entry.efficiency !== null)
+      .map((entry) => ({ date: format(parseEntryDate(entry.date), 'MMM yy'), value: entry.efficiency as number }))
+  }, [chronological])
+
+  // Chart data: Spending over time. A running total computed once (O(n))
+  // instead of re-summing the whole array at every point (O(n^2)) — the old
+  // version also happened to sum in the wrong direction, since summing
+  // newest-to-current on a newest-first array makes "cumulative" peak at the
+  // oldest fill-up instead of the most recent one.
+  const spendingChartData = useMemo(() => {
+    return chronological.reduce<{ date: string; amount: number; cumulative: number }[]>((acc, entry) => {
+      const previousTotal = acc.length > 0 ? acc[acc.length - 1].cumulative : 0
+      acc.push({
         date: entry.date,
         amount: entry.amountPaid,
-        cumulative,
-      }
-    })
-  }, [filteredEntriesWithCalculations])
-
-  // Chart data: Efficiency trend (excluding entries with null efficiency)
-  const efficiencyChartData = useMemo(() => {
-    return filteredEntriesWithCalculations
-      .filter((entry) => entry.efficiency !== null)
-      .map((entry) => ({
-        date: entry.date,
-        efficiency: entry.efficiency as number,
-      }))
-  }, [filteredEntriesWithCalculations])
+        cumulative: previousTotal + entry.amountPaid,
+      })
+      return acc
+    }, [])
+  }, [chronological])
 
   // Chart data: Station comparison (only when viewing all stations)
   const stationComparisonData = useMemo(() => {
@@ -205,122 +172,155 @@ function Statistics({ entries }: StatisticsProps) {
     })
   }, [selectedStation, allStations, entriesWithCalculations])
 
+  // Recharts renders an SVG with no text alternative, so a screen reader
+  // announces nothing useful for any of these charts. Each one gets a
+  // computed one-sentence summary, exposed as the chart's aria-label.
+  const spendingChartSummary = useMemo(() => {
+    if (spendingChartData.length === 0) return 'No spending data available yet.'
+    const amounts = spendingChartData.map((d) => d.amount)
+    const total = spendingChartData[spendingChartData.length - 1].cumulative
+    return `${spendingChartData.length} fill-ups shown, ranging from ₹${Math.min(...amounts).toFixed(0)} to ₹${Math.max(...amounts).toFixed(0)} per fill-up. Cumulative spending reaches ₹${total.toLocaleString('en-IN', { maximumFractionDigits: 0 })}.`
+  }, [spendingChartData])
+
+  const stationSpendingSummary = useMemo(() => {
+    if (stationComparisonData.length === 0) return 'No station data available yet.'
+    const top = [...stationComparisonData].sort((a, b) => b.spent - a.spent)[0]
+    return `${stationComparisonData.length} stations compared. ${top.fullStation} accounts for the most spending, at ₹${top.spent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}.`
+  }, [stationComparisonData])
+
+  const stationEfficiencySummary = useMemo(() => {
+    if (stationComparisonData.length === 0) return 'No station data available yet.'
+    const best = [...stationComparisonData].sort((a, b) => b.efficiency - a.efficiency)[0]
+    return `${stationComparisonData.length} stations compared. ${best.fullStation} has the best average efficiency, at ${best.efficiency.toFixed(1)} km/L.`
+  }, [stationComparisonData])
+
+  // Reads from the theme tokens in index.css (see :root / .dark) instead of
+  // hardcoded hex, so charts actually follow dark mode instead of staying
+  // light-mode purple regardless of theme.
   const chartConfig = {
     amount: {
       label: 'Amount Paid',
-      color: '#7f22fe', // Purple
+      color: 'var(--chart-2)', // amber — matches the app's action color
     },
     cumulative: {
       label: 'Cumulative Spending',
-      color: '#8b5cf6', // Purple
+      color: 'var(--chart-4)', // warm gold — distinct from "amount" at a glance
     },
     efficiency: {
       label: 'Fuel Efficiency',
-      color: '#10b981', // Green
+      color: 'var(--chart-1)', // teal — the app's one recurring "efficiency" color
     },
     spent: {
       label: 'Total Spent',
-      color: '#f59e0b', // Amber
+      color: 'var(--chart-2)',
     },
   }
 
   return (
     <div className='space-y-6'>
-      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-        <div>
-          <h2 className='text-2xl font-bold tracking-tight'>Statistics</h2>
-          <p className='text-sm text-muted-foreground mt-1'>Overview of your fuel consumption and spending</p>
+      {/* Hero: average efficiency across the filtered history */}
+      <Card className='overflow-hidden py-0'>
+        <div className='grid md:grid-cols-[1fr_1.3fr]'>
+          <div className='flex flex-col gap-3 p-5 md:border-r md:p-6'>
+            <div className='flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground'>
+              Average efficiency
+              {efficiencyRange && (
+                <span className='rounded-full bg-primary/10 px-2 py-0.5 font-mono text-xs normal-case tracking-normal text-primary'>
+                  {efficiencyRange.count} {efficiencyRange.count === 1 ? 'tank' : 'tanks'}
+                </span>
+              )}
+            </div>
+            {efficiencyRange ? (
+              <>
+                <div className='flex flex-wrap items-baseline gap-2.5'>
+                  <span className='font-mono text-5xl font-medium leading-none tracking-tight tabular-nums sm:text-6xl'>
+                    {stats.avgFuelEfficiency.toFixed(1)}
+                  </span>
+                  <span className='text-lg text-muted-foreground'>km/L</span>
+                </div>
+                <p className='text-sm text-muted-foreground'>
+                  Ranging from <span className='font-medium text-foreground'>{efficiencyRange.min.toFixed(1)}</span>{' '}
+                  to <span className='font-medium text-foreground'>{efficiencyRange.max.toFixed(1)} km/L</span>
+                  {selectedStation !== 'All' && <> at {selectedStation}</>}
+                </p>
+              </>
+            ) : (
+              <p className='text-sm text-muted-foreground'>
+                Log a second fill-up to see an average efficiency here.
+              </p>
+            )}
+          </div>
+          <div className='flex flex-col gap-3 p-5 md:p-6'>
+            <span className='text-[11px] font-semibold uppercase tracking-wide text-muted-foreground'>
+              Efficiency over time
+            </span>
+            <EfficiencySparkline points={sparklinePoints} className='h-24' />
+          </div>
         </div>
-        <Field className='w-full sm:w-72'>
-          <FieldLabel htmlFor='station-filter' className='sr-only'>
-            Filter by Station
-          </FieldLabel>
-          <Select value={selectedStation} onValueChange={(value) => setSelectedStation(value || 'All')}>
-            <SelectTrigger id='station-filter'>
-              <SelectValue placeholder='Filter by station' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='All'>All Stations</SelectItem>
-              {allStations.map((station) => (
-                <SelectItem key={station} value={station}>
-                  {station}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-      </div>
+        <div className='grid grid-cols-2 gap-px border-t bg-border sm:grid-cols-3 lg:grid-cols-5'>
+          <div className='flex flex-col gap-0.5 bg-card p-3.5'>
+            <span className='text-[10px] font-semibold uppercase tracking-wide text-muted-foreground'>Total spent</span>
+            <span className='font-mono text-xl font-medium tabular-nums'>
+              ₹{stats.totalSpent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            </span>
+          </div>
+          <div className='flex flex-col gap-0.5 bg-card p-3.5'>
+            <span className='text-[10px] font-semibold uppercase tracking-wide text-muted-foreground'>Distance</span>
+            <span className='font-mono text-xl font-medium tabular-nums'>
+              {stats.totalKm.toLocaleString('en-IN')} <span className='text-sm text-muted-foreground'>km</span>
+            </span>
+          </div>
+          <div className='flex flex-col gap-0.5 bg-card p-3.5'>
+            <span className='text-[10px] font-semibold uppercase tracking-wide text-muted-foreground'>Fuel filled</span>
+            <span className='font-mono text-xl font-medium tabular-nums'>
+              {stats.totalFuel.toFixed(1)} <span className='text-sm text-muted-foreground'>L</span>
+            </span>
+          </div>
+          <div className='flex flex-col gap-0.5 bg-card p-3.5'>
+            <span className='text-[10px] font-semibold uppercase tracking-wide text-muted-foreground'>Cost per km</span>
+            <span className='font-mono text-xl font-medium tabular-nums'>₹{stats.avgCostPerKm.toFixed(2)}</span>
+          </div>
+          <div className='col-span-2 flex flex-col gap-0.5 bg-card p-3.5 sm:col-span-1'>
+            <span className='text-[10px] font-semibold uppercase tracking-wide text-muted-foreground'>Price per litre</span>
+            <span className='font-mono text-xl font-medium tabular-nums'>₹{stats.avgPricePerLiter.toFixed(2)}</span>
+          </div>
+        </div>
+      </Card>
 
-      {/* Statistics Cards */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-        <Card className='overflow-hidden gap-0 py-4'>
-          <CardHeader className='pb-3'>
-            <CardDescription className='text-xs font-medium'>Total Money Spent</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='text-3xl font-bold tracking-tight'>
-              ₹{stats.totalSpent.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className='text-xs text-muted-foreground mt-1'>Across all stations</p>
-          </CardContent>
-        </Card>
-
-        <Card className='overflow-hidden gap-0 py-4'>
-          <CardHeader className='pb-3'>
-            <CardDescription className='text-xs font-medium'>Total Distance</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='text-3xl font-bold tracking-tight'>
-              {stats.totalKm.toLocaleString('en-IN')} <span className='text-xl text-muted-foreground'>km</span>
-            </div>
-            <p className='text-xs text-muted-foreground mt-1'>Total kilometers traveled</p>
-          </CardContent>
-        </Card>
-
-        <Card className='overflow-hidden gap-0 py-4 border-primary/20 bg-primary/5'>
-          <CardHeader className='pb-3'>
-            <CardDescription className='text-xs font-medium'>Avg Fuel Efficiency</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='text-3xl font-bold tracking-tight text-primary'>
-              {stats.avgFuelEfficiency.toFixed(2)} <span className='text-xl text-primary/70'>km/L</span>
-            </div>
-            <p className='text-xs text-muted-foreground mt-1'>Average mileage</p>
-          </CardContent>
-        </Card>
-
-        <Card className='overflow-hidden gap-0 py-4'>
-          <CardHeader className='pb-3'>
-            <CardDescription className='text-xs font-medium'>Avg Cost per Kilometer</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='text-3xl font-bold tracking-tight'>₹{stats.avgCostPerKm.toFixed(2)}</div>
-            <p className='text-xs text-muted-foreground mt-1'>Per kilometer cost</p>
-          </CardContent>
-        </Card>
-
-        <Card className='overflow-hidden gap-0 py-4'>
-          <CardHeader className='pb-3'>
-            <CardDescription className='text-xs font-medium'>Total Fuel Filled</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='text-3xl font-bold tracking-tight'>
-              {stats.totalFuel.toFixed(2)} <span className='text-xl text-muted-foreground'>L</span>
-            </div>
-            <p className='text-xs text-muted-foreground mt-1'>Liters consumed</p>
-          </CardContent>
-        </Card>
-
-        <Card className='overflow-hidden gap-0 py-4'>
-          <CardHeader className='pb-3'>
-            <CardDescription className='text-xs font-medium'>Avg Price per Liter</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='text-3xl font-bold tracking-tight'>₹{stats.avgPricePerLiter.toFixed(2)}</div>
-            <p className='text-xs text-muted-foreground mt-1'>Average fuel price</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Station filter chips */}
+      {allStations.length > 0 && (
+        <div className='flex flex-wrap gap-1.5' role='group' aria-label='Filter by station'>
+          <button
+            type='button'
+            onClick={() => setSelectedStation('All')}
+            aria-pressed={selectedStation === 'All'}
+            className={cn(
+              'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+              selectedStation === 'All'
+                ? 'border-foreground bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            All stations
+          </button>
+          {allStations.map((station) => (
+            <button
+              key={station}
+              type='button'
+              onClick={() => setSelectedStation(station)}
+              aria-pressed={selectedStation === station}
+              className={cn(
+                'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                selectedStation === station
+                  ? 'border-foreground bg-foreground text-background'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {station}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Charts */}
       <div className='grid grid-cols-1 gap-6'>
@@ -331,7 +331,7 @@ function Statistics({ entries }: StatisticsProps) {
             <CardDescription className='text-xs'>Amount paid per refuel and cumulative spending</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className='h-75 w-full'>
+            <ChartContainer config={chartConfig} className='h-75 w-full' role='img' aria-label={spendingChartSummary}>
               <LineChart data={spendingChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
                 <XAxis dataKey='date' tick={{ fontSize: 11 }} tickLine={false} interval='preserveStartEnd' />
@@ -358,32 +358,6 @@ function Statistics({ entries }: StatisticsProps) {
           </CardContent>
         </Card>
 
-        {/* Fuel Efficiency Over Time */}
-        <Card className='overflow-hidden py-0'>
-          <CardHeader className='border-b bg-muted/50 py-4'>
-            <CardTitle className='text-base'>Fuel Efficiency Trend</CardTitle>
-            <CardDescription className='text-xs'>Kilometers per liter between refuels</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className='h-75 w-full'>
-              <LineChart data={efficiencyChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
-                <XAxis dataKey='date' tick={{ fontSize: 11 }} tickLine={false} interval='preserveStartEnd' />
-                <YAxis tick={{ fontSize: 11 }} tickLine={false} width={60} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Line
-                  type='monotone'
-                  dataKey='efficiency'
-                  stroke='var(--color-efficiency)'
-                  strokeWidth={2.5}
-                  dot={{ fill: 'var(--color-efficiency)', r: 3 }}
-                  name='km/L'
-                />
-              </LineChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
         {/* Station Comparison (only shown when "All" is selected) */}
         {selectedStation === 'All' && stationComparisonData.length > 0 && (
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
@@ -393,7 +367,7 @@ function Statistics({ entries }: StatisticsProps) {
                 <CardDescription className='text-xs'>Total money spent at each fuel station</CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className='h-75 w-full'>
+                <ChartContainer config={chartConfig} className='h-75 w-full' role='img' aria-label={stationSpendingSummary}>
                   <BarChart data={stationComparisonData} margin={{ top: 5, right: 10, left: 0, bottom: 60 }}>
                     <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
                     <XAxis
@@ -419,7 +393,7 @@ function Statistics({ entries }: StatisticsProps) {
                 <CardDescription className='text-xs'>Average fuel efficiency at each station</CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className='h-75 w-full'>
+                <ChartContainer config={chartConfig} className='h-75 w-full' role='img' aria-label={stationEfficiencySummary}>
                   <BarChart data={stationComparisonData} margin={{ top: 5, right: 10, left: 0, bottom: 60 }}>
                     <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
                     <XAxis

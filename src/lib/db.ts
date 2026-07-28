@@ -1,15 +1,6 @@
 // IndexedDB utility for storing fuel entries
 import { openDB, STORES } from './database';
-
-export type Entry = {
-  id?: number;
-  userId: number;
-  date: string;
-  amountPaid: number;
-  odometerReading: number;
-  fuelFilled: number;
-  fuelStation: string;
-};
+import type { Entry } from '../types';
 
 const STORE_NAME = STORES.ENTRIES;
 
@@ -90,6 +81,35 @@ export async function clearAllEntries(userId: number): Promise<void> {
         resolve();
       }
     };
+  });
+}
+
+// Bulk add entries, returning the assigned id for each in the same order —
+// used by fuelService.bulkCreateEntries so a batch import needs one Supabase
+// insert instead of one round trip per row.
+export async function bulkAddEntriesReturningIds(entries: Omit<Entry, 'id'>[]): Promise<number[]> {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    if (entries.length === 0) {
+      resolve([]);
+      return;
+    }
+
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const ids: number[] = new Array(entries.length);
+    let pending = entries.length;
+
+    entries.forEach((entry, index) => {
+      const request = store.add(entry);
+      request.onsuccess = () => {
+        ids[index] = request.result as number;
+        pending--;
+        if (pending === 0) resolve(ids);
+      };
+      request.onerror = () => reject(request.error);
+    });
   });
 }
 

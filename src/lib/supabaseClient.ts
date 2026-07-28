@@ -19,6 +19,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export type FuelEntryDB = {
   id: string; // uuid
   user_id: string;
+  // Client-generated identity (see Entry.clientId in src/types.ts) used to
+  // recognize an entry that's already been pushed, instead of matching on
+  // date/amount/odometer/litres. Requires the `client_id text unique` column
+  // — nullable, so pre-existing rows are unaffected.
+  client_id?: string | null;
   date: string;
   amount_paid: number;
   odometer_reading: number;

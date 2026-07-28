@@ -35,7 +35,7 @@ export function EmailConfirmation({ email, onBack }: EmailConfirmationProps) {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-3 text-center">
           <div className="flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-primary/80">
               <HugeiconsIcon
                 icon={Mail01Icon}
                 className="size-8 text-primary-foreground"

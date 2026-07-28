@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import {
@@ -9,41 +9,48 @@ import {
 } from '@hugeicons/core-free-icons';
 import { Button } from './components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './components/ui/alert-dialog';
 import { Textarea } from './components/ui/textarea';
 import { Field, FieldLabel } from './components/ui/field';
+import { useToast } from './components/ui/toast';
 import { Entries } from './components/entries';
-import { Statistics } from './components/statistics';
+import { ThemeToggle } from './components/ThemeToggle';
 import { useAuth } from './contexts/AuthContext';
 import { SignIn } from './components/auth/SignIn';
 import { SignUp } from './components/auth/SignUp';
 import { EmailConfirmation } from './components/auth/EmailConfirmation';
 import * as fuelService from './services/fuelService';
-import { type FuelEntry } from './services/fuelService';
+import { type Entry } from './types';
 
-// Entry type for UI components (matching the original interface)
-type Entry = {
-  id?: number;
-  supabaseId?: string;
-  userId: number;
-  date: string;
-  amountPaid: number;
-  odometerReading: number;
-  fuelFilled: number;
-  fuelStation: string;
-};
+// Recharts is a sizeable dependency that most sessions never need on first
+// paint (the Entries tab is the default view) — split it into its own chunk.
+const Statistics = lazy(() =>
+  import('./components/statistics').then((m) => ({ default: m.Statistics }))
+);
 
 export function App() {
   const { user, isLoading: authLoading, signOut, authState, clearAwaitingConfirmation } = useAuth();
+  const { toast } = useToast();
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [confirmationEmail, setConfirmationEmail] = useState<string>('');
-  
+
   // Entries state
   const [entries, setEntries] = useState<Entry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [csvText, setCsvText] = useState('');
+  const [pendingImport, setPendingImport] = useState<{ entries: Omit<Entry, 'id' | 'userId'>[]; rejectedCount: number } | null>(null);
 
   // Load entries when user changes
   useEffect(() => {
@@ -105,13 +112,13 @@ export function App() {
     if (!user?.id) return;
     
     try {
-      await fuelService.updateEntry(entry as FuelEntry, user.supabaseId);
+      await fuelService.updateEntry(entry, user.supabaseId);
       setEntries(prev => prev.map(e => e.id === entry.id ? entry : e));
     } catch (error) {
       console.error('Error updating entry:', error);
       throw error;
     }
-  }, [user?.supabaseId]);
+  }, [user?.id, user?.supabaseId]);
 
   const deleteEntry = useCallback(async (id: number) => {
     const entry = entries.find(e => e.id === id);
@@ -126,25 +133,13 @@ export function App() {
     }
   }, [entries, user?.supabaseId]);
 
-  const moveEntry = useCallback((fromIndex: number, toIndex: number) => {
-    setEntries(prev => {
-      const newEntries = [...prev];
-      const [removed] = newEntries.splice(fromIndex, 1);
-      newEntries.splice(toIndex, 0, removed);
-      return newEntries;
-    });
-  }, []);
-
   const clearAllEntries = useCallback(async () => {
     if (!user?.id) return;
-    
+
     try {
-      // Delete each entry (this will soft delete in Supabase)
-      for (const entry of entries) {
-        if (entry.id !== undefined) {
-          await fuelService.deleteEntry(entry.id, entry.supabaseId, user.supabaseId);
-        }
-      }
+      // Soft-deletes in Supabase with one request instead of one per entry.
+      const deletable = entries.filter((e): e is Entry & { id: number } => e.id !== undefined);
+      await fuelService.bulkDeleteEntries(deletable, user.supabaseId);
       setEntries([]);
     } catch (error) {
       console.error('Error clearing entries:', error);
@@ -154,23 +149,24 @@ export function App() {
 
   const replaceAllEntries = useCallback(async (newEntries: Omit<Entry, 'id' | 'userId'>[]) => {
     if (!user?.id) return;
-    
+
     try {
-      // Clear existing entries
-      await clearAllEntries();
-      
-      // Add new entries
-      const addedEntries: Entry[] = [];
-      for (const entry of newEntries) {
-        const newEntry = await fuelService.createEntry(entry, user.id, user.supabaseId);
-        addedEntries.push(newEntry as Entry);
-      }
+      // Insert the new entries before removing the old ones: if the import
+      // fails, nothing is lost. If the cleanup afterwards fails, the worst
+      // case is leftover old rows still visible — recoverable, unlike having
+      // wiped the account and then failed to repopulate it.
+      const addedEntries = await fuelService.bulkCreateEntries(newEntries, user.id, user.supabaseId);
+
+      const deletable = entries.filter((e): e is Entry & { id: number } => e.id !== undefined);
+      await fuelService.bulkDeleteEntries(deletable, user.supabaseId);
+
       setEntries(addedEntries);
+      return addedEntries;
     } catch (error) {
       console.error('Error replacing entries:', error);
       throw error;
     }
-  }, [user?.id, user?.supabaseId, clearAllEntries]);
+  }, [entries, user?.id, user?.supabaseId]);
 
   // Handle email confirmation callback
   const handleNeedsConfirmation = (email: string) => {
@@ -186,7 +182,7 @@ export function App() {
   // Download entries as CSV
   function handleDownload() {
     if (entries.length === 0) {
-      alert('No entries to export!');
+      toast({ title: 'Nothing to export yet', description: 'Add a fill-up first.' });
       return;
     }
     
@@ -198,7 +194,9 @@ export function App() {
         entry.amountPaid,
         entry.odometerReading,
         entry.fuelFilled,
-        `"${entry.fuelStation}"`, // Quote station name to handle commas
+        // Quote the station name to handle commas, and escape embedded quotes
+        // per RFC 4180 (double them) so a station like `Bob's "Corner" Fuel` round-trips.
+        `"${entry.fuelStation.replace(/"/g, '""')}"`,
       ].join(','))
     ];
     
@@ -224,50 +222,92 @@ export function App() {
     fileInputRef.current?.click();
   }
 
-  function parseCsvText(content: string): Omit<Entry, 'id' | 'userId'>[] {
+  type ImportCandidate = Omit<Entry, 'id' | 'userId'>;
+
+  // A row is only usable if every field parsed to something real — a NaN from a
+  // malformed number or an unparseable date must never reach the database, since
+  // every downstream average is computed from these fields.
+  function isValidImportCandidate(entry: ImportCandidate): boolean {
+    return (
+      !!entry.date.trim() &&
+      !Number.isNaN(Date.parse(entry.date.replace(/\//g, '-'))) &&
+      Number.isFinite(entry.amountPaid) && entry.amountPaid > 0 &&
+      Number.isFinite(entry.odometerReading) && entry.odometerReading >= 0 &&
+      Number.isFinite(entry.fuelFilled) && entry.fuelFilled > 0 &&
+      !!entry.fuelStation.trim()
+    );
+  }
+
+  function parseCsvText(content: string): { entries: ImportCandidate[]; rejectedCount: number } {
     const lines = content.split('\n').filter(line => line.trim());
-    if (lines.length === 0) return [];
-    
+    if (lines.length === 0) return { entries: [], rejectedCount: 0 };
+
     const hasHeader = lines[0].toLowerCase().includes('date') || lines[0].toLowerCase().includes('amount');
     const dataLines = hasHeader ? lines.slice(1) : lines;
-    
-    return dataLines.map(line => {
-      // Handle quoted values
-      const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map(v => v.trim().replace(/^"|"$/g, '')) || [];
-      
+
+    const candidates: ImportCandidate[] = dataLines.map(line => {
+      // Handle quoted values, un-escaping doubled quotes (`""` -> `"`)
+      const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map(v =>
+        v.trim().replace(/^"|"$/g, '').replace(/""/g, '"')
+      ) || [];
+
       return {
-        date: values[0] || '',
-        amountPaid: parseFloat(values[1] || '0'),
-        odometerReading: parseFloat(values[2] || '0'),
-        fuelFilled: parseFloat(values[3] || '0'),
-        fuelStation: values[4] || '',
+        date: (values[0] || '').trim(),
+        amountPaid: parseFloat(values[1] || ''),
+        odometerReading: parseFloat(values[2] || ''),
+        fuelFilled: parseFloat(values[3] || ''),
+        fuelStation: (values[4] || '').trim(),
       };
-    }).filter(entry => entry.date && entry.amountPaid > 0);
+    });
+
+    const entries = candidates.filter(isValidImportCandidate);
+    return { entries, rejectedCount: candidates.length - entries.length };
+  }
+
+  function describeImport(count: number, rejectedCount: number): string {
+    const base = rejectedCount > 0
+      ? `Found ${count} valid entries (${rejectedCount} row${rejectedCount === 1 ? '' : 's'} skipped — check the format).`
+      : `Found ${count} entries.`;
+    return `${base} This replaces everything currently saved — it can't be undone.`;
   }
 
   async function handleImportText() {
     if (!csvText.trim()) {
-      alert('Please enter CSV data.');
+      toast({ title: 'Please enter CSV data', variant: 'destructive' });
       return;
     }
 
     try {
-      const parsedEntries = parseCsvText(csvText);
-      
+      const { entries: parsedEntries, rejectedCount } = parseCsvText(csvText);
+
       if (parsedEntries.length > 0) {
-        const confirmMessage = `Found ${parsedEntries.length} entries. Replace current data?`;
-        if (confirm(confirmMessage)) {
-          await replaceAllEntries(parsedEntries);
-          alert('Data imported successfully!');
-          setImportDialogOpen(false);
-          setCsvText('');
-        }
+        setPendingImport({ entries: parsedEntries, rejectedCount });
       } else {
-        alert('No valid entries found in the CSV data.');
+        toast({ title: 'No valid entries found in the CSV data', variant: 'destructive' });
       }
     } catch (error) {
       console.error('Error parsing CSV:', error);
-      alert('Error parsing CSV data. Please check the format and try again.');
+      toast({ title: 'Could not parse CSV data', description: 'Check the format and try again.', variant: 'destructive' });
+    }
+  }
+
+  async function confirmPendingImport() {
+    if (!pendingImport) return;
+
+    try {
+      const addedEntries = await replaceAllEntries(pendingImport.entries);
+      toast({
+        title: 'Data imported successfully',
+        description: `${addedEntries?.length ?? pendingImport.entries.length} entries saved.`,
+        variant: 'success',
+      });
+      setImportDialogOpen(false);
+      setCsvText('');
+    } catch (error) {
+      console.error('Error importing entries:', error);
+      toast({ title: 'Import failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setPendingImport(null);
     }
   }
 
@@ -279,39 +319,37 @@ export function App() {
     reader.onload = async (e) => {
       const content = e.target?.result as string;
       try {
-        let parsedEntries;
+        let parsedEntries: ImportCandidate[];
+        let rejectedCount = 0;
 
         if (file.name.endsWith('.json')) {
-          // Parse JSON
           const jsonData = JSON.parse(content) as Entry[];
-          parsedEntries = jsonData.map((entry) => ({
-            date: entry.date,
+          const candidates: ImportCandidate[] = jsonData.map((entry) => ({
+            date: entry.date ?? '',
             amountPaid: entry.amountPaid,
             odometerReading: entry.odometerReading,
             fuelFilled: entry.fuelFilled,
-            fuelStation: entry.fuelStation,
+            fuelStation: entry.fuelStation ?? '',
           }));
+          parsedEntries = candidates.filter(isValidImportCandidate);
+          rejectedCount = candidates.length - parsedEntries.length;
         } else if (file.name.endsWith('.csv')) {
-          // Parse CSV
-          parsedEntries = parseCsvText(content);
+          const result = parseCsvText(content);
+          parsedEntries = result.entries;
+          rejectedCount = result.rejectedCount;
         } else {
-          alert('Unsupported file format. Please upload a CSV or JSON file.');
+          toast({ title: 'Unsupported file format', description: 'Upload a CSV or JSON file.', variant: 'destructive' });
           return;
         }
 
         if (parsedEntries.length > 0) {
-          const confirmMessage = `Found ${parsedEntries.length} entries. Replace current data?`;
-          if (confirm(confirmMessage)) {
-            await replaceAllEntries(parsedEntries);
-            alert('Data imported successfully!');
-            setImportDialogOpen(false);
-          }
+          setPendingImport({ entries: parsedEntries, rejectedCount });
         } else {
-          alert('No valid entries found in the file.');
+          toast({ title: 'No valid entries found in the file', variant: 'destructive' });
         }
       } catch (error) {
         console.error('Error parsing file:', error);
-        alert('Error parsing file. Please check the format and try again.');
+        toast({ title: 'Could not parse the file', description: 'Check the format and try again.', variant: 'destructive' });
       }
     };
 
@@ -355,11 +393,11 @@ export function App() {
 
   return (
     <div className='min-h-screen bg-linear-to-br from-background via-background to-muted/20'>
-      <header className='border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50 shadow-sm'>
+      <header className='border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50'>
         <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex h-16 items-center justify-between'>
             <div className='flex items-center gap-3'>
-              <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-primary/80 shadow-lg shadow-primary/20'>
+              <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-primary/80'>
                 <HugeiconsIcon
                   icon={FuelStationIcon}
                   className='size-5 text-primary-foreground'
@@ -375,6 +413,7 @@ export function App() {
               <div className='hidden sm:block text-sm text-muted-foreground mr-2'>
                 {user.name}
               </div>
+              <ThemeToggle />
               <Button
                 variant='outline'
                 size='sm'
@@ -475,6 +514,20 @@ export function App() {
           </div>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={pendingImport !== null} onOpenChange={(open) => { if (!open) setPendingImport(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace current data?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingImport && describeImport(pendingImport.entries.length, pendingImport.rejectedCount)}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingImport(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPendingImport}>Replace</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <main className='container mx-auto px-4 md:px-6 lg:px-8 py-4'>
         {isLoading ? (
           <div className="flex items-center justify-center min-h-100">
@@ -499,12 +552,17 @@ export function App() {
                 addEntry={addEntry}
                 updateEntry={updateEntry}
                 deleteEntry={deleteEntry}
-                moveEntry={moveEntry}
                 clearAllEntries={clearAllEntries}
               />
             </TabsContent>
             <TabsContent value='statistics' className='space-y-6'>
-              <Statistics entries={entries} />
+              <Suspense fallback={
+                <div className='flex items-center justify-center min-h-100'>
+                  <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>
+                </div>
+              }>
+                <Statistics entries={entries} />
+              </Suspense>
             </TabsContent>
           </Tabs>
         )}

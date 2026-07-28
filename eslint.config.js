@@ -6,7 +6,11 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // `app/` is the separate Expo project — it has its own eslint.config.js
+  // (eslint-config-expo) and its own `lint` script (`expo lint`). Without
+  // this ignore, `npm run lint` here silently also lints Expo/React Native
+  // files against Vite-project rules that don't apply to them.
+  globalIgnores(['dist', 'app']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -20,7 +24,7 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      'react-refresh/only-export-components': 'ignore',
+      'react-refresh/only-export-components': 'off',
     }
   },
 ])
