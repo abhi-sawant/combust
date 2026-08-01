@@ -12,7 +12,7 @@ function isDarkApplied(): boolean {
   return document.documentElement.classList.contains('dark');
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ menuItem = false }: { menuItem?: boolean }) {
   const [isDark, setIsDark] = useState(isDarkApplied);
 
   useEffect(() => {
@@ -22,15 +22,15 @@ export function ThemeToggle() {
 
   return (
     <Button
-      variant='outline'
+      variant={menuItem ? 'ghost' : 'outline'}
       size='sm'
-      className='gap-2'
+      className={menuItem ? 'gap-2 justify-start w-full' : 'gap-2'}
       onClick={() => setIsDark((prev) => !prev)}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       <HugeiconsIcon icon={isDark ? Sun03Icon : Moon02Icon} className='size-4' />
-      <span className='hidden sm:inline'>{isDark ? 'Light' : 'Dark'}</span>
+      <span className={menuItem ? '' : 'hidden sm:inline'}>{isDark ? 'Light' : 'Dark'}</span>
     </Button>
   );
 }

@@ -6,8 +6,10 @@ import {
   FuelStationIcon,
   Upload01Icon,
   Logout01Icon,
+  Menu01Icon,
 } from '@hugeicons/core-free-icons';
 import { Button } from './components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './components/ui/dialog';
 import {
   AlertDialog,
@@ -42,6 +44,7 @@ export function App() {
   const { toast } = useToast();
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [confirmationEmail, setConfirmationEmail] = useState<string>('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Entries state
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -405,12 +408,12 @@ export function App() {
                 />
               </div>
               <div>
-                <h1 className='text-2xl font-bold tracking-tight'>Combust</h1>
-                <p className='text-xs text-muted-foreground'>Fuel Tracking Made Simple</p>
+                <h1 className='text-lg sm:text-2xl font-bold tracking-tight'>Combust</h1>
+                <p className='hidden sm:block text-xs text-muted-foreground'>Fuel Tracking Made Simple</p>
               </div>
             </div>
-            <div className='flex items-center gap-2'>
-              <div className='hidden sm:block text-sm text-muted-foreground mr-2'>
+            <div className='hidden sm:flex items-center gap-2'>
+              <div className='text-sm text-muted-foreground mr-2'>
                 {user.name}
               </div>
               <ThemeToggle />
@@ -421,7 +424,7 @@ export function App() {
                 onClick={handleUpload}
               >
                 <HugeiconsIcon icon={Upload01Icon} className='size-4' />
-                <span className='hidden sm:inline'>Import</span>
+                <span>Import</span>
               </Button>
               <Button
                 variant='outline'
@@ -430,7 +433,7 @@ export function App() {
                 onClick={handleDownload}
               >
                 <HugeiconsIcon icon={Download01Icon} className='size-4' />
-                <span className='hidden sm:inline'>Export</span>
+                <span>Export</span>
               </Button>
               <Button
                 variant='outline'
@@ -440,8 +443,60 @@ export function App() {
                 title="Sign Out"
               >
                 <HugeiconsIcon icon={Logout01Icon} className='size-4' />
-                <span className='hidden sm:inline'>Sign Out</span>
+                <span>Sign Out</span>
               </Button>
+            </div>
+            <div className='sm:hidden'>
+              <Popover open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <PopoverTrigger
+                  render={
+                    <Button variant='outline' size='icon' aria-label='Open menu'>
+                      <HugeiconsIcon icon={Menu01Icon} className='size-5' />
+                    </Button>
+                  }
+                />
+                <PopoverContent align='end' className='w-56 p-2 gap-0'>
+                  <div className='px-2 pb-2 mb-1 border-b text-sm text-muted-foreground'>
+                    {user.name}
+                  </div>
+                  <div className='flex flex-col gap-1'>
+                    <ThemeToggle menuItem />
+                    <Button
+                      variant='ghost'
+                      className='justify-start gap-2 w-full'
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        handleUpload();
+                      }}
+                    >
+                      <HugeiconsIcon icon={Upload01Icon} className='size-4' />
+                      <span>Import</span>
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      className='justify-start gap-2 w-full'
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        handleDownload();
+                      }}
+                    >
+                      <HugeiconsIcon icon={Download01Icon} className='size-4' />
+                      <span>Export</span>
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      className='justify-start gap-2 w-full'
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        signOut();
+                      }}
+                    >
+                      <HugeiconsIcon icon={Logout01Icon} className='size-4' />
+                      <span>Sign Out</span>
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
