@@ -364,7 +364,7 @@ export function App() {
   // Show loading state while checking auth
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-background via-background to-muted/20">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-3">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="text-muted-foreground">Loading...</p>
@@ -395,12 +395,12 @@ export function App() {
   }
 
   return (
-    <div className='min-h-screen bg-linear-to-br from-background via-background to-muted/20'>
-      <header className='border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50'>
+    <div className='min-h-screen bg-background'>
+      <header className='border-b border-border bg-background sticky top-0 z-50'>
         <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex h-16 items-center justify-between'>
             <div className='flex items-center gap-3'>
-              <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-primary/80'>
+              <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-primary'>
                 <HugeiconsIcon
                   icon={FuelStationIcon}
                   className='size-5 text-primary-foreground'
@@ -594,16 +594,16 @@ export function App() {
         ) : (
           <Tabs defaultValue='entries' className='space-y-2'>
             <TabsList className='grid w-full max-w-md mx-auto grid-cols-2 h-auto!'>
-              <TabsTrigger value='entries' className='text-base'>
+              <TabsTrigger value='entries' className='text-base data-active:bg-primary data-active:text-primary-foreground dark:data-active:bg-primary dark:data-active:text-primary-foreground dark:data-active:border-transparent'>
                 Entries
               </TabsTrigger>
-              <TabsTrigger value='statistics' className='text-base'>
+              <TabsTrigger value='statistics' className='text-base data-active:bg-primary data-active:text-primary-foreground dark:data-active:bg-primary dark:data-active:text-primary-foreground dark:data-active:border-transparent'>
                 Statistics
               </TabsTrigger>
             </TabsList>
             <TabsContent value='entries' className='space-y-6'>
-              <Entries 
-                entries={entries} 
+              <Entries
+                entries={entries}
                 addEntry={addEntry}
                 updateEntry={updateEntry}
                 deleteEntry={deleteEntry}

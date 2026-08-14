@@ -1,51 +1,55 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/inter";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Sodium-lamp amber for actions, instrument teal for the efficiency series,
- * warm graphite neutrals — a palette pulled from a fuel station forecourt at
- * night, rather than the default shadcn violet. See improvements.md for the
- * full rationale.
+ * Finio Focus: warm paper background, a single instrument-green accent for
+ * every meaningful action/positive/link, warm graphite neutrals, hairline
+ * elevation instead of shadows or rings. Dark mode extends the same warm
+ * neutrals (there is no literal dark spec to follow) and brightens only the
+ * accent for contrast.
  */
 :root {
-    --background: #F6F5F2;
-    --foreground: #191612;
-    --card: #FFFFFF;
-    --card-foreground: #191612;
-    --popover: #FFFFFF;
-    --popover-foreground: #191612;
-    --primary: #D9590C;
+    --background: #F7F5F1;
+    --foreground: #1B1A17;
+    --card: #FFFDF9;
+    --card-foreground: #1B1A17;
+    --popover: #FFFDF9;
+    --popover-foreground: #1B1A17;
+    --primary: #146B54;
     --primary-foreground: #FFFFFF;
-    --secondary: #EFECE6;
-    --secondary-foreground: #191612;
-    --muted: #EFECE6;
-    --muted-foreground: #6B665C;
-    --accent: #FBEEE3;
-    --accent-foreground: #B04607;
-    --destructive: #B8402F;
-    --success: #2F7D48;
-    --warning: #A8760A;
-    --border: #E4E1DA;
-    --input: #E4E1DA;
-    --ring: #D9590C;
-    --chart-1: #0E7F76;
-    --chart-2: #D9590C;
-    --chart-3: #2F7D48;
-    --chart-4: #A8760A;
-    --chart-5: #6B665C;
-    --radius: 0.625rem;
-    --sidebar: #FAF9F6;
-    --sidebar-foreground: #191612;
-    --sidebar-primary: #D9590C;
+    --secondary: #F1EDE4;
+    --secondary-foreground: #1B1A17;
+    --muted: #F1EDE4;
+    --muted-foreground: #726D62;
+    --accent: #EAF0EE;
+    --accent-foreground: #146B54;
+    --destructive: #B3421F;
+    --success: #146B54;
+    --warning: #8F5139;
+    --border: #EAE5DB;
+    --input: #EAE5DB;
+    --ring: #146B54;
+    --chart-1: #146B54;
+    --chart-2: #B3421F;
+    --chart-3: #C79B4F;
+    --chart-4: #8A9B6E;
+    --chart-5: #6E8FB0;
+    --radius: 1rem;
+    --scrim: rgba(27, 26, 23, 0.35);
+    --shadow-lifted: 0 24px 60px -30px rgba(40, 34, 20, 0.4);
+    --sidebar: #FFFDF9;
+    --sidebar-foreground: #1B1A17;
+    --sidebar-primary: #146B54;
     --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #EFECE6;
-    --sidebar-accent-foreground: #191612;
-    --sidebar-border: #E4E1DA;
-    --sidebar-ring: #D9590C;
+    --sidebar-accent: #F1EDE4;
+    --sidebar-accent-foreground: #1B1A17;
+    --sidebar-border: #EAE5DB;
+    --sidebar-ring: #146B54;
 }
 
 .dark {
@@ -55,37 +59,40 @@
     --card-foreground: #F4F1EA;
     --popover: #1D1A16;
     --popover-foreground: #F4F1EA;
-    --primary: #F98A3C;
+    --primary: #2BAF8A;
     --primary-foreground: #14120F;
     --secondary: #262119;
     --secondary-foreground: #F4F1EA;
     --muted: #262119;
     --muted-foreground: #A39C90;
-    --accent: #2C1D10;
-    --accent-foreground: #FFA463;
+    --accent: #1B2A24;
+    --accent-foreground: #2BAF8A;
     --destructive: #E0705F;
-    --success: #5CB874;
-    --warning: #D9A83A;
+    --success: #2BAF8A;
+    --warning: #D19A6E;
     --border: #322C24;
     --input: #322C24;
-    --ring: #F98A3C;
-    --chart-1: #3FB8AC;
-    --chart-2: #F98A3C;
-    --chart-3: #5CB874;
-    --chart-4: #D9A83A;
-    --chart-5: #A39C90;
+    --ring: #2BAF8A;
+    --chart-1: #2BAF8A;
+    --chart-2: #E0705F;
+    --chart-3: #D9B570;
+    --chart-4: #A8BB8C;
+    --chart-5: #8FB0D4;
+    --scrim: rgba(27, 26, 23, 0.35);
+    --shadow-lifted: 0 24px 60px -30px rgba(0, 0, 0, 0.6);
     --sidebar: #1D1A16;
     --sidebar-foreground: #F4F1EA;
-    --sidebar-primary: #F98A3C;
+    --sidebar-primary: #2BAF8A;
     --sidebar-primary-foreground: #14120F;
     --sidebar-accent: #262119;
     --sidebar-accent-foreground: #F4F1EA;
     --sidebar-border: #322C24;
-    --sidebar-ring: #F98A3C;
+    --sidebar-ring: #2BAF8A;
 }
 
 @theme inline {
-    --font-sans: 'Inter Variable', sans-serif;
+    --font-sans: 'Geist Variable', sans-serif;
+    --font-mono: 'Geist Mono Variable', monospace;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

@@ -13,7 +13,7 @@ type ConfigurationErrorProps = {
 // import resolution, before React starts rendering anything.
 export function ConfigurationError({ missingVars }: ConfigurationErrorProps) {
   return (
-    <div className='min-h-screen flex items-center justify-center bg-linear-to-br from-background via-background to-muted/20 p-4'>
+    <div className='min-h-screen flex items-center justify-center bg-background p-4'>
       <div className='w-full max-w-md rounded-xl border bg-card p-8 space-y-5 text-center'>
         <div className='flex justify-center'>
           <div className='flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10'>

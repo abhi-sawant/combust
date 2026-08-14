@@ -200,15 +200,15 @@ function Statistics({ entries }: StatisticsProps) {
   const chartConfig = {
     amount: {
       label: 'Amount Paid',
-      color: 'var(--chart-2)', // amber — matches the app's action color
+      color: 'var(--chart-2)', // rust — the app's negative/spend-tracking color
     },
     cumulative: {
       label: 'Cumulative Spending',
-      color: 'var(--chart-4)', // warm gold — distinct from "amount" at a glance
+      color: 'var(--chart-4)', // olive — distinct from "amount" at a glance
     },
     efficiency: {
       label: 'Fuel Efficiency',
-      color: 'var(--chart-1)', // teal — the app's one recurring "efficiency" color
+      color: 'var(--chart-1)', // instrument green — the app's one accent color
     },
     spent: {
       label: 'Total Spent',
@@ -297,8 +297,8 @@ function Statistics({ entries }: StatisticsProps) {
             className={cn(
               'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
               selectedStation === 'All'
-                ? 'border-foreground bg-foreground text-background'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-card text-muted-foreground hover:text-foreground'
             )}
           >
             All stations
@@ -312,8 +312,8 @@ function Statistics({ entries }: StatisticsProps) {
               className={cn(
                 'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
                 selectedStation === station
-                  ? 'border-foreground bg-foreground text-background'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:text-foreground'
               )}
             >
               {station}

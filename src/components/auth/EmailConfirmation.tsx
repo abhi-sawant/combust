@@ -31,11 +31,11 @@ export function EmailConfirmation({ email, onBack }: EmailConfirmationProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-background via-background to-muted/20 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-3 text-center">
           <div className="flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-primary/80">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary">
               <HugeiconsIcon
                 icon={Mail01Icon}
                 className="size-8 text-primary-foreground"
@@ -57,8 +57,8 @@ export function EmailConfirmation({ email, onBack }: EmailConfirmationProps) {
 
           {message && (
             <div className={`text-sm p-3 rounded-md ${
-              message.type === 'success' 
-                ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
+              message.type === 'success'
+                ? 'bg-success/10 text-success'
                 : 'bg-destructive/10 text-destructive'
             }`}>
               {message.text}

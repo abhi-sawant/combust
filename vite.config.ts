@@ -17,8 +17,8 @@ export default defineConfig({
         name: 'Combust - Fuel Tracker',
         short_name: 'Combust',
         description: 'Track your fuel consumption, spending, and vehicle efficiency',
-        theme_color: '#7f22fe',
-        background_color: '#ffffff',
+        theme_color: '#F7F5F1',
+        background_color: '#F7F5F1',
         display: 'standalone',
         start_url: '/',
         scope: '/',
@@ -52,7 +52,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // Inter is bundled locally via @fontsource-variable and precached by
+        // Geist is bundled locally via @fontsource-variable and precached by
         // globPatterns below (it's a .woff2 in the build output) — the app
         // never requests fonts.googleapis.com, so a runtime-caching rule for
         // it cached nothing. Supabase REST responses are deliberately left

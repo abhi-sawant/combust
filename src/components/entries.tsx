@@ -283,7 +283,7 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, clearAllEntries 
               <span className='text-[11px] font-semibold uppercase tracking-wide text-muted-foreground'>
                 Efficiency trend
               </span>
-              <div className='inline-flex rounded-full border bg-muted/50 p-0.5' role='group' aria-label='Time range'>
+              <div className='inline-flex rounded-full bg-muted p-0.5' role='group' aria-label='Time range'>
                 {(['6', '12', 'all'] as const).map((r) => (
                   <button
                     key={r}
@@ -292,7 +292,7 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, clearAllEntries 
                     aria-pressed={range === r}
                     className={cn(
                       'rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
-                      range === r ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground'
+                      range === r ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
                     {r === 'all' ? 'All' : `${r} fills`}
@@ -339,8 +339,8 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, clearAllEntries 
             className={cn(
               'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
               stationFilter === 'All'
-                ? 'border-foreground bg-foreground text-background'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-card text-muted-foreground hover:text-foreground'
             )}
           >
             All stations
@@ -354,8 +354,8 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, clearAllEntries 
               className={cn(
                 'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
                 stationFilter === s
-                  ? 'border-foreground bg-foreground text-background'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:text-foreground'
               )}
             >
               {s}
@@ -394,7 +394,7 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, clearAllEntries 
               </p>
             </div>
           ) : (
-            <div className='space-y-2'>
+            <Card className='gap-0 divide-y divide-border py-0'>
               {displayLegs.map((leg) => (
                 <LegRow
                   key={leg.id ?? leg.date}
@@ -406,7 +406,7 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, clearAllEntries 
                   onDelete={(id, date) => setDeleteTarget({ type: 'single', id, date })}
                 />
               ))}
-            </div>
+            </Card>
           )}
         </section>
 
@@ -442,7 +442,7 @@ function Entries({ entries, addEntry, updateEntry, deleteEntry, clearAllEntries 
         <DialogContent
           showCloseButton={false}
           className={cn(
-            'inset-x-0 bottom-0 top-auto left-0 max-h-[85vh] max-w-full translate-x-0 translate-y-0 gap-0 overflow-y-auto rounded-b-none rounded-t-2xl p-0',
+            'inset-x-0 bottom-0 top-auto left-0 max-h-[85vh] max-w-full translate-x-0 translate-y-0 gap-0 overflow-y-auto rounded-b-none rounded-t-2xl p-0 shadow-[var(--shadow-lifted)]',
             'data-open:slide-in-from-bottom-8 data-closed:slide-out-to-bottom-8',
             'lg:inset-x-auto lg:bottom-auto lg:top-1/2 lg:left-1/2 lg:max-w-md lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-xl'
           )}
@@ -626,7 +626,7 @@ function LegRow({ leg, barPercent, isBest, isWorst, onEdit, onDelete }: LegRowPr
   const parsedDate = parseEntryDate(leg.date);
 
   return (
-    <div className='grid grid-cols-[48px_1fr_auto] items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:border-primary/40 sm:grid-cols-[56px_1fr_auto]'>
+    <div className='grid grid-cols-[48px_1fr_auto] items-center gap-3 p-3 transition-colors hover:bg-muted/50 sm:grid-cols-[56px_1fr_auto]'>
       <div className='flex flex-col leading-tight'>
         <span className='font-mono text-base font-semibold tabular-nums'>{format(parsedDate, 'dd')}</span>
         <span className='text-[10px] font-semibold uppercase tracking-wide text-muted-foreground'>
@@ -660,7 +660,7 @@ function LegRow({ leg, barPercent, isBest, isWorst, onEdit, onDelete }: LegRowPr
           )}
         </div>
         {barPercent !== null && (
-          <div className='h-1 max-w-70 overflow-hidden rounded-full bg-muted'>
+          <div className='h-1.5 max-w-70 overflow-hidden rounded-full bg-muted'>
             <div className='h-full rounded-full bg-chart-1' style={{ width: `${barPercent}%` }} />
           </div>
         )}
