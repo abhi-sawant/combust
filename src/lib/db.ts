@@ -1,145 +1,76 @@
-// IndexedDB utility for storing fuel entries
-import { openDB, STORES } from './database';
-import type { Entry } from '../types';
+import { openDB, type DBSchema, type IDBPDatabase } from "idb"
 
-const STORE_NAME = STORES.ENTRIES;
+import type { FuelEntry, FuelEntryInput } from "@/types/entry"
 
-// Get all entries for a specific user
-export async function getAllEntries(userId: number): Promise<Entry[]> {
-  const db = await openDB();
-  
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readonly');
-    const store = transaction.objectStore(STORE_NAME);
-    const index = store.index('userId');
-    const request = index.getAll(userId);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-  });
-}
-
-// Add a new entry
-export async function addEntry(entry: Omit<Entry, 'id'>): Promise<number> {
-  const db = await openDB();
-  
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.add(entry);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result as number);
-  });
-}
-
-// Update an existing entry
-export async function updateEntry(entry: Entry): Promise<void> {
-  const db = await openDB();
-  
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.put(entry);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
-  });
-}
-
-// Delete an entry
-export async function deleteEntry(id: number): Promise<void> {
-  const db = await openDB();
-  
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.delete(id);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
-  });
-}
-
-// Clear all entries for a specific user
-export async function clearAllEntries(userId: number): Promise<void> {
-  const db = await openDB();
-  
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-    const index = store.index('userId');
-    const request = index.openCursor(IDBKeyRange.only(userId));
-    
-    request.onerror = () => reject(request.error);
-    request.onsuccess = (event) => {
-      const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-      if (cursor) {
-        cursor.delete();
-        cursor.continue();
-      } else {
-        resolve();
-      }
-    };
-  });
-}
-
-// Bulk add entries, returning the assigned id for each in the same order —
-// used by fuelService.bulkCreateEntries so a batch import needs one Supabase
-// insert instead of one round trip per row.
-export async function bulkAddEntriesReturningIds(entries: Omit<Entry, 'id'>[]): Promise<number[]> {
-  const db = await openDB();
-
-  return new Promise((resolve, reject) => {
-    if (entries.length === 0) {
-      resolve([]);
-      return;
-    }
-
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-    const ids: number[] = new Array(entries.length);
-    let pending = entries.length;
-
-    entries.forEach((entry, index) => {
-      const request = store.add(entry);
-      request.onsuccess = () => {
-        ids[index] = request.result as number;
-        pending--;
-        if (pending === 0) resolve(ids);
-      };
-      request.onerror = () => reject(request.error);
-    });
-  });
-}
-
-// Bulk add entries (useful for import)
-export async function bulkAddEntries(entries: Omit<Entry, 'id'>[]): Promise<void> {
-  const db = await openDB();
-  
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-    
-    let pending = entries.length;
-    
-    entries.forEach((entry) => {
-      const request = store.add(entry);
-      request.onsuccess = () => {
-        pending--;
-        if (pending === 0) resolve();
-      };
-      request.onerror = () => reject(request.error);
-    });
-  });
-}
-
-// Replace all entries for a user (clear and add new ones)
-export async function replaceAllEntries(userId: number, entries: Omit<Entry, 'id'>[]): Promise<void> {
-  await clearAllEntries(userId);
-  if (entries.length > 0) {
-    // Ensure all entries have the correct userId
-    const entriesWithUserId = entries.map(entry => ({ ...entry, userId }));
-    await bulkAddEntries(entriesWithUserId);
+interface FuelDB extends DBSchema {
+  entries: {
+    key: string
+    value: FuelEntry
+    indexes: { "by-odometer": number }
   }
+}
+
+const DB_NAME = "combust"
+const DB_VERSION = 1
+const STORE_NAME = "entries"
+
+let dbPromise: Promise<IDBPDatabase<FuelDB>> | null = null
+
+function getDb() {
+  dbPromise ??= openDB<FuelDB>(DB_NAME, DB_VERSION, {
+    upgrade(db) {
+      const store = db.createObjectStore(STORE_NAME, { keyPath: "id" })
+      store.createIndex("by-odometer", "odometerReading")
+    },
+  })
+  return dbPromise
+}
+
+/** Storage contract for fuel entries, kept narrow so the backing store can be swapped later. */
+export interface EntriesRepository {
+  getAll(): Promise<FuelEntry[]>
+  add(entry: FuelEntryInput): Promise<FuelEntry>
+  update(id: string, entry: FuelEntryInput): Promise<FuelEntry>
+  delete(id: string): Promise<void>
+}
+
+class IndexedDbEntriesRepository implements EntriesRepository {
+  async getAll(): Promise<FuelEntry[]> {
+    const db = await getDb()
+    return db.getAllFromIndex(STORE_NAME, "by-odometer")
+  }
+
+  async add(entry: FuelEntryInput): Promise<FuelEntry> {
+    const db = await getDb()
+    const record: FuelEntry = { ...entry, id: crypto.randomUUID() }
+    await db.add(STORE_NAME, record)
+    return record
+  }
+
+  async update(id: string, entry: FuelEntryInput): Promise<FuelEntry> {
+    const db = await getDb()
+    const record: FuelEntry = { ...entry, id }
+    await db.put(STORE_NAME, record)
+    return record
+  }
+
+  async delete(id: string): Promise<void> {
+    const db = await getDb()
+    await db.delete(STORE_NAME, id)
+  }
+}
+
+export const entriesRepository: EntriesRepository = new IndexedDbEntriesRepository()
+
+/**
+ * Bulk-inserts entries (e.g. from CSV import) in a single transaction.
+ * Not part of `EntriesRepository` since it's an import-time convenience,
+ * not a swap point for the storage backend.
+ */
+export async function bulkAddEntries(entries: FuelEntryInput[]): Promise<FuelEntry[]> {
+  const db = await getDb()
+  const tx = db.transaction(STORE_NAME, "readwrite")
+  const records = entries.map((entry) => ({ ...entry, id: crypto.randomUUID() }))
+  await Promise.all([...records.map((record) => tx.store.add(record)), tx.done])
+  return records
 }
