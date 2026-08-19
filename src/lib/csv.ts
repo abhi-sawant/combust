@@ -75,7 +75,7 @@ function parseFlexibleNumber(raw: string): number | null {
   return Number.isFinite(value) ? value : null
 }
 
-const REQUIRED_COLUMNS = ["date", "amount paid", "odometer reading", "fuel filled", "fuel station"]
+export const REQUIRED_COLUMNS = ["date", "amount paid", "odometer reading", "fuel filled", "fuel station"]
 
 /**
  * Parses the CSV export format: Date, Amount Paid, Odometer Reading, Fuel

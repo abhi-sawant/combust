@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { EntriesContext, type EntriesContextValue } from "@/hooks/entries-context"
+import { useVehicles } from "@/hooks/vehicles-context"
 import { deriveEntries } from "@/lib/calculations"
 import { entriesRepository } from "@/lib/db"
 import type { FuelEntry, FuelEntryInput } from "@/types/entry"
 
 export function EntriesProvider({ children }: { children: React.ReactNode }) {
+  const { activeVehicleId } = useVehicles()
   const [entries, setEntries] = useState<FuelEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
+    if (!activeVehicleId) return
     try {
-      const all = await entriesRepository.getAll()
+      const all = await entriesRepository.getAll(activeVehicleId)
       setEntries(all)
       setError(null)
     } catch (err) {
@@ -20,13 +23,15 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [activeVehicleId])
 
   useEffect(() => {
+    if (!activeVehicleId) return
+
     let cancelled = false
 
     entriesRepository
-      .getAll()
+      .getAll(activeVehicleId)
       .then((all) => {
         if (cancelled) return
         setEntries(all)
@@ -43,22 +48,24 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [activeVehicleId])
 
   const addEntry = useCallback(
     async (input: FuelEntryInput) => {
-      await entriesRepository.add(input)
+      if (!activeVehicleId) return
+      await entriesRepository.add(input, activeVehicleId)
       await refresh()
     },
-    [refresh]
+    [refresh, activeVehicleId]
   )
 
   const updateEntry = useCallback(
     async (id: string, input: FuelEntryInput) => {
-      await entriesRepository.update(id, input)
+      if (!activeVehicleId) return
+      await entriesRepository.update(id, input, activeVehicleId)
       await refresh()
     },
-    [refresh]
+    [refresh, activeVehicleId]
   )
 
   const deleteEntry = useCallback(

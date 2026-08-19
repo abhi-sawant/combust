@@ -1,3 +1,5 @@
+import { format, parseISO, subMonths } from "date-fns"
+
 import type { FuelEntry } from "@/types/entry"
 import type { DerivedEntry, OverallStats, StationStats } from "@/types/stats"
 
@@ -8,33 +10,34 @@ export function sortByOdometer<T extends { odometerReading: number }>(entries: T
 
 /**
  * Attaches distance/mileage/cost-per-litre to each entry relative to the
- * previous one by odometer order. The lowest-odometer entry is the
- * "baseline" and never has mileage. An entry whose odometer reading
- * regresses relative to its predecessor gets no distance/mileage figures
+ * next one by odometer order — the litres added at that later fill-up is
+ * what quantifies the distance covered on the tank filled here. The
+ * highest-odometer entry is "pending" (no later fill-up yet to measure
+ * against) and never has mileage. An entry whose odometer reading is
+ * overtaken by (or ties) its successor gets no distance/mileage figures
  * (they'd be meaningless), but its cost-per-litre is still computed.
  */
 export function deriveEntries(entries: FuelEntry[]): DerivedEntry[] {
   const sorted = sortByOdometer(entries)
 
   return sorted.map((entry, index) => {
-    const previous = index > 0 ? sorted[index - 1] : null
-    const isBaseline = previous === null
-    const isOdometerRegression =
-      previous !== null && entry.odometerReading <= previous.odometerReading
+    const next = index < sorted.length - 1 ? sorted[index + 1] : null
+    const isPending = next === null
+    const isOdometerRegression = next !== null && next.odometerReading <= entry.odometerReading
 
     const distanceCovered =
-      previous && !isOdometerRegression ? entry.odometerReading - previous.odometerReading : null
+      next && !isOdometerRegression ? next.odometerReading - entry.odometerReading : null
 
     const mileage =
-      distanceCovered !== null && entry.litresFilled > 0
-        ? distanceCovered / entry.litresFilled
+      distanceCovered !== null && next!.litresFilled > 0
+        ? distanceCovered / next!.litresFilled
         : null
 
     const costPerLitre = entry.litresFilled > 0 ? entry.amountPaid / entry.litresFilled : null
 
     return {
       ...entry,
-      isBaseline,
+      isPending,
       isOdometerRegression,
       distanceCovered,
       mileage,
@@ -97,6 +100,61 @@ export function computeStationStats(derived: DerivedEntry[]): StationStats[] {
       totalAmountSpent: entries.reduce((sum, e) => sum + e.amountPaid, 0),
     }))
     .sort((a, b) => b.fillCount - a.fillCount)
+}
+
+/** A contiguous run of entries sharing the same calendar month, most-recent month first. */
+export interface MonthGroup<T> {
+  label: string
+  items: T[]
+}
+
+/** Groups entries (already sorted by date, newest first) into per-month buckets for the mobile entries list. */
+export function groupByMonth<T extends { date: string }>(entries: T[]): MonthGroup<T>[] {
+  const groups: MonthGroup<T>[] = []
+  for (const entry of entries) {
+    const label = format(parseISO(entry.date), "MMMM yyyy")
+    const last = groups[groups.length - 1]
+    if (last && last.label === label) {
+      last.items.push(entry)
+    } else {
+      groups.push({ label, items: [entry] })
+    }
+  }
+  return groups
+}
+
+export interface MileageTrend {
+  /** Latest mileage as a multiple of the previous fill-up's mileage (e.g. 1.18 = 18% better). */
+  ratio: number
+  direction: "up" | "down" | "flat"
+}
+
+/**
+ * Compares the two most recent fill-ups with a computed mileage (`derived`
+ * is already odometer-ascending, so these are the last two entries with
+ * `mileage !== null`) — the "vs last fill" trend shown on the overview.
+ */
+export function computeMileageTrend(derived: DerivedEntry[]): MileageTrend | null {
+  const withMileage = derived.filter((e) => e.mileage !== null)
+  if (withMileage.length < 2) return null
+
+  const latest = withMileage[withMileage.length - 1]
+  const previous = withMileage[withMileage.length - 2]
+  if (!previous.mileage) return null
+
+  const ratio = latest.mileage! / previous.mileage!
+  const direction = ratio > 1.001 ? "up" : ratio < 0.999 ? "down" : "flat"
+  return { ratio, direction }
+}
+
+export type TrendRange = "3M" | "6M" | "1Y" | "All"
+
+/** Filters date-stamped rows to the trailing N months for the Trends range chips. */
+export function filterByRange<T extends { date: string }>(entries: T[], range: TrendRange): T[] {
+  if (range === "All") return entries
+  const months = range === "3M" ? 3 : range === "6M" ? 6 : 12
+  const cutoff = subMonths(new Date(), months)
+  return entries.filter((e) => parseISO(e.date) >= cutoff)
 }
 
 /**
