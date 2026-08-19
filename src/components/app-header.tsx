@@ -1,4 +1,4 @@
-import { Car, ChevronDown, Fuel, Plus, Settings, Upload } from 'lucide-react'
+import { Car, ChevronDown, Plus, Settings, Upload } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useVehicles } from '@/hooks/vehicles-context'
