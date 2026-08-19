@@ -1,5 +1,3 @@
-import { Fuel } from 'lucide-react'
-
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface AuthShellProps {
@@ -13,8 +11,8 @@ export function AuthShell({ title, description, children, footer }: AuthShellPro
   return (
     <div className='mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-8 bg-background p-4'>
       <div className='flex flex-col items-center gap-3'>
-        <div className='flex size-12 items-center justify-center rounded-md bg-accent'>
-          <Fuel className='size-6 text-accent-foreground' />
+        <div className='flex size-12 items-center justify-center rounded-md'>
+          <img src='/logo.svg' />
         </div>
         <h1 className='font-sans text-2xl font-bold text-foreground'>Combust</h1>
       </div>

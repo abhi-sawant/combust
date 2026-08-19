@@ -21,8 +21,8 @@ export function OverviewDashboard({ onAddEntry, onImportCsv, onViewAllEntries }:
   if (stats.entryCount === 0) {
     return (
       <div className='flex flex-col items-center gap-3.5 pt-16 text-center'>
-        <div className='grid size-16 place-items-center rounded-md bg-accent'>
-          <Fuel className='size-7 text-primary' />
+        <div className='grid size-16 place-items-center rounded-md'>
+          <img src='/logo.svg' className='size-8' />
         </div>
         <h2 className='font-sans text-xl font-bold'>No fill-ups yet</h2>
         <p className='max-w-64 text-[13.5px] text-muted-foreground'>
