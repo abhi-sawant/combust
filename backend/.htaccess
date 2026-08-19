@@ -1,0 +1,20 @@
+RewriteEngine On
+
+# Some Apache/cPanel setups strip the Authorization header before PHP sees it.
+# Re-expose it as an environment variable so AuthMiddleware can read it.
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# This folder is the web root, so explicitly block the app internals that live
+# here alongside index.php — they should only ever be reached through it.
+RewriteRule ^(src|database)/ - [F,L]
+RewriteRule (^|/)\.git(/|$) - [F,L]
+
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+# Send every other request that isn't a real file/directory to the front controller.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]

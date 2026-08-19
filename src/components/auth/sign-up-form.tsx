@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
+import { useAuth } from "@/hooks/auth-context"
 import { setStoredUserName } from "@/hooks/use-user-name"
+import { ApiError } from "@/lib/api-client"
 
 const signUpSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
@@ -28,6 +30,7 @@ interface SignUpFormProps {
 }
 
 export function SignUpForm({ onSignedUp }: SignUpFormProps) {
+  const { signUpSendOtp, signUpVerify } = useAuth()
   const [otpSent, setOtpSent] = useState(false)
 
   const form = useForm<SignUpValues>({
@@ -39,13 +42,23 @@ export function SignUpForm({ onSignedUp }: SignUpFormProps) {
     const emailValid = await form.trigger("email")
     if (!emailValid) return
 
-    setOtpSent(true)
-    toast.success(`OTP sent to ${form.getValues("email")}`)
+    try {
+      await signUpSendOtp(form.getValues("email"))
+      setOtpSent(true)
+      toast.success(`OTP sent to ${form.getValues("email")}`)
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to send OTP")
+    }
   }
 
-  function onSubmit(values: SignUpValues) {
-    setStoredUserName(values.name)
-    onSignedUp()
+  async function onSubmit(values: SignUpValues) {
+    try {
+      await signUpVerify(values)
+      setStoredUserName(values.name)
+      onSignedUp()
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to create account")
+    }
   }
 
   return (

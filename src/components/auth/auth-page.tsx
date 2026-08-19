@@ -9,11 +9,7 @@ import { Button } from "@/components/ui/button"
 
 type AuthView = "sign-in" | "sign-up" | "forgot-password"
 
-interface AuthPageProps {
-  onSignedIn: () => void
-}
-
-export function AuthPage({ onSignedIn }: AuthPageProps) {
+export function AuthPage() {
   const [view, setView] = useState<AuthView>("sign-in")
 
   if (view === "sign-up") {
@@ -30,12 +26,7 @@ export function AuthPage({ onSignedIn }: AuthPageProps) {
           </p>
         }
       >
-        <SignUpForm
-          onSignedUp={() => {
-            toast.success("Account created. Please sign in.")
-            setView("sign-in")
-          }}
-        />
+        <SignUpForm onSignedUp={() => toast.success("Account created!")} />
       </AuthShell>
     )
   }
@@ -52,8 +43,8 @@ export function AuthPage({ onSignedIn }: AuthPageProps) {
         }
       >
         <ForgotPasswordForm
-          onVerified={() => {
-            toast.success("Code verified. Please sign in.")
+          onReset={() => {
+            toast.success("Password updated. Please sign in.")
             setView("sign-in")
           }}
         />
@@ -74,7 +65,7 @@ export function AuthPage({ onSignedIn }: AuthPageProps) {
         </p>
       }
     >
-      <SignInForm onSignedIn={onSignedIn} onForgotPassword={() => setView("forgot-password")} />
+      <SignInForm onForgotPassword={() => setView("forgot-password")} />
     </AuthShell>
   )
 }

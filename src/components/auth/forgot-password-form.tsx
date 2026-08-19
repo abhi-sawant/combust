@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
+import { useAuth } from "@/hooks/auth-context"
+import { ApiError } from "@/lib/api-client"
 
 const forgotPasswordSchema = z.object({
   email: z.string().trim().min(1, "Email is required").email("Enter a valid email"),
@@ -16,32 +18,44 @@ const forgotPasswordSchema = z.object({
     .trim()
     .min(1, "Enter the code sent to your email")
     .length(6, "Code must be 6 digits"),
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
 })
 
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
 
 interface ForgotPasswordFormProps {
-  onVerified: () => void
+  onReset: () => void
 }
 
-export function ForgotPasswordForm({ onVerified }: ForgotPasswordFormProps) {
+export function ForgotPasswordForm({ onReset }: ForgotPasswordFormProps) {
+  const { forgotPasswordSendOtp, forgotPasswordReset } = useAuth()
   const [otpSent, setOtpSent] = useState(false)
 
   const form = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
-    defaultValues: { email: "", otp: "" },
+    defaultValues: { email: "", otp: "", newPassword: "" },
   })
 
   async function handleSendOtp() {
     const emailValid = await form.trigger("email")
     if (!emailValid) return
 
-    setOtpSent(true)
-    toast.success(`OTP sent to ${form.getValues("email")}`)
+    try {
+      await forgotPasswordSendOtp(form.getValues("email"))
+      setOtpSent(true)
+      toast.success(`OTP sent to ${form.getValues("email")}`)
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to send OTP")
+    }
   }
 
-  function onSubmit() {
-    onVerified()
+  async function onSubmit(values: ForgotPasswordValues) {
+    try {
+      await forgotPasswordReset(values)
+      onReset()
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to reset password")
+    }
   }
 
   return (
@@ -90,10 +104,29 @@ export function ForgotPasswordForm({ onVerified }: ForgotPasswordFormProps) {
           </FieldDescription>
           <FieldError errors={[form.formState.errors.otp]} />
         </Field>
+
+        <Field data-invalid={!!form.formState.errors.newPassword}>
+          <FieldLabel
+            htmlFor="forgot-new-password"
+            className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+          >
+            New password
+          </FieldLabel>
+          <Input
+            id="forgot-new-password"
+            type="password"
+            autoComplete="new-password"
+            disabled={!otpSent}
+            aria-invalid={!!form.formState.errors.newPassword}
+            className="h-11"
+            {...form.register("newPassword")}
+          />
+          <FieldError errors={[form.formState.errors.newPassword]} />
+        </Field>
       </FieldGroup>
 
       <Button type="submit" className="h-11 w-full font-semibold" disabled={form.formState.isSubmitting}>
-        Verify code
+        Reset password
       </Button>
     </form>
   )

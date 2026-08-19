@@ -15,7 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Toaster } from "@/components/ui/sonner"
 import { AddVehicleOnboarding } from "@/components/vehicles/add-vehicle-onboarding"
 import { VehicleSwitcherSheet } from "@/components/vehicles/vehicle-switcher-sheet"
+import { useAuth } from "@/hooks/auth-context"
 import { EntriesProvider } from "@/hooks/use-entries"
+import { AuthProvider } from "@/hooks/use-auth"
 import { VehiclesProvider } from "@/hooks/use-vehicles"
 import { useVehicles } from "@/hooks/vehicles-context"
 
@@ -115,13 +117,15 @@ function AppContent() {
   )
 }
 
-function App() {
-  const [authenticated, setAuthenticated] = useState(false)
+function AuthGate() {
+  const { isAuthenticated, isLoading } = useAuth()
 
-  if (!authenticated) {
+  if (isLoading) return null
+
+  if (!isAuthenticated) {
     return (
       <>
-        <AuthPage onSignedIn={() => setAuthenticated(true)} />
+        <AuthPage />
         <Toaster />
       </>
     )
@@ -131,6 +135,14 @@ function App() {
     <VehiclesProvider>
       <AppContent />
     </VehiclesProvider>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   )
 }
 

@@ -1,0 +1,15 @@
+# This app has no client-side routing (no distinct URLs per screen), so no
+# rewrite rules are needed here — every visitor just gets index.html directly.
+#
+# These headers only exist so PWA updates roll out promptly: the app shell
+# and service worker should always be re-checked, while hashed JS/CSS
+# filenames (Vite embeds a content hash in the name) can be cached forever.
+<IfModule mod_headers.c>
+    <FilesMatch "^(index\.html|sw\.js|registerSW\.js|manifest\.webmanifest)$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+
+    <FilesMatch "\.(js|css|woff2)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>

@@ -1,10 +1,13 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "sonner"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useAuth } from "@/hooks/auth-context"
+import { ApiError } from "@/lib/api-client"
 
 const signInSchema = z.object({
   email: z.string().trim().min(1, "Email is required").email("Enter a valid email"),
@@ -14,18 +17,23 @@ const signInSchema = z.object({
 type SignInValues = z.infer<typeof signInSchema>
 
 interface SignInFormProps {
-  onSignedIn: () => void
   onForgotPassword: () => void
 }
 
-export function SignInForm({ onSignedIn, onForgotPassword }: SignInFormProps) {
+export function SignInForm({ onForgotPassword }: SignInFormProps) {
+  const { signIn } = useAuth()
+
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: { email: "", password: "" },
   })
 
-  function onSubmit() {
-    onSignedIn()
+  async function onSubmit(values: SignInValues) {
+    try {
+      await signIn(values)
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to sign in")
+    }
   }
 
   return (
