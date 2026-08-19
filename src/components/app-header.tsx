@@ -1,4 +1,4 @@
-import { Car, ChevronDown, Fuel, Plus, Upload } from "lucide-react"
+import { Car, ChevronDown, Fuel, Plus, Settings, Upload } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useVehicles } from "@/hooks/vehicles-context"
@@ -6,10 +6,11 @@ import { useVehicles } from "@/hooks/vehicles-context"
 interface AppHeaderProps {
   onOpenImport: () => void
   onOpenVehicle: () => void
+  onOpenSettings: () => void
   onAddEntry: () => void
 }
 
-export function AppHeader({ onOpenImport, onOpenVehicle, onAddEntry }: AppHeaderProps) {
+export function AppHeader({ onOpenImport, onOpenVehicle, onOpenSettings, onAddEntry }: AppHeaderProps) {
   const { activeVehicle } = useVehicles()
 
   return (
@@ -25,6 +26,9 @@ export function AppHeader({ onOpenImport, onOpenVehicle, onAddEntry }: AppHeader
           </Button>
           <Button size="sm" onClick={onAddEntry} className="hidden sm:inline-flex">
             <Plus /> Add entry
+          </Button>
+          <Button variant="outline" size="icon-sm" onClick={onOpenSettings} aria-label="Settings">
+            <Settings />
           </Button>
         </div>
       </div>

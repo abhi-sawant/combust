@@ -24,7 +24,7 @@ export function OverviewDashboard({ onAddEntry, onImportCsv, onViewAllEntries }:
         <div className='grid size-16 place-items-center rounded-md bg-accent'>
           <Fuel className='size-7 text-primary' />
         </div>
-        <h2 className='font-serif text-xl font-bold'>No fill-ups yet</h2>
+        <h2 className='font-sans text-xl font-bold'>No fill-ups yet</h2>
         <p className='max-w-64 text-[13.5px] text-muted-foreground'>
           Log a fill-up right after you pay and Combust starts working out mileage from the second one on.
         </p>
@@ -50,7 +50,7 @@ export function OverviewDashboard({ onAddEntry, onImportCsv, onViewAllEntries }:
       <div>
         <p className='text-[10.5px] font-medium tracking-[0.16em] text-muted-foreground uppercase'>Average mileage</p>
         <div className='mt-3 flex items-baseline gap-2'>
-          <span className='font-serif text-6xl leading-[0.85] font-bold tracking-tight'>
+          <span className='font-sans text-6xl leading-[0.85] font-bold tracking-tight'>
             {stats.averageMileage !== null ? stats.averageMileage.toFixed(2) : '—'}
           </span>
           <span className='text-sm font-medium text-muted-foreground'>km/l</span>
@@ -90,7 +90,7 @@ export function OverviewDashboard({ onAddEntry, onImportCsv, onViewAllEntries }:
 
       <div className='flex flex-col gap-3'>
         <div className='flex items-baseline justify-between'>
-          <h2 className='font-serif text-lg font-semibold'>Recent fill-ups</h2>
+          <h2 className='font-sans text-lg font-semibold'>Recent fill-ups</h2>
           <button
             type='button'
             onClick={onViewAllEntries}
@@ -100,9 +100,7 @@ export function OverviewDashboard({ onAddEntry, onImportCsv, onViewAllEntries }:
         </div>
         <div className='flex flex-col gap-2.5'>
           {recent.map((entry) => (
-            <div
-              key={entry.id}
-              className='flex items-center gap-3 rounded-md border border-border bg-card p-3.5 shadow-card'>
+            <div key={entry.id} className='flex items-center gap-3 rounded-md border border-border bg-card shadow-card'>
               <FillupRow entry={entry} />
             </div>
           ))}

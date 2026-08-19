@@ -48,7 +48,7 @@ export function VehicleSwitcherSheet({ open, onOpenChange }: VehicleSwitcherShee
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side='bottom'>
         <SheetHeader>
-          <SheetTitle className='font-serif text-xl font-bold'>Vehicle</SheetTitle>
+          <SheetTitle className='font-sans text-xl font-bold'>Vehicle</SheetTitle>
         </SheetHeader>
         <div className='flex flex-col gap-2.5 px-4 pb-6'>
           {vehicles.map((vehicle) => {

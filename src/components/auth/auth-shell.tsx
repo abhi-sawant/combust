@@ -16,12 +16,12 @@ export function AuthShell({ title, description, children, footer }: AuthShellPro
         <div className='flex size-12 items-center justify-center rounded-md bg-accent'>
           <Fuel className='size-6 text-accent-foreground' />
         </div>
-        <h1 className='font-serif text-2xl font-bold text-foreground'>Combust</h1>
+        <h1 className='font-sans text-2xl font-bold text-foreground'>Combust</h1>
       </div>
 
       <Card className='shadow-card'>
         <CardHeader>
-          <CardTitle className='font-serif text-xl font-bold'>{title}</CardTitle>
+          <CardTitle className='font-sans text-xl font-bold'>{title}</CardTitle>
           <CardDescription className='text-sm text-muted-foreground'>{description}</CardDescription>
         </CardHeader>
         <CardContent>{children}</CardContent>

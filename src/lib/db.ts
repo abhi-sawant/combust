@@ -40,8 +40,8 @@ function getDb() {
         entriesStore.createIndex("by-vehicle", "vehicleId")
 
         // Backfill only applies to a real upgrade (existing rows with no vehicleId yet).
-        // A brand-new install has nothing to back-fill — its default vehicle is created
-        // lazily by VehiclesProvider instead.
+        // A brand-new install has nothing to back-fill, so no vehicle is created here —
+        // the user is prompted to add one on first use instead.
         const existing = await entriesStore.getAll()
         if (existing.length > 0) {
           const defaultVehicle: Vehicle = {
@@ -153,6 +153,12 @@ class IndexedDbVehiclesRepository implements VehiclesRepository {
 }
 
 export const vehiclesRepository: VehiclesRepository = new IndexedDbVehiclesRepository()
+
+/** Wipes all vehicles and fuel entries. Preferences (theme, name) are untouched. */
+export async function clearAllData(): Promise<void> {
+  const db = await getDb()
+  await Promise.all([db.clear(ENTRIES_STORE), db.clear(VEHICLES_STORE)])
+}
 
 /** Fill-up counts per vehicle, for the vehicle-switcher sheet — fetched on demand rather than kept live. */
 export async function countEntriesByVehicle(): Promise<Record<string, number>> {

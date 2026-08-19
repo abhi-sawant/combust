@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowUpDown, Pencil, Trash2 } from 'lucide-react'
+import { ArrowUpDown } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -64,14 +64,12 @@ export function EntriesTable() {
 
   function renderRowActions(entry: DerivedEntry) {
     return (
-      <>
-        <Button variant='ghost' size='icon-sm' aria-label='Edit entry' onClick={() => setEditingEntry(entry)}>
-          <Pencil />
+      <div className='grid grid-cols-2 w-full border-t'>
+        <Button variant='ghost' aria-label='Edit entry' onClick={() => setEditingEntry(entry)}>
+          Edit
         </Button>
         <AlertDialog open={deletingId === entry.id} onOpenChange={(open) => setDeletingId(open ? entry.id : null)}>
-          <AlertDialogTrigger render={<Button variant='ghost' size='icon-sm' aria-label='Delete entry' />}>
-            <Trash2 />
-          </AlertDialogTrigger>
+          <AlertDialogTrigger render={<Button variant='ghost' aria-label='Delete entry' />}>Delete</AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
@@ -88,7 +86,7 @@ export function EntriesTable() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </>
+      </div>
     )
   }
 
@@ -111,12 +109,12 @@ export function EntriesTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>
-                  <Button variant='ghost' size='sm' onClick={() => toggleSort('date')} className='-ml-2.5'>
+                  <Button variant='ghost' size='sm' onClick={() => toggleSort('date')}>
                     Date <ArrowUpDown />
                   </Button>
                 </TableHead>
                 <TableHead>
-                  <Button variant='ghost' size='sm' onClick={() => toggleSort('odometer')} className='-ml-2.5'>
+                  <Button variant='ghost' size='sm' onClick={() => toggleSort('odometer')}>
                     Odometer <ArrowUpDown />
                   </Button>
                 </TableHead>
@@ -167,9 +165,7 @@ export function EntriesTable() {
               </span>
             </div>
             {group.items.map((entry) => (
-              <div
-                key={entry.id}
-                className='flex items-center gap-2 rounded-md border border-border bg-card p-3.5 shadow-card'>
+              <div key={entry.id} className='rounded-md border border-border bg-card shadow-card'>
                 <FillupRow entry={entry} />
                 <div className='flex shrink-0 gap-0.5'>{renderRowActions(entry)}</div>
               </div>

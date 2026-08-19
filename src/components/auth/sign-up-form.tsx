@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
+import { setStoredUserName } from "@/hooks/use-user-name"
 
 const signUpSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
@@ -42,7 +43,8 @@ export function SignUpForm({ onSignedUp }: SignUpFormProps) {
     toast.success(`OTP sent to ${form.getValues("email")}`)
   }
 
-  function onSubmit() {
+  function onSubmit(values: SignUpValues) {
+    setStoredUserName(values.name)
     onSignedUp()
   }
 

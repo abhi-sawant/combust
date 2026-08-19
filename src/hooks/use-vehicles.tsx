@@ -4,8 +4,7 @@ import { VehiclesContext, type VehiclesContextValue } from "@/hooks/vehicles-con
 import { vehiclesRepository } from "@/lib/db"
 import type { Vehicle, VehicleInput } from "@/types/vehicle"
 
-const ACTIVE_VEHICLE_KEY = "combust:active-vehicle-id"
-const DEFAULT_VEHICLE_NAME = "My Vehicle"
+export const ACTIVE_VEHICLE_KEY = "combust:active-vehicle-id"
 
 export function VehiclesProvider({ children }: { children: React.ReactNode }) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -29,18 +28,16 @@ export function VehiclesProvider({ children }: { children: React.ReactNode }) {
 
     async function bootstrap() {
       try {
-        let all = await vehiclesRepository.getAll()
-        if (all.length === 0) {
-          const created = await vehiclesRepository.add({ name: DEFAULT_VEHICLE_NAME })
-          all = [created]
-        }
+        const all = await vehiclesRepository.getAll()
         if (cancelled) return
 
         setVehicles(all)
-        const stored = localStorage.getItem(ACTIVE_VEHICLE_KEY)
-        const activeId = stored && all.some((v) => v.id === stored) ? stored : all[0].id
-        setActiveVehicleIdState(activeId)
-        if (activeId !== stored) localStorage.setItem(ACTIVE_VEHICLE_KEY, activeId)
+        if (all.length > 0) {
+          const stored = localStorage.getItem(ACTIVE_VEHICLE_KEY)
+          const activeId = stored && all.some((v) => v.id === stored) ? stored : all[0].id
+          setActiveVehicleIdState(activeId)
+          if (activeId !== stored) localStorage.setItem(ACTIVE_VEHICLE_KEY, activeId)
+        }
         setError(null)
       } catch (err) {
         if (cancelled) return

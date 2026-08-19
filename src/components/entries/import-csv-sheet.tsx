@@ -71,7 +71,7 @@ export function ImportCsvSheet({ open, onOpenChange }: ImportCsvSheetProps) {
       }}>
       <SheetContent side='bottom'>
         <SheetHeader>
-          <SheetTitle className='font-serif text-xl font-bold'>Import from CSV</SheetTitle>
+          <SheetTitle className='font-sans text-xl font-bold'>Import from CSV</SheetTitle>
           <SheetDescription>Bring over a spreadsheet of past fill-ups in one go.</SheetDescription>
         </SheetHeader>
 

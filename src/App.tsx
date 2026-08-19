@@ -8,13 +8,16 @@ import { EntriesTable } from "@/components/entries/entries-table"
 import { ImportCsvSheet } from "@/components/entries/import-csv-sheet"
 import { CHUNK_RELOAD_FLAG, ErrorBoundary } from "@/components/error-boundary"
 import { OverviewDashboard } from "@/components/overview/overview-dashboard"
+import { SettingsSheet } from "@/components/settings/settings-sheet"
 import { OverallStats } from "@/components/stats/overall-stats"
 import { StationStats } from "@/components/stats/station-stats"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Toaster } from "@/components/ui/sonner"
+import { AddVehicleOnboarding } from "@/components/vehicles/add-vehicle-onboarding"
 import { VehicleSwitcherSheet } from "@/components/vehicles/vehicle-switcher-sheet"
 import { EntriesProvider } from "@/hooks/use-entries"
 import { VehiclesProvider } from "@/hooks/use-vehicles"
+import { useVehicles } from "@/hooks/vehicles-context"
 
 // Recharts is the heaviest dependency and only the "Trends" tab needs it.
 const TrendsCharts = lazy(() =>
@@ -28,6 +31,7 @@ function AppShell() {
   const [addOpen, setAddOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [vehicleOpen, setVehicleOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [tab, setTab] = useState("overview")
 
   return (
@@ -35,6 +39,7 @@ function AppShell() {
       <AppHeader
         onOpenImport={() => setImportOpen(true)}
         onOpenVehicle={() => setVehicleOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
         onAddEntry={() => setAddOpen(true)}
       />
 
@@ -83,8 +88,30 @@ function AppShell() {
       <EntrySheet open={addOpen} onOpenChange={setAddOpen} />
       <ImportCsvSheet open={importOpen} onOpenChange={setImportOpen} />
       <VehicleSwitcherSheet open={vehicleOpen} onOpenChange={setVehicleOpen} />
+      <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
       <Toaster />
     </div>
+  )
+}
+
+function AppContent() {
+  const { vehicles, isLoading } = useVehicles()
+
+  if (isLoading) return null
+
+  if (vehicles.length === 0) {
+    return (
+      <>
+        <AddVehicleOnboarding />
+        <Toaster />
+      </>
+    )
+  }
+
+  return (
+    <EntriesProvider>
+      <AppShell />
+    </EntriesProvider>
   )
 }
 
@@ -102,9 +129,7 @@ function App() {
 
   return (
     <VehiclesProvider>
-      <EntriesProvider>
-        <AppShell />
-      </EntriesProvider>
+      <AppContent />
     </VehiclesProvider>
   )
 }
