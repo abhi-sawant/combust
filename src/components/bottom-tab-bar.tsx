@@ -1,13 +1,7 @@
-import { BarChart3, Gauge, List, Plus, TrendingUp } from "lucide-react"
+import { Plus } from "lucide-react"
 
+import { NAV_ITEMS } from "@/components/app-rail"
 import { cn } from "@/lib/utils"
-
-const TABS = [
-  { value: "overview", label: "Overview", icon: Gauge },
-  { value: "entries", label: "Entries", icon: List },
-  { value: "stats", label: "Stats", icon: BarChart3 },
-  { value: "trends", label: "Trends", icon: TrendingUp },
-] as const
 
 interface BottomTabBarProps {
   value: string
@@ -15,39 +9,43 @@ interface BottomTabBarProps {
   onAddEntry: () => void
 }
 
-/** Mobile-only bottom navigation replacing the top TabsList below the `sm` breakpoint. */
+/** Mobile-only bottom navigation; the rail replaces it from `md` up. */
 export function BottomTabBar({ value, onValueChange, onAddEntry }: BottomTabBarProps) {
+  const tab = (item: (typeof NAV_ITEMS)[number]) => {
+    const Icon = item.icon
+    const active = item.value === value
+    return (
+      <button
+        key={item.value}
+        type="button"
+        aria-current={active ? "page" : undefined}
+        onClick={() => onValueChange(item.value)}
+        className={cn(
+          "flex flex-col items-center gap-1 py-1.5 text-[11.5px] font-bold outline-none focus-visible:text-lime",
+          active ? "text-lime" : "text-[#9a9d92]"
+        )}
+      >
+        <Icon className="size-[21px]" strokeWidth={1.9} />
+        {item.label}
+      </button>
+    )
+  }
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card px-3.5 pt-2.5 pb-[max(env(safe-area-inset-bottom),10px)] sm:hidden">
-      <div className="relative mx-auto flex max-w-3xl items-stretch">
-        {TABS.map((tab) => {
-          const Icon = tab.icon
-          const active = tab.value === value
-          return (
-            <button
-              key={tab.value}
-              type="button"
-              onClick={() => onValueChange(tab.value)}
-              className={cn(
-                "flex flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-medium",
-                active ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              <Icon className="size-[22px]" strokeWidth={1.7} />
-              {tab.label}
-            </button>
-          )
-        })}
-        <span className="w-14 shrink-0" aria-hidden />
-        <button
-          type="button"
-          onClick={onAddEntry}
-          aria-label="Add fuel entry"
-          className="absolute top-[-26px] right-1 grid size-14 place-items-center rounded-[20px] bg-primary text-primary-foreground shadow-float"
-        >
-          <Plus className="size-[22px]" strokeWidth={2.1} />
-        </button>
-      </div>
-    </div>
+    <nav
+      aria-label="Sections"
+      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-[1fr_1fr_72px_1fr_1fr] items-end bg-rail px-2 pt-2 pb-[max(env(safe-area-inset-bottom),10px)] text-rail-foreground md:hidden"
+    >
+      {NAV_ITEMS.slice(0, 2).map(tab)}
+      <button
+        type="button"
+        onClick={onAddEntry}
+        aria-label="Add fuel entry"
+        className="-mt-7 grid size-[58px] place-items-center justify-self-center rounded-full border-4 border-background bg-lime text-lime-foreground outline-none transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-foreground"
+      >
+        <Plus className="size-6" strokeWidth={3} />
+      </button>
+      {NAV_ITEMS.slice(2).map(tab)}
+    </nav>
   )
 }

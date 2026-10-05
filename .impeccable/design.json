@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-05T00:00:00Z",
+  "title": "Design System: Combust",
+  "extensions": {
+    "colorMeta": {
+      "lime": {"role": "primary", "displayName": "Pit Lime", "canonical": "#c6ff1a", "tonalRamp": ["#232d07","#3d5000","#5f8000","#84b800","#a6e000","#c6ff1a","#dff07e","#f0f8c0"]},
+      "ink": {"role": "primary", "displayName": "Ink", "canonical": "#0d0d0e", "tonalRamp": ["#0d0d0e","#1b1b1d","#26262a","#34343a","#5d6056","#9a9d92","#c7cbb9","#eceee4"]},
+      "sector-best": {"role": "secondary", "displayName": "Best Purple", "canonical": "#7b2fe0", "tonalRamp": ["#2a1050","#451a85","#5e22b5","#7b2fe0","#8a3ff5","#b06cff","#b77bff","#e3d0ff"]},
+      "sector-up": {"role": "secondary", "displayName": "Above-Average Green", "canonical": "#0f9e45", "tonalRamp": ["#0f2a19","#075c28","#0f9e45","#19c25a","#2bd96b","#3be07a","#a0efbf","#d4f3de"]},
+      "sector-down": {"role": "secondary", "displayName": "Below-Average Amber", "canonical": "#a87500", "tonalRamp": ["#2b2200","#5c4200","#a87500","#c98f00","#f2b705","#ffd23f","#ffe48a","#fff1c2"]},
+      "daylight-background": {"role": "neutral", "displayName": "Daylight Paper", "canonical": "#eceee4", "tonalRamp": ["#26262a","#5d6056","#9a9d92","#c7cbb9","#d9dccf","#e2e5d6","#eceee4","#ffffff"]},
+      "night-background": {"role": "neutral", "displayName": "Night Asphalt", "canonical": "#09090a", "tonalRamp": ["#09090a","#141416","#1a1a1d","#1f1f23","#26262a","#34343a","#9a9d92","#f3f4ee"]}
+    },
+    "typographyMeta": {
+      "display-numeral": {"displayName": "Display Numeral", "purpose": "Hero average-mileage figure."},
+      "headline": {"displayName": "Headline", "purpose": "Empty-state heading, uppercase."},
+      "panel-title": {"displayName": "Panel Title", "purpose": "Panel and card titles, uppercase."},
+      "row-figure": {"displayName": "Row Figure", "purpose": "Mileage and station codes in rows."},
+      "body": {"displayName": "Body", "purpose": "Labels, names, buttons."},
+      "caption": {"displayName": "Caption", "purpose": "Meta lines, chart dates, legends."}
+    },
+    "shadows": [
+      {"name": "card", "value": "0 1px 0 rgba(13,13,14,0.04)", "purpose": "Daylight card hairline lift; none at night."},
+      {"name": "float", "value": "0 18px 40px -18px rgba(13,13,14,0.45)", "purpose": "Overlays; night uses rgba(0,0,0,0.8)."}
+    ],
+    "motion": [
+      {"name": "bar-grow", "value": "0.7s cubic-bezier(0.16,1,0.3,1) both, 40ms stagger", "purpose": "Mileage bars scale up from baseline; motion-safe only."}
+    ],
+    "breakpoints": [
+      {"name": "sm", "value": "640px"},
+      {"name": "md", "value": "768px"},
+      {"name": "lg", "value": "1024px"}
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button", "kind": "button", "refersTo": "button-primary",
+      "description": "Ink pill; turns purple on hover in daylight.",
+      "html": "<button class=\"ds-btn\">Save entry</button>",
+      "css": ".ds-btn{height:40px;padding:0 16px;border-radius:9999px;border:1px solid transparent;background:#0d0d0e;color:#eceee4;font:700 14px 'Hanken Grotesk Variable',system-ui,sans-serif;cursor:pointer;transition:all .15s}.ds-btn:hover{background:#7b2fe0;color:#fff}.ds-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(123,47,224,.5)}.ds-btn:active{transform:translateY(1px)}"
+    },
+    {
+      "name": "Lime Button", "kind": "button", "refersTo": "button-lime",
+      "description": "Lime pill for brand-field actions.",
+      "html": "<button class=\"ds-btn-lime\">Add fill-up</button>",
+      "css": ".ds-btn-lime{height:40px;padding:0 16px;border-radius:9999px;border:1px solid transparent;background:#c6ff1a;color:#0b0b0c;font:700 14px 'Hanken Grotesk Variable',system-ui,sans-serif;cursor:pointer}.ds-btn-lime:hover{filter:brightness(.95)}.ds-btn-lime:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(123,47,224,.5)}"
+    },
+    {
+      "name": "Input", "kind": "input", "refersTo": "input",
+      "description": "44px field with ring-coloured focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Litres filled\">",
+      "css": ".ds-input{height:44px;width:100%;box-sizing:border-box;padding:0 14px;border-radius:12.8px;border:1px solid #c7cbb9;background:#fff;color:#0d0d0e;font:400 14px 'Hanken Grotesk Variable',system-ui,sans-serif;outline:none}.ds-input::placeholder{color:#5d6056}.ds-input:focus-visible{border-color:#7b2fe0;box-shadow:0 0 0 3px rgba(123,47,224,.5)}"
+    },
+    {
+      "name": "Rail Item", "kind": "nav", "refersTo": "rail-item-active",
+      "description": "Pit-wall rail items on ink; active is lime.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-rail-item ds-active\">Overview</a><a class=\"ds-rail-item\">Entries</a></nav>",
+      "css": ".ds-rail{display:flex;flex-direction:column;gap:4px;width:208px;padding:14px;background:#0b0b0c;border-radius:12px}.ds-rail-item{display:flex;align-items:center;height:44px;padding:0 12px;border-radius:12.8px;color:#a7aa9f;font:700 15px 'Hanken Grotesk Variable',system-ui,sans-serif;cursor:pointer;transition:colors .15s}.ds-rail-item:hover{background:#1b1b1d;color:#fff}.ds-rail-item:focus-visible{outline:none;box-shadow:0 0 0 2px #c6ff1a}.ds-rail-item.ds-active{background:#c6ff1a;color:#0b0b0c}"
+    },
+    {
+      "name": "Badge", "kind": "chip", "refersTo": "badge",
+      "description": "Pill badge, ink fill.",
+      "html": "<span class=\"ds-badge\">Pending</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;height:24px;padding:2px 10px;border-radius:9999px;background:#0d0d0e;color:#eceee4;font:700 12px 'Hanken Grotesk Variable',system-ui,sans-serif}"
+    },
+    {
+      "name": "Hero Slab", "kind": "card", "refersTo": "card",
+      "description": "Lime average-mileage slab with display numeral.",
+      "html": "<div class=\"ds-hero\"><div class=\"ds-hero-label\">Average mileage</div><div class=\"ds-hero-fig\">18.4<span>km/l</span></div></div>",
+      "css": ".ds-hero{padding:28px;border-radius:22px;background:#c6ff1a;color:#0b0b0c;font-family:'Hanken Grotesk Variable',system-ui,sans-serif}.ds-hero-label{font-weight:700;font-size:15px}.ds-hero-fig{font:900 96px/0.82 'Big Shoulders Display','Arial Narrow',sans-serif;letter-spacing:-.025em;margin-top:6px}.ds-hero-fig span{font-size:26px;font-weight:800;margin-left:10px;letter-spacing:0}"
+    },
+    {
+      "name": "Fill-up Row", "kind": "custom", "refersTo": "card",
+      "description": "Timing-tower row with sector chip, station code and sector-coloured mileage.",
+      "html": "<div class=\"ds-row\"><span class=\"ds-chip\"></span><span class=\"ds-code\">IOC</span><div class=\"ds-meta\"><b>Indian Oil</b><small>12 Sep · 24.3 L · Rs 2,400</small></div><span class=\"ds-mil\">18.4</span></div>",
+      "css": ".ds-row{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border-radius:20px;font-family:'Hanken Grotesk Variable',system-ui,sans-serif;color:#0d0d0e}.ds-chip{width:6px;align-self:stretch;border-radius:3px;background:#8a3ff5}.ds-code{width:3ch;font:900 26px/1 'Big Shoulders Display','Arial Narrow',sans-serif;letter-spacing:.05em}.ds-meta{flex:1;display:flex;flex-direction:column;gap:2px}.ds-meta b{font-size:15px}.ds-meta small{font-size:13px;color:#5d6056}.ds-mil{font:800 30px/1 'Big Shoulders Display','Arial Narrow',sans-serif;color:#7b2fe0}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Timing Board",
+    "overview": "Combust reads fuel mileage the way a pit wall reads lap times: one loud headline figure, then a tower of rows where colour carries the verdict. Lime is the brand field and the only saturated surface; ink (near-black) is the rail and the primary action; purple, green and amber are reserved for sector meaning (best, above average, below average mileage). Two themes ship: daylight and pit lane night.",
+    "keyCharacteristics": [
+      "Lime hero slab (22px radius) holds the average-mileage figure; everything else sits on cards.",
+      "Sector colour is semantic only: best/up/down. It appears as text, bar fills and the 6px row chip.",
+      "Desktop gets an ink pit-wall rail; mobile gets an ink bottom tab bar with a raised lime add button.",
+      "Pill buttons, 20px cards, flat surfaces with hairline borders."
+    ],
+    "rules": [
+      {"name": "The Sector Meaning Rule", "body": "Purple, green and amber mean best, above average, below average mileage, via sectorOf in src/lib/sector.ts. Do not use them as decoration.", "section": "colors"},
+      {"name": "The One Field Rule", "body": "Lime is the only saturated surface colour; a screen has one lime slab, plus small lime markers (active nav, add button).", "section": "colors"},
+      {"name": "The Figures Line Up Rule", "body": "Body is font-variant-numeric: tabular-nums globally; numbers never use proportional figures.", "section": "typography"}
+    ],
+    "dos": [
+      "Do colour mileage via sectorOf and the SECTOR_TEXT / SECTOR_BAR maps.",
+      "Do set headings, numerals and station codes in Big Shoulders Display; everything else in Hanken Grotesk.",
+      "Do use pill buttons, 20px cards, and one lime slab per screen.",
+      "Do define both themes' values for any new token in :root and .dark."
+    ],
+    "donts": [
+      "Don't use sector purple, green or amber for non-mileage decoration.",
+      "Don't add a monospace face; use tabular numerals.",
+      "Don't add a second saturated brand colour beside lime.",
+      "Don't hardcode hex in components when a token exists."
+    ]
+  }
+}

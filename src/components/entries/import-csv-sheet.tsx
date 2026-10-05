@@ -89,7 +89,7 @@ export function ImportCsvSheet({ open, onOpenChange }: ImportCsvSheetProps) {
               if (file) void handleFile(file)
             }}
             className={cn(
-              'flex flex-col items-center gap-2 rounded-md border-1.5 border-dashed border-border bg-background px-4 py-6 text-center transition-colors',
+              'flex flex-col items-center gap-2 rounded-xl border-1.5 border-dashed border-border bg-background px-4 py-6 text-center transition-colors',
               isDragging && 'border-primary bg-accent',
             )}>
             <UploadCloud className='size-6 text-primary' />
@@ -117,7 +117,7 @@ export function ImportCsvSheet({ open, onOpenChange }: ImportCsvSheetProps) {
           </div>
 
           <div className='flex flex-col gap-1.5'>
-            <span className='text-[10.5px] font-medium tracking-[0.14em] text-muted-foreground uppercase'>
+            <span className='text-[13px] font-bold text-muted-foreground'>
               Columns expected
             </span>
             <div className='flex flex-wrap gap-1.5'>
@@ -130,7 +130,7 @@ export function ImportCsvSheet({ open, onOpenChange }: ImportCsvSheetProps) {
           </div>
 
           {errors.length > 0 && (
-            <div className='max-h-40 overflow-y-auto rounded-md border border-border p-2 text-sm'>
+            <div className='max-h-40 overflow-y-auto rounded-xl border border-border p-2 text-sm'>
               <p className='mb-1 font-medium text-destructive'>Skipped rows</p>
               <ul className='flex flex-col gap-1 text-muted-foreground'>
                 {errors.map((error) => (

@@ -42,7 +42,7 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
         <Field data-invalid={!!form.formState.errors.email}>
           <FieldLabel
             htmlFor="signin-email"
-            className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+            className="text-[13px] font-bold text-muted-foreground"
           >
             Email
           </FieldLabel>
@@ -61,7 +61,7 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
           <div className="flex items-center justify-between gap-2">
             <FieldLabel
               htmlFor="signin-password"
-              className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+              className="text-[13px] font-bold text-muted-foreground"
             >
               Password
             </FieldLabel>

@@ -96,7 +96,7 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                     type="button"
                     onClick={() => setTheme(value)}
                     className={cn(
-                      "flex flex-col items-center gap-1.5 rounded-md border p-3 text-xs font-medium transition-colors",
+                      "flex flex-col items-center gap-1.5 rounded-xl border p-3 text-xs font-medium transition-colors",
                       active
                         ? "border-primary bg-accent text-foreground"
                         : "border-border bg-background text-muted-foreground hover:bg-muted"

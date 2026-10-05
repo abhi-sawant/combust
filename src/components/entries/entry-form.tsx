@@ -209,9 +209,9 @@ export function EntryForm({ entry, onSaved, onCancel }: EntryFormProps) {
         </div>
 
         {costPerLitre !== null && (
-          <div className='flex items-baseline justify-between rounded-md bg-accent px-3.5 py-3'>
-            <span className='text-[11.5px] font-medium text-accent-foreground'>Works out to</span>
-            <span className='font-mono text-sm font-medium text-accent-foreground'>
+          <div className='flex items-baseline justify-between rounded-xl bg-lime px-3.5 py-3 text-lime-foreground'>
+            <span className='text-[13px] font-semibold opacity-75'>Works out to</span>
+            <span className='text-sm font-extrabold text-lime-foreground'>
               {formatAmount(costPerLitre)} / litre
             </span>
           </div>

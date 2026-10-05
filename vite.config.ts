@@ -16,8 +16,8 @@ export default defineConfig({
         name: 'Combust — Fuel Tracker',
         short_name: 'Combust',
         description: 'Track fuel fill-ups, mileage, and cost for your motorcycle — fully offline.',
-        theme_color: '#146b54',
-        background_color: '#f7f5f1',
+        theme_color: '#0b0b0c',
+        background_color: '#eceee4',
         display: 'standalone',
         start_url: '/',
         icons: [

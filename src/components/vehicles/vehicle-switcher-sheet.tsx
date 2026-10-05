@@ -62,7 +62,7 @@ export function VehicleSwitcherSheet({ open, onOpenChange }: VehicleSwitcherShee
                   onOpenChange(false)
                 }}
                 className={cn(
-                  'flex items-center gap-3 rounded-md border p-3.5 text-left transition-colors',
+                  'flex items-center gap-3 rounded-xl border p-3.5 text-left transition-colors',
                   active ? 'border-primary bg-accent' : 'border-border bg-background hover:bg-muted',
                 )}>
                 <div className='flex flex-1 flex-col gap-1'>
@@ -78,7 +78,7 @@ export function VehicleSwitcherSheet({ open, onOpenChange }: VehicleSwitcherShee
           })}
 
           {isAdding ? (
-            <div className='flex flex-col gap-3 rounded-md border border-border p-3.5'>
+            <div className='flex flex-col gap-3 rounded-xl border border-border p-3.5'>
               <Field>
                 <FieldLabel htmlFor='vehicle-name'>Name</FieldLabel>
                 <Input
@@ -110,7 +110,7 @@ export function VehicleSwitcherSheet({ open, onOpenChange }: VehicleSwitcherShee
             <button
               type='button'
               onClick={() => setIsAdding(true)}
-              className='flex h-12 items-center justify-center gap-2 rounded-md border border-dashed border-border text-[13.5px] font-medium text-primary transition-colors hover:bg-accent'>
+              className='flex h-12 items-center justify-center gap-2 rounded-xl border border-dashed border-border text-[13.5px] font-medium text-primary transition-colors hover:bg-accent'>
               <Plus className='size-[15px]' />
               Add a vehicle
             </button>

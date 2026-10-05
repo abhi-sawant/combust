@@ -34,7 +34,7 @@ export function AddVehicleOnboarding() {
           <Field data-invalid={!!form.formState.errors.name}>
             <FieldLabel
               htmlFor="onboarding-vehicle-name"
-              className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+              className="text-[13px] font-bold text-muted-foreground"
             >
               Name
             </FieldLabel>
@@ -51,7 +51,7 @@ export function AddVehicleOnboarding() {
           <Field>
             <FieldLabel
               htmlFor="onboarding-vehicle-plate"
-              className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+              className="text-[13px] font-bold text-muted-foreground"
             >
               Plate (optional)
             </FieldLabel>

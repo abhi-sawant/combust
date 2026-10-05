@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from "react"
 
 import { AppHeader } from "@/components/app-header"
+import { AppRail } from "@/components/app-rail"
 import { AuthPage } from "@/components/auth/auth-page"
 import { BottomTabBar } from "@/components/bottom-tab-bar"
 import { EntrySheet } from "@/components/entries/entry-sheet"
@@ -11,9 +12,10 @@ import { OverviewDashboard } from "@/components/overview/overview-dashboard"
 import { SettingsSheet } from "@/components/settings/settings-sheet"
 import { OverallStats } from "@/components/stats/overall-stats"
 import { StationStats } from "@/components/stats/station-stats"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Toaster } from "@/components/ui/sonner"
 import { AddVehicleOnboarding } from "@/components/vehicles/add-vehicle-onboarding"
+import { VehicleChip } from "@/components/vehicles/vehicle-chip"
 import { VehicleSwitcherSheet } from "@/components/vehicles/vehicle-switcher-sheet"
 import { useAuth } from "@/hooks/auth-context"
 import { EntriesProvider } from "@/hooks/use-entries"
@@ -37,44 +39,40 @@ function AppShell() {
   const [tab, setTab] = useState("overview")
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-3xl flex-col gap-4 p-4 pb-24 sm:pb-8">
+    <div className="min-h-svh md:flex">
+      <AppRail
+        value={tab}
+        onValueChange={setTab}
+        onOpenImport={() => setImportOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
+      <div className="mx-auto flex min-h-svh w-full min-w-0 max-w-5xl flex-col gap-4 p-4 pb-28 md:p-7 md:pb-10">
       <AppHeader
         onOpenImport={() => setImportOpen(true)}
-        onOpenVehicle={() => setVehicleOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onAddEntry={() => setAddOpen(true)}
       />
 
       <Tabs value={tab} onValueChange={(value) => setTab(String(value))}>
-        <TabsList className="hidden w-full sm:flex">
-          <TabsTrigger value="overview" className="flex-1">
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="entries" className="flex-1">
-            Entries
-          </TabsTrigger>
-          <TabsTrigger value="stats" className="flex-1">
-            Stats
-          </TabsTrigger>
-          <TabsTrigger value="trends" className="flex-1">
-            Trends
-          </TabsTrigger>
-        </TabsList>
         <TabsContent value="overview" className="flex flex-col gap-4">
           <OverviewDashboard
             onAddEntry={() => setAddOpen(true)}
             onImportCsv={() => setImportOpen(true)}
             onViewAllEntries={() => setTab("entries")}
+            onOpenVehicle={() => setVehicleOpen(true)}
           />
         </TabsContent>
         <TabsContent value="entries" className="flex flex-col gap-4">
+          <VehicleChip onClick={() => setVehicleOpen(true)} />
           <EntriesTable />
         </TabsContent>
         <TabsContent value="stats" className="flex flex-col gap-4">
+          <VehicleChip onClick={() => setVehicleOpen(true)} />
           <OverallStats />
           <StationStats />
         </TabsContent>
         <TabsContent value="trends" className="flex flex-col gap-4">
+          <VehicleChip onClick={() => setVehicleOpen(true)} />
           <ErrorBoundary>
             <Suspense
               fallback={<p className="py-10 text-center text-sm text-muted-foreground">Loading charts…</p>}
@@ -84,6 +82,7 @@ function AppShell() {
           </ErrorBoundary>
         </TabsContent>
       </Tabs>
+      </div>
 
       <BottomTabBar value={tab} onValueChange={setTab} onAddEntry={() => setAddOpen(true)} />
 

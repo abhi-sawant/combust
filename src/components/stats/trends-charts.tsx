@@ -56,7 +56,7 @@ export function TrendsCharts() {
             type="button"
             variant={range === r ? "default" : "outline"}
             size="sm"
-            className={cn("flex-1 rounded-full", range === r && "shadow-none")}
+            className={cn("flex-1", range === r && "shadow-none")}
             onClick={() => setRange(r)}
           >
             {r}
@@ -79,9 +79,16 @@ export function TrendsCharts() {
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  tickFormatter={(value: number) => `${(value / 1000).toFixed(0)}k`}
+                  tickFormatter={(value: number) => `${(value / 1000).toFixed(1)}k`}
                 />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} width={32} />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  width={36}
+                  allowDecimals={false}
+                  domain={[(min: number) => Math.floor(min - 1), (max: number) => Math.ceil(max + 1)]}
+                />
                 <ChartTooltip
                   content={
                     <ChartTooltipContent
@@ -95,8 +102,9 @@ export function TrendsCharts() {
                   dataKey="mileage"
                   type="monotone"
                   stroke="var(--color-mileage)"
-                  strokeWidth={2}
+                  strokeWidth={3}
                   dot={false}
+                  isAnimationActive={false}
                 />
               </LineChart>
             </ChartContainer>
@@ -119,7 +127,14 @@ export function TrendsCharts() {
                   tickMargin={8}
                   tickFormatter={(value: string) => formatDate(value)}
                 />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} width={32} />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  width={36}
+                  allowDecimals={false}
+                  domain={[(min: number) => Math.floor(min - 1), (max: number) => Math.ceil(max + 1)]}
+                />
                 <ChartTooltip
                   content={<ChartTooltipContent labelFormatter={(value) => formatDate(String(value))} />}
                 />
@@ -127,8 +142,9 @@ export function TrendsCharts() {
                   dataKey="costPerLitre"
                   type="monotone"
                   stroke="var(--color-costPerLitre)"
-                  strokeWidth={2}
+                  strokeWidth={3}
                   dot={false}
+                  isAnimationActive={false}
                 />
               </LineChart>
             </ChartContainer>

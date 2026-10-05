@@ -9,17 +9,15 @@ interface AuthShellProps {
 
 export function AuthShell({ title, description, children, footer }: AuthShellProps) {
   return (
-    <div className='mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-8 bg-background p-4'>
-      <div className='flex flex-col items-center gap-3'>
-        <div className='flex size-12 items-center justify-center rounded-md'>
-          <img src='/logo.svg' />
-        </div>
-        <h1 className='font-sans text-2xl font-bold text-foreground'>Combust</h1>
+    <div className='mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-4 p-4'>
+      <div className='rounded-[22px] bg-lime p-6 text-lime-foreground'>
+        <h1 className='font-display text-6xl leading-[0.85] font-black tracking-wider'>COMBUST</h1>
+        <p className='mt-2 text-sm font-semibold'>Fuel, mileage and cost for your bike.</p>
       </div>
 
-      <Card className='shadow-card'>
+      <Card>
         <CardHeader>
-          <CardTitle className='font-sans text-xl font-bold'>{title}</CardTitle>
+          <CardTitle className='text-3xl'>{title}</CardTitle>
           <CardDescription className='text-sm text-muted-foreground'>{description}</CardDescription>
         </CardHeader>
         <CardContent>{children}</CardContent>

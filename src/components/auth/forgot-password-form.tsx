@@ -64,7 +64,7 @@ export function ForgotPasswordForm({ onReset }: ForgotPasswordFormProps) {
         <Field data-invalid={!!form.formState.errors.email}>
           <FieldLabel
             htmlFor="forgot-email"
-            className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+            className="text-[13px] font-bold text-muted-foreground"
           >
             Email
           </FieldLabel>
@@ -86,7 +86,7 @@ export function ForgotPasswordForm({ onReset }: ForgotPasswordFormProps) {
         <Field data-invalid={!!form.formState.errors.otp}>
           <FieldLabel
             htmlFor="forgot-otp"
-            className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+            className="text-[13px] font-bold text-muted-foreground"
           >
             OTP
           </FieldLabel>
@@ -108,7 +108,7 @@ export function ForgotPasswordForm({ onReset }: ForgotPasswordFormProps) {
         <Field data-invalid={!!form.formState.errors.newPassword}>
           <FieldLabel
             htmlFor="forgot-new-password"
-            className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+            className="text-[13px] font-bold text-muted-foreground"
           >
             New password
           </FieldLabel>

@@ -80,14 +80,14 @@ export function StationStats() {
 
       {/* Mobile: stacked cards, mirroring entries-table's dual-layout pattern */}
       <div className="flex flex-col gap-3 sm:hidden">
-        <p className="px-0.5 text-[10.5px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+        <p className="px-0.5 font-display text-xl leading-none font-extrabold tracking-wide uppercase">
           By fuel station
         </p>
         {stations.map((station) => (
           <Card key={station.station} size="sm">
             <CardContent className="flex flex-col gap-3">
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="font-medium">{station.station}</span>
+                <span className="font-bold">{station.station}</span>
                 {bestMileageStation?.station === station.station && (
                   <Badge variant="accent">Best mileage</Badge>
                 )}

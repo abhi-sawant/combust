@@ -67,7 +67,7 @@ export function SignUpForm({ onSignedUp }: SignUpFormProps) {
         <Field data-invalid={!!form.formState.errors.name}>
           <FieldLabel
             htmlFor="signup-name"
-            className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+            className="text-[13px] font-bold text-muted-foreground"
           >
             Name
           </FieldLabel>
@@ -84,7 +84,7 @@ export function SignUpForm({ onSignedUp }: SignUpFormProps) {
         <Field data-invalid={!!form.formState.errors.email}>
           <FieldLabel
             htmlFor="signup-email"
-            className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+            className="text-[13px] font-bold text-muted-foreground"
           >
             Email
           </FieldLabel>
@@ -106,7 +106,7 @@ export function SignUpForm({ onSignedUp }: SignUpFormProps) {
         <Field data-invalid={!!form.formState.errors.otp}>
           <FieldLabel
             htmlFor="signup-otp"
-            className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+            className="text-[13px] font-bold text-muted-foreground"
           >
             OTP
           </FieldLabel>
@@ -128,7 +128,7 @@ export function SignUpForm({ onSignedUp }: SignUpFormProps) {
         <Field data-invalid={!!form.formState.errors.password}>
           <FieldLabel
             htmlFor="signup-password"
-            className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+            className="text-[13px] font-bold text-muted-foreground"
           >
             Password
           </FieldLabel>

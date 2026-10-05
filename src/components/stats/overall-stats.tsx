@@ -19,12 +19,12 @@ function StatCard({
   return (
     <Card size="sm">
       <CardHeader>
-        <CardDescription className="text-[10.5px] font-medium tracking-[0.12em] uppercase">
+        <CardDescription className="text-[13px] font-semibold">
           {label}
         </CardDescription>
-        <CardTitle className="font-mono text-xl font-medium">{value}</CardTitle>
+        <CardTitle className="text-4xl font-black normal-case">{value}</CardTitle>
         <CardAction>
-          <span className="grid size-8 place-items-center rounded-full bg-grad-primary-soft text-accent-foreground">
+          <span className="grid size-9 place-items-center rounded-full bg-lime text-lime-foreground">
             <Icon className="size-4" />
           </span>
         </CardAction>

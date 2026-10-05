@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowUpDown } from 'lucide-react'
+import { ArrowUpDown, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -19,15 +19,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { EntrySheet } from '@/components/entries/entry-sheet'
 import { FillupRow, MileageCell } from '@/components/entries/fillup-row'
 import { useEntries } from '@/hooks/entries-context'
-import { groupByMonth } from '@/lib/calculations'
+import { computeOverallStats, groupByMonth } from '@/lib/calculations'
 import { formatAmount, formatDate, formatKm, formatNumber } from '@/lib/format'
+import { sectorOf } from '@/lib/sector'
 import type { DerivedEntry } from '@/types/stats'
 
 type SortKey = 'date' | 'odometer'
 type SortDir = 'asc' | 'desc'
 
 export function EntriesTable() {
-  const { derivedEntries, deleteEntry } = useEntries()
+  const { derivedEntries, deleteEntry, isLoading } = useEntries()
   const [sortKey, setSortKey] = useState<SortKey>('odometer')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [editingEntry, setEditingEntry] = useState<DerivedEntry | null>(null)
@@ -41,6 +42,11 @@ export function EntriesTable() {
     })
     return copy
   }, [derivedEntries, sortKey, sortDir])
+
+  const { average, bestId } = useMemo(() => {
+    const s = computeOverallStats(derivedEntries)
+    return { average: s.averageMileage, bestId: s.bestMileageEntry?.id ?? null }
+  }, [derivedEntries])
 
   const monthGroups = useMemo(() => {
     const byDateDesc = [...derivedEntries].sort((a, b) => b.date.localeCompare(a.date))
@@ -62,14 +68,21 @@ export function EntriesTable() {
     setDeletingId(null)
   }
 
-  function renderRowActions(entry: DerivedEntry) {
+  function renderRowActions(entry: DerivedEntry, compact = false) {
     return (
-      <div className='grid grid-cols-2 w-full border-t'>
-        <Button variant='ghost' aria-label='Edit entry' onClick={() => setEditingEntry(entry)}>
-          Edit
+      <div className={compact ? 'flex gap-0.5' : 'grid grid-cols-2 w-full border-t'}>
+        <Button
+          variant='ghost'
+          size={compact ? 'icon-sm' : 'default'}
+          aria-label='Edit entry'
+          onClick={() => setEditingEntry(entry)}>
+          {compact ? <Pencil /> : 'Edit'}
         </Button>
         <AlertDialog open={deletingId === entry.id} onOpenChange={(open) => setDeletingId(open ? entry.id : null)}>
-          <AlertDialogTrigger render={<Button variant='ghost' aria-label='Delete entry' />}>Delete</AlertDialogTrigger>
+          <AlertDialogTrigger
+            render={<Button variant='ghost' size={compact ? 'icon-sm' : 'default'} aria-label='Delete entry' />}>
+            {compact ? <Trash2 /> : 'Delete'}
+          </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
@@ -89,6 +102,8 @@ export function EntriesTable() {
       </div>
     )
   }
+
+  if (isLoading && sortedEntries.length === 0) return null
 
   if (sortedEntries.length === 0) {
     return (
@@ -140,10 +155,10 @@ export function EntriesTable() {
                     {entry.costPerLitre !== null ? formatAmount(entry.costPerLitre) : '—'}
                   </TableCell>
                   <TableCell className='text-right'>
-                    <MileageCell entry={entry} />
+                    <MileageCell entry={entry} sector={sectorOf(entry, average, bestId)} />
                   </TableCell>
                   <TableCell>
-                    <div className='flex justify-end gap-1'>{renderRowActions(entry)}</div>
+                    <div className='flex justify-end gap-1'>{renderRowActions(entry, true)}</div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -157,16 +172,16 @@ export function EntriesTable() {
         {monthGroups.map((group) => (
           <div key={group.label} className='flex flex-col gap-2.5'>
             <div className='flex items-baseline justify-between px-0.5'>
-              <span className='text-[10.5px] font-medium tracking-[0.16em] text-muted-foreground uppercase'>
+              <span className='font-display text-xl leading-none font-extrabold tracking-wide uppercase'>
                 {group.label}
               </span>
-              <span className='font-mono text-xs text-muted-foreground'>
+              <span className='text-sm font-bold text-muted-foreground'>
                 {formatAmount(group.items.reduce((sum, e) => sum + e.amountPaid, 0))}
               </span>
             </div>
             {group.items.map((entry) => (
-              <div key={entry.id} className='rounded-md border border-border bg-card shadow-card'>
-                <FillupRow entry={entry} />
+              <div key={entry.id} className='overflow-hidden rounded-[20px] border border-border bg-card'>
+                <FillupRow entry={entry} sector={sectorOf(entry, average, bestId)} />
                 <div className='flex shrink-0 gap-0.5'>{renderRowActions(entry)}</div>
               </div>
             ))}

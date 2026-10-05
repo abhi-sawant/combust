@@ -1,17 +1,29 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/archivo";
-@import "@fontsource/ibm-plex-mono/400.css";
-@import "@fontsource/ibm-plex-mono/500.css";
-@import "@fontsource/ibm-plex-mono/600.css";
+@import "@fontsource-variable/hanken-grotesk";
+@import "@fontsource/big-shoulders-display/700";
+@import "@fontsource/big-shoulders-display/800";
+@import "@fontsource/big-shoulders-display/900";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: 'Archivo Variable', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-heading: var(--font-display);
+  --font-sans: 'Hanken Grotesk Variable', system-ui, sans-serif;
+  /* Paddock has no monospace: figures are tabular numerals in the body face. */
+  --font-mono: 'Hanken Grotesk Variable', system-ui, sans-serif;
+  --color-lime: var(--lime);
+  --color-lime-foreground: var(--lime-foreground);
+  --color-best: var(--best);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-bar-best: var(--bar-best);
+  --color-bar-up: var(--bar-up);
+  --color-bar-down: var(--bar-down);
+  --color-rail: var(--rail);
+  --color-rail-foreground: var(--rail-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -68,111 +80,123 @@
 }
 
 :root {
-  --background: #f7f5f1;
-  --foreground: #1b1a17;
-  --card: #fffdf9;
-  --card-foreground: #1b1a17;
-  --popover: #fffdf9;
-  --popover-foreground: #1b1a17;
-  --primary: #146b54;
-  --primary-foreground: #fffdf9;
-  --secondary: #f0ece3;
-  --secondary-foreground: #1b1a17;
-  --muted: #f0ece3;
-  --muted-foreground: #79746a;
-  --accent: #e9f1ec;
-  --accent-foreground: #0f4c3d;
-  --destructive: #b3421f;
-  --destructive-foreground: #fffdf9;
-  --border: #eae5db;
-  --input: #eae5db;
-  --ring: #146b54;
-  --chart-1: #146b54;
-  --chart-2: #b3421f;
-  --chart-3: #c79b4f;
-  --chart-4: #6ba292;
-  --chart-5: #6e8fb0;
+  /* Paddock — daylight. Lime is the brand field; ink is the primary action. */
+  --lime: #c6ff1a;
+  --lime-foreground: #0b0b0c;
+  --rail: #0b0b0c;
+  --rail-foreground: #f2f4ea;
+  --background: #eceee4;
+  --foreground: #0d0d0e;
+  --card: #ffffff;
+  --card-foreground: #0d0d0e;
+  --popover: #ffffff;
+  --popover-foreground: #0d0d0e;
+  --primary: #0d0d0e;
+  --primary-foreground: #eceee4;
+  --secondary: #e2e5d6;
+  --secondary-foreground: #0d0d0e;
+  --muted: #e2e5d6;
+  --muted-foreground: #5d6056;
+  --accent: #dff07e;
+  --accent-foreground: #1b2200;
+  --destructive: #c9301c;
+  --destructive-foreground: #ffffff;
+  --border: #d9dccf;
+  --input: #c7cbb9;
+  --ring: #7b2fe0;
+  --chart-1: #7b2fe0;
+  --chart-2: #0f9e45;
+  --chart-3: #c98f00;
+  --chart-4: #5d6056;
+  --chart-5: #0d0d0e;
   --radius: 1rem;
-  --sidebar: #fffdf9;
-  --sidebar-foreground: #1b1a17;
-  --sidebar-primary: #146b54;
-  --sidebar-primary-foreground: #fffdf9;
-  --sidebar-accent: #e9f1ec;
-  --sidebar-accent-foreground: #0f4c3d;
-  --sidebar-border: #eae5db;
-  --sidebar-ring: #146b54;
+  --sidebar: #0b0b0c;
+  --sidebar-foreground: #f2f4ea;
+  --sidebar-primary: #c6ff1a;
+  --sidebar-primary-foreground: #0b0b0c;
+  --sidebar-accent: #1b1b1d;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #26262a;
+  --sidebar-ring: #c6ff1a;
 
-  /* The single collapsed-alert "warm band" — distinct from destructive */
-  --warning-band: #fbede6;
-  --warning-band-foreground: #7a2e13;
-  --warning-band-accent: #b3421f;
+  /* Timing-board sectors: best fill, above average, below average */
+  --best: #7b2fe0;
+  --up: #0f9e45;
+  --down: #a87500;
+  --bar-best: #8a3ff5;
+  --bar-up: #19c25a;
+  --bar-down: #f2b705;
 
-  /* Flat accent fills (no gradients/glows) */
-  --grad-primary: #146b54;
-  --grad-primary-soft: #e9f1ec;
-  --grad-success: #146b54;
-  --grad-success-soft: #e9f1ec;
-  --grad-danger: #b3421f;
-  --grad-danger-soft: #f7e6de;
-  --grad-info: #6e8fb0;
-  --grad-warning: #c79b4f;
-  --grad-surface: #fffdf9;
+  --warning-band: #fff1c2;
+  --warning-band-foreground: #5c4200;
+  --warning-band-accent: #c98f00;
 
-  /* Soft, warm, neutral elevation — no colored glows */
-  --card-shadow: 0 1px 2px rgba(27, 26, 23, 0.05);
-  --float-shadow: 0 18px 40px -20px rgba(27, 26, 23, 0.35);
+  --grad-primary: #0d0d0e;
+  --grad-primary-soft: #dff07e;
+  --grad-success: #0f9e45;
+  --grad-success-soft: #d4f3de;
+  --grad-danger: #c9301c;
+  --grad-danger-soft: #fbe0da;
+  --grad-info: #7b2fe0;
+  --grad-warning: #c98f00;
+  --grad-surface: #ffffff;
+
+  --card-shadow: 0 1px 0 rgba(13, 13, 14, 0.04);
+  --float-shadow: 0 18px 40px -18px rgba(13, 13, 14, 0.45);
 }
 
 .dark {
-  --background: #211e1a;
-  --foreground: #f3efe7;
-  --card: #2a2521;
-  --card-foreground: #f3efe7;
-  --popover: #2a2521;
-  --popover-foreground: #f3efe7;
-  --primary: #2e9c7a;
-  --primary-foreground: #0b1f19;
-  --secondary: #35302a;
-  --secondary-foreground: #f3efe7;
-  --muted: #35302a;
-  --muted-foreground: #b0a99c;
-  --accent: #24352e;
-  --accent-foreground: #8fcbb3;
-  --destructive: #e0714a;
-  --destructive-foreground: #241008;
-  --border: rgba(243, 239, 231, 0.1);
-  --input: rgba(243, 239, 231, 0.14);
-  --ring: #2e9c7a;
-  --chart-1: #2e9c7a;
-  --chart-2: #e0714a;
-  --chart-3: #d9b36b;
-  --chart-4: #7fb8a4;
-  --chart-5: #86a9c4;
-  --sidebar: #211e1a;
-  --sidebar-foreground: #f3efe7;
-  --sidebar-primary: #2e9c7a;
-  --sidebar-primary-foreground: #0b1f19;
-  --sidebar-accent: #24352e;
-  --sidebar-accent-foreground: #8fcbb3;
-  --sidebar-border: rgba(243, 239, 231, 0.1);
-  --sidebar-ring: #2e9c7a;
+  /* Paddock — pit lane at night. */
+  --background: #09090a;
+  --foreground: #f3f4ee;
+  --card: #141416;
+  --card-foreground: #f3f4ee;
+  --popover: #1a1a1d;
+  --popover-foreground: #f3f4ee;
+  --primary: #c6ff1a;
+  --primary-foreground: #0b0b0c;
+  --secondary: #1f1f23;
+  --secondary-foreground: #f3f4ee;
+  --muted: #1f1f23;
+  --muted-foreground: #9a9d92;
+  --accent: #232d07;
+  --accent-foreground: #d6ff58;
+  --destructive: #ff6a55;
+  --destructive-foreground: #1b0803;
+  --border: #26262a;
+  --input: #34343a;
+  --ring: #c6ff1a;
+  --chart-1: #b77bff;
+  --chart-2: #3be07a;
+  --chart-3: #ffd23f;
+  --chart-4: #9a9d92;
+  --chart-5: #f3f4ee;
+  --sidebar: #000000;
+  --sidebar-border: #26262a;
 
-  --warning-band: #3a2a20;
-  --warning-band-foreground: #e8c9b8;
-  --warning-band-accent: #e0714a;
+  --best: #b77bff;
+  --up: #3be07a;
+  --down: #ffd23f;
+  --bar-best: #b06cff;
+  --bar-up: #2bd96b;
+  --bar-down: #ffd23f;
 
-  --grad-primary: #2e9c7a;
-  --grad-primary-soft: #1d3129;
-  --grad-success: #2e9c7a;
-  --grad-success-soft: #1d3129;
-  --grad-danger: #e0714a;
-  --grad-danger-soft: #3a2419;
-  --grad-info: #86a9c4;
-  --grad-warning: #d9b36b;
-  --grad-surface: #2a2521;
+  --warning-band: #2b2200;
+  --warning-band-foreground: #ffd23f;
+  --warning-band-accent: #ffd23f;
 
-  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --float-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.6);
+  --grad-primary: #c6ff1a;
+  --grad-primary-soft: #232d07;
+  --grad-success: #3be07a;
+  --grad-success-soft: #0f2a19;
+  --grad-danger: #ff6a55;
+  --grad-danger-soft: #331511;
+  --grad-info: #b77bff;
+  --grad-warning: #ffd23f;
+  --grad-surface: #141416;
+
+  --card-shadow: none;
+  --float-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.8);
 }
 
 @layer base {
@@ -186,5 +210,25 @@
 
   html {
     @apply font-sans;
+  }
+
+  ::selection {
+    background: var(--lime);
+    color: #0b0b0c;
+  }
+
+  /* All figures line up in columns. */
+  body {
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0.02);
   }
 }
