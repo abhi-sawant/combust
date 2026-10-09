@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Combust — Odometer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f1f3; --surface:#fafafb; --ink:#13151a; --muted:#656a73; --faint:#9a9ea6; --line:#dcdfe3; --line-strong:#c6cad0;
+  --accent:#ff5a1f; --accent-text:#c93d08; --accent-ink:#fff; --drum:#e7e9ec; --drum-shade:rgba(19,21,26,.10);
+  --sel:#ffd9c9; --warn:#8a5a00; --warn-bg:#fdf0d4; --bad:#b3261e; --bad-bg:#fbe3e1;
+  --sans:'Geist',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+:root[data-theme=dark]{
+  --bg:#0d0e10; --surface:#131518; --ink:#eceef0; --muted:#9097a1; --faint:#5d636c; --line:#22252a; --line-strong:#33373e;
+  --accent:#ff6a2b; --accent-text:#ff8a57; --accent-ink:#140a05; --drum:#1b1d21; --drum-shade:rgba(0,0,0,.45);
+  --sel:#5a2a14; --warn:#f2c660; --warn-bg:#2b2208; --bad:#ff8a80; --bad-bg:#2e1412;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0}
+html{background:var(--bg)}
+body{font:400 15px/1.5 var(--sans);color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;min-height:100svh}
+::selection{background:var(--sel);color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+svg{width:18px;height:18px;flex:none}
+.mono{font-family:var(--mono)}
+*{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+
+/* shell */
+.shell{display:grid;grid-template-columns:76px minmax(0,1fr);min-height:100svh}
+.rail{position:sticky;top:0;height:100svh;display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 0;border-right:1px solid var(--line)}
+.mark{display:grid;place-items:center;width:34px;height:34px;margin-bottom:18px;border-radius:9px;background:var(--ink);color:var(--bg);font:600 15px var(--mono)}
+.mark i{font-style:normal;color:var(--accent)}
+.nav{display:flex;flex-direction:column;gap:4px;width:100%;padding:0 10px}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 7px;border-radius:10px;color:var(--muted);font-size:11px;font-weight:500;transition:color .2s,background .2s}
+.nav button:hover{color:var(--ink);background:var(--drum)}
+.nav button[aria-current=page]{color:var(--ink);background:var(--drum)}
+.nav button[aria-current=page] svg{color:var(--accent-text)}
+.nav button[aria-disabled=true]{opacity:.45;cursor:default}
+.rail .sp{flex:1}
+.rail .ghost{width:40px;height:40px;display:grid;place-items:center;border-radius:10px;color:var(--muted)}
+.rail .ghost:hover{background:var(--drum);color:var(--ink)}
+
+main{width:100%;max-width:1080px;margin:0 auto;padding:28px 40px 72px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:36px}
+.veh{display:flex;align-items:center;gap:10px;padding:6px 12px 6px 6px;border:1px solid var(--line);border-radius:999px;background:var(--surface);transition:border-color .2s}
+.veh:hover{border-color:var(--line-strong)}
+.veh .av{width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font:600 11px var(--mono)}
+.veh b{font-weight:500}.veh span{color:var(--muted);font-size:13px}
+.veh svg{width:15px;height:15px;color:var(--faint)}
+.top .sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;font-weight:500;font-size:14px;transition:transform .2s var(--ease),background .2s}
+.btn svg{width:16px;height:16px}
+.btn-primary{background:var(--ink);color:var(--bg)}
+.btn-primary:hover{background:var(--accent);color:var(--accent-ink)}
+.btn-primary:active{transform:scale(.97)}
+.btn-line{border:1px solid var(--line-strong)}
+.btn-line:hover{background:var(--drum)}
+.icon-btn{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);color:var(--muted)}
+.icon-btn:hover{color:var(--ink);border-color:var(--line-strong)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:40px 72px;align-items:end;padding-bottom:36px;border-bottom:1px solid var(--line)}
+.lbl{font-size:13px;color:var(--muted);font-weight:500}
+.reading{display:flex;align-items:flex-end;gap:14px;margin-top:14px}
+.drums{display:flex;gap:6px;align-items:center}
+.drum{position:relative;width:62px;height:92px;overflow:hidden;border-radius:10px;background:var(--drum);border:1px solid var(--line);font:500 74px/92px var(--mono);text-align:center}
+.drum .strip{display:flex;flex-direction:column;transition:transform 1.4s var(--ease)}
+.drum .strip span{height:92px;flex:none}
+.drum::after{content:'';position:absolute;inset:0;background:linear-gradient(var(--drum-shade),transparent 28%,transparent 72%,var(--drum-shade));pointer-events:none}
+.drum.tenth{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.drum.tenth::after{background:linear-gradient(rgba(0,0,0,.22),transparent 28%,transparent 72%,rgba(0,0,0,.22))}
+.dot{align-self:flex-end;width:8px;height:8px;margin:0 -1px 14px;border-radius:50%;background:var(--ink)}
+.unit{font:500 20px var(--mono);color:var(--muted);padding-bottom:14px}
+.delta{display:inline-flex;align-items:center;gap:6px;margin-top:18px;font-size:14px;color:var(--muted)}
+.delta svg{width:15px;height:15px}
+.delta b{color:var(--ink);font-weight:500}
+.delta.up svg{color:var(--accent-text)}
+dl.facts{display:grid;grid-template-columns:repeat(4,1fr)}
+.facts>div{padding:2px 0 2px 20px;border-left:1px solid var(--line)}
+.facts dt{font-size:13px;color:var(--muted)}
+.facts dd{font:500 26px/1.15 var(--mono);margin-top:4px;letter-spacing:-.02em}
+.facts small{font:400 13px var(--sans);color:var(--faint);margin-left:3px;letter-spacing:0}
+
+/* two columns */
+.cols{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:56px;margin-top:36px}
+h2{font-size:15px;font-weight:600;letter-spacing:-.005em}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:22px}
+.link{font-size:13px;color:var(--muted);display:inline-flex;align-items:center;gap:2px;text-underline-offset:4px}
+.link:hover{color:var(--ink);text-decoration:underline}
+.link svg{width:14px;height:14px}
+
+/* tick chart */
+.chart{position:relative;height:200px;display:flex;align-items:flex-end;gap:7px;padding-top:24px;border-bottom:1px solid var(--line-strong)}
+.chart .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;position:relative}
+.chart .fill{width:100%;border-radius:3px 3px 0 0;background:var(--line-strong);transform-origin:bottom;animation:grow .9s var(--ease) both;animation-delay:calc(var(--i)*35ms);transition:background .2s}
+.chart .bar.up .fill{background:var(--ink)}
+.chart .bar.best .fill{background:var(--accent)}
+.chart .bar:hover .fill{background:var(--accent)}
+.chart .bar .tip{position:absolute;bottom:calc(var(--h) + 8px);left:50%;transform:translateX(-50%);font:500 11px var(--mono);opacity:0;transition:opacity .15s;white-space:nowrap;pointer-events:none}
+.chart .bar:hover .tip,.chart .bar.best .tip{opacity:1}
+.avgline{position:absolute;left:0;right:0;border-top:1px dashed var(--faint);pointer-events:none}
+.avgline span{position:absolute;right:0;top:-20px;font:500 11px var(--mono);color:var(--muted);background:var(--bg);padding-left:6px}
+.axis{display:flex;gap:7px;margin-top:8px;font:400 10.5px var(--mono);color:var(--faint)}
+.axis span{flex:1;text-align:center}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:0}
+@keyframes grow{from{transform:scaleY(.02);opacity:0}}
+
+/* rows */
+.rows{list-style:none;padding:0}
+.row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 0;border-top:1px solid var(--line);transition:background .2s}
+.rows .row:first-child{border-top:0;padding-top:0}
+.row .d{font:400 12px/1.25 var(--mono);color:var(--muted)}
+.row .d b{display:block;font:500 17px var(--mono);color:var(--ink)}
+.row .s{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .sub{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .m{text-align:right;font:500 21px/1.1 var(--mono);display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.row .m small{display:block;font:400 11.5px var(--mono);color:var(--faint);margin-top:3px}
+.v{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none;margin-right:8px;vertical-align:2px}
+.mm .v{margin-right:0}
+.v.best{background:var(--accent)}.v.up{background:var(--ink)}.v.down{border:1.5px solid var(--faint)}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font:500 12px var(--sans);border:1px solid var(--line-strong);color:var(--muted)}
+.chip.pending{border-style:dashed}
+.chip.warn{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.chip.bad{background:var(--bad-bg);color:var(--bad);border-color:transparent}
+
+/* entries */
+.page-h{display:flex;align-items:flex-end;gap:16px;margin-bottom:24px}
+.page-h h1{font:600 30px/1.1 var(--sans);letter-spacing:-.025em}
+.page-h p{color:var(--muted);font-size:14px;margin-top:4px}
+.page-h .sp{flex:1}
+.seg{display:inline-flex;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.seg button{padding:5px 14px;border-radius:999px;font-size:13px;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+table{width:100%;border-collapse:collapse}
+th{font:500 12px var(--sans);color:var(--muted);text-align:right;padding:0 12px 10px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+th:first-child,td:first-child{padding-left:0;text-align:left}
+th.l,td.l{text-align:left}
+td{padding:13px 12px;border-bottom:1px solid var(--line);text-align:right;font:400 14px var(--mono);white-space:nowrap}
+td.l{font-family:var(--sans)}
+tr.grp td{padding:30px 0 10px;border-bottom:1px solid var(--line-strong);font:600 14px var(--sans);text-align:left}
+tr.grp td:last-child{text-align:right;font:400 13px var(--mono);color:var(--muted);padding-right:12px}
+tr.grp:first-child td{padding-top:6px}
+tbody tr.e{transition:background .15s}
+tbody tr.e:hover{background:color-mix(in srgb,var(--drum) 60%,transparent)}
+td.act{width:84px;padding-right:0}
+.acts{display:flex;gap:2px;justify-content:flex-end;opacity:0;transition:opacity .15s}
+tr.e:hover .acts,tr.e:focus-within .acts{opacity:1}
+.acts button{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;color:var(--muted)}
+.acts button:hover{background:var(--drum);color:var(--ink)}
+.acts svg{width:16px;height:16px}
+.mm{display:inline-flex;align-items:center;gap:8px;font-weight:500}
+.list-m{display:none}
+
+/* mobile tab bar */
+.tabbar{display:none}
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .rail{display:none}
+  main{padding:16px 18px 120px}
+  .top{margin-bottom:26px}
+  .top .btn span{display:none}.top .btn{width:40px;padding:0;justify-content:center}
+  .hero{grid-template-columns:1fr;gap:28px;padding-bottom:28px}
+  .drum{width:52px;height:78px;font-size:62px;line-height:78px}.drum .strip span{height:78px}
+  dl.facts{grid-template-columns:1fr 1fr;row-gap:20px}
+  .facts>div:nth-child(odd){border-left:0;padding-left:0}
+  .cols{grid-template-columns:1fr;gap:44px}
+  .page-h{flex-wrap:wrap}.page-h h1{font-size:26px}
+  .tbl{display:none}.list-m{display:block}
+  .gh{display:flex;justify-content:space-between;align-items:baseline;padding:26px 0 10px;border-bottom:1px solid var(--line-strong)}
+  .gh b{font-weight:600}.gh span{font:400 13px var(--mono);color:var(--muted)}
+  .list-m .row{grid-template-columns:44px minmax(0,1fr) auto}
+  .list-m>div:first-child .gh{padding-top:4px}
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));height:64px;align-items:center;border:1px solid var(--line-strong);border-radius:22px;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);z-index:5}
+  .tabbar button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:500;color:var(--muted);padding:6px 0}
+  .tabbar button[aria-current=page]{color:var(--ink)}
+  .tabbar button[aria-current=page] svg{color:var(--accent-text)}
+  .tabbar button[aria-disabled=true]{opacity:.4}
+  .tabbar .add{width:48px;height:48px;border-radius:50%;margin:0 auto;background:var(--accent);color:var(--accent-ink);justify-content:center}
+  .tabbar .add svg{width:22px;height:22px}
+}
+@media (prefers-reduced-motion:reduce){.chart .fill{animation:none}.drum .strip{transition:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="rail">
+    <div class="mark">C<i>.</i></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sp"></div>
+    <button class="ghost" title="Import CSV" aria-label="Import CSV" id="imp"></button>
+    <button class="ghost" title="Settings" aria-label="Settings" id="set"></button>
+  </aside>
+  <main id="app"></main>
+</div>
+<nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
+<script src="shared.js"></script>
+<script>
+const {entries:E,stats:S,sector,f1,int,money,dshort,dfull,groups,icons:I,state}=CB;
+const NAV=[['overview','Overview','gauge'],['entries','Entries','list'],['stats','Stats','bars'],['trends','Trends','trend']];
+const navBtn=(v,l,ic)=>`<button data-go="${v}" ${state.page===v?'aria-current="page"':''} ${v==='stats'||v==='trends'?'aria-disabled="true" title="Not part of this prototype"':''}>${I[ic]}<span>${l}</span></button>`;
+function shell(){
+  document.getElementById('nav').innerHTML=NAV.map(n=>navBtn(...n)).join('');
+  const tb=NAV.map(n=>navBtn(...n));
+  tb.splice(2,0,`<button class="add" aria-label="Add fill-up">${I.plus}</button>`);
+  document.getElementById('tabbar').innerHTML=tb.join('');
+  document.getElementById('imp').innerHTML=I.upload;document.getElementById('set').innerHTML=I.gear;
+}
+const topbar=()=>`<div class="top">
+  <button class="veh"><span class="av">K3</span><b>Duke 390</b><span>MH 12 · ${int(E.at(-1).odo)} km</span>${I.swap}</button>
+  <div class="sp"></div>
+  <button class="icon-btn" data-theme-btn></button>
+  <button class="btn btn-primary">${I.plus}<span>Log fill-up</span></button></div>`;
+
+function drums(n){
+  const s=n.toFixed(1).replace('.','');
+  return `<div class="drums" aria-label="${n.toFixed(1)} kilometres per litre">`+[...s].map((d,i)=>{
+    const last=i===s.length-1;
+    const strip=Array.from({length:10},(_,k)=>`<span>${k}</span>`).join('');
+    return (i===s.length-1?'<i class="dot"></i>':'')+`<div class="drum ${last?'tenth':''}"><div class="strip" data-to="${d}" data-d="${i}">${strip}</div></div>`;
+  }).join('')+`</div>`;
+}
+function rollDrums(){
+  document.querySelectorAll('.strip').forEach(s=>{
+    const h=s.firstElementChild.offsetHeight;
+    s.style.transitionDelay=(s.dataset.d*140)+'ms';
+    s.style.transform='translateY(0)';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>s.style.transform=`translateY(${-h*s.dataset.to}px)`));
+  });
+}
+function mileCell(e,withDot=true){
+  if(e.pending)return '<span class="chip pending">Pending</span>';
+  if(e.missed)return '<span class="chip warn">Missed fill</span>';
+  if(e.partial)return '<span class="chip">Partial fill</span>';
+  if(e.mileage===null)return '<span style="color:var(--faint)">—</span>';
+  return `<span class="mm"><i class="v ${sector(e)}"></i>${f1(e.mileage)}</span>`;
+}
+function row(e){
+  const m=e.mileage!==null&&!e.pending&&!e.missed?`<i class="v ${sector(e)}"></i>${f1(e.mileage)}`:mileCell(e);
+  const [dd,mm]=dshort(e.date).split(' ');
+  return `<li class="row"><div class="d"><b>${dd}</b>${mm}</div>
+  <div style="min-width:0"><div class="s">${e.station}</div><div class="sub">${f1(e.litres)} L · ${money(e.amount)} · ${money(e.cpl)}/L${e.partial?' · partial':''}</div></div>
+  <div class="m"><div>${m}<small>${int(e.odo)} km</small></div></div></li>`;
+}
+function chart(){
+  const bars=E.filter(e=>e.mileage!==null).slice(-12);
+  const lo=Math.floor(S.min-3),hi=Math.ceil(S.max+0.5);
+  const h=v=>((v-lo)/(hi-lo)*100);
+  return `<div class="chart" id="chart">
+    <div class="avgline" style="bottom:${h(S.avg)}%"><span>avg ${f1(S.avg)}</span></div>
+    ${bars.map((e,i)=>`<div class="bar ${sector(e)}" style="--i:${i};--h:${h(e.mileage)}%"><span class="tip">${f1(e.mileage)}</span><div class="fill" style="height:${h(e.mileage)}%"></div></div>`).join('')}
+  </div><div class="axis">${bars.map(e=>`<span>${e.date.slice(5,7)==='01'?'':dshort(e.date).split(' ')[1].slice(0,1)}</span>`).join('')}</div>`;
+}
+const pages={
+  overview(){
+    const rec=[...E].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+    return `${topbar()}
+    <section class="hero" aria-label="Summary">
+      <div><div class="lbl">Average mileage</div>
+        <div class="reading">${drums(S.avg)}<span class="unit">km/l</span></div>
+        <p class="delta ${S.delta>0?'up':''}">${S.delta>0?I.up:I.down}<span><b>${Math.abs(S.delta).toFixed(1)}</b> ${S.delta>0?'better':'lower'} than the previous fill</span></p></div>
+      <dl class="facts">
+        <div><dt>Spent</dt><dd>${money(S.spent)}</dd></div>
+        <div><dt>Distance</dt><dd>${int(S.km)}<small>km</small></dd></div>
+        <div><dt>Fuel</dt><dd>${f1(S.litres)}<small>L</small></dd></div>
+        <div><dt>Fill-ups</dt><dd>${S.count}</dd></div>
+      </dl>
+    </section>
+    <div class="cols">
+      <section><div class="sec-h"><h2>Mileage by fill-up</h2>
+        <div class="legend"><span><i style="background:var(--accent)"></i>Best</span><span><i style="background:var(--ink)"></i>Above avg</span><span><i style="background:var(--line-strong)"></i>Below</span></div></div>${chart()}</section>
+      <section><div class="sec-h"><h2>Recent fill-ups</h2><button class="link" data-go="entries">All entries ${I.chev}</button></div>
+        <ol class="rows">${rec.map(row).join('')}</ol></section>
+    </div>`;
+  },
+  entries(){
+    const asc=state.sort==='odo';
+    const sorted=[...E].sort((a,b)=>b.odo-a.odo);
+    const body=state.sort==='odo'
+      ?sorted.map(tr).join('')
+      :groups().map(g=>`<tr class="grp"><td colspan="7">${g.label}</td><td>${money(g.spent)}</td></tr>`+g.items.map(tr).join('')).join('');
+    return `${topbar()}
+    <div class="page-h"><div><h1>Entries</h1><p>${E.length} fill-ups · ${dfull(E[0].date)} to ${dfull(E.at(-1).date)}</p></div><div class="sp"></div>
+      <div class="seg" role="group" aria-label="Group"><button aria-pressed="${!asc}" data-sort="date">By month</button><button aria-pressed="${asc}" data-sort="odo">By odometer</button></div>
+      <button class="btn btn-line">${I.upload}Import CSV</button></div>
+    <div class="tbl"><table><thead><tr><th>Date</th><th>Odometer</th><th class="l">Station</th><th>Litres</th><th>Amount</th><th>Cost / L</th><th>Mileage</th><th></th></tr></thead><tbody>${body}</tbody></table></div>
+    <div class="list-m">${groups().map(g=>`<div><div class="gh"><b>${g.label}</b><span>${money(g.spent)}</span></div><ol class="rows">${g.items.map(row).join('')}</ol></div>`).join('')}</div>`;
+  }
+};
+function tr(e){return `<tr class="e"><td>${dshort(e.date)}</td><td>${int(e.odo)} km</td><td class="l">${e.station}</td><td>${f1(e.litres)}</td><td>${money(e.amount)}</td><td>${money(e.cpl)}</td><td>${mileCell(e)}</td>
+ <td class="act"><div class="acts"><button aria-label="Edit entry">${I.pencil}</button><button aria-label="Delete entry">${I.trash}</button></div></td></tr>`}
+state.sort='date';
+function render(){
+  document.getElementById('app').innerHTML=pages[state.page]();
+  shell();CB.applyTheme();
+  if(state.page==='overview')rollDrums();
+}
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');if(g&&g.getAttribute('aria-disabled')!=='true'){state.page=g.dataset.go;render();scrollTo(0,0);}
+  const t=e.target.closest('[data-theme-btn]');if(t){state.theme=state.theme==='dark'?'light':'dark';CB.applyTheme();}
+  const s=e.target.closest('[data-sort]');if(s){state.sort=s.dataset.sort;render();}
+});
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Combust — Redesign candidates</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f4f2;--ink:#151515;--mut:#6b6b66;--line:#dcdcd6}
+*{box-sizing:border-box;margin:0}
+body{font:400 15px/1.5 Geist,system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+.w{max-width:1280px;margin:0 auto;padding:0 32px}
+header{padding:48px 0 24px}
+h1{font-size:34px;letter-spacing:-.03em;line-height:1.1}
+header p{color:var(--mut);margin-top:10px;max-width:60ch}
+.jump{position:sticky;top:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);z-index:5}
+.jump .w{display:flex;gap:8px;padding-top:12px;padding-bottom:12px}
+.jump a{padding:7px 14px;border-radius:99px;border:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:500;font-size:14px}
+.jump a:hover{background:var(--ink);color:var(--bg)}
+section.d{padding:56px 0 24px;border-bottom:1px solid var(--line)}
+.dh{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:24px}
+.dh h2{font-size:26px;letter-spacing:-.025em}
+.dh p{color:var(--mut);max-width:62ch;margin-top:6px}
+.dh a{color:var(--ink);font-weight:500;font-size:14px;text-underline-offset:4px}
+.sw{display:flex;gap:6px;margin-top:12px}.sw i{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.12)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.cap{font-size:12px;font-weight:600;color:var(--mut);margin:0 0 8px}
+.frame{position:relative;width:100%;aspect-ratio:1280/820;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#fff}
+.frame iframe{position:absolute;left:0;top:0;width:1280px;height:820px;border:0;transform-origin:0 0}
+.phones{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:32px}
+.pf{position:relative;width:100%;aspect-ratio:390/780;border-radius:22px;overflow:hidden;border:1px solid var(--line);background:#fff}
+.pf iframe{position:absolute;left:0;top:0;width:390px;height:780px;border:0;transform-origin:0 0}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.phones{grid-template-columns:1fr 1fr}.w{padding:0 16px}}
+</style>
+</head>
+<body>
+<header><div class="w"><h1>Combust redesign: three candidates</h1>
+<p>Same data, same screens (Overview and Entries), three different worlds. Each frame is a live, scrollable page. Open a full prototype to resize it, switch theme or page, and try the mobile layout.</p></div></header>
+<div class="jump"><div class="w"><a href="#d1">1 · Odometer</a><a href="#d2">2 · Ember</a><a href="#d3">3 · Highlighter</a></div></div>
+<div class="w" id="root"></div>
+<script>
+const D=[
+ {id:1,file:'1-odometer.html',name:'Odometer',blurb:'A precision instrument at rest. Cool graphite, hairline structure, Geist and Geist Mono. The average mileage rolls up on load like an odometer drum, with the tenths digit in ignition orange.',sw:['#f0f1f3','#13151a','#ff5a1f','#0d0e10']},
+ {id:2,file:'2-ember.html',name:'Ember',blurb:'Soft, round and a little warm. Lavender-grey paper (aubergine at night), pill shapes, Bricolage Grotesque. The only flame colour lives in small marks: the best fill, the heat pips beside each mileage.',sw:['#f3f1f7','#e9e4f4','#ff6b3d','#130f1a']},
+ {id:3,file:'3-highlighter.html',name:'Highlighter',blurb:'Typographic and ruled, almost no containers. Schibsted Grotesk, ink hairlines, and a lime highlighter swipe reserved for the one number that matters. Keeps a nod to the current lime brand.',sw:['#fcfcf9','#10100d','#d6ff3d','#0a0a09']}
+];
+const V=[['overview','light','Overview · Light'],['overview','dark','Overview · Dark'],['entries','light','Entries · Light'],['entries','dark','Entries · Dark']];
+const u=(f,p,t)=>`${f}?embed&page=${p}&theme=${t}`;
+document.getElementById('root').innerHTML=D.map(d=>`<section class="d" id="d${d.id}">
+ <div class="dh"><div><h2>${d.id} · ${d.name}</h2><p>${d.blurb}</p><div class="sw">${d.sw.map(c=>`<i style="background:${c}"></i>`).join('')}</div></div><a href="${d.file}">Open full prototype →</a></div>
+ <div class="grid">${V.map(([p,t,l])=>`<div><div class="cap">${l}</div><div class="frame"><iframe loading="lazy" src="${u(d.file,p,t)}" title="${d.name} ${l}"></iframe></div></div>`).join('')}</div>
+ <div class="phones">${V.map(([p,t,l])=>`<div><div class="cap">Phone · ${l}</div><div class="pf"><iframe loading="lazy" src="${u(d.file,p,t)}" title="${d.name} phone ${l}"></iframe></div></div>`).join('')}</div>
+</section>`).join('');
+function fit(){document.querySelectorAll('.frame,.pf').forEach(f=>{const i=f.firstElementChild;i.style.transform=`scale(${f.clientWidth/i.offsetWidth})`})}
+addEventListener('resize',fit);fit();
+</script>
+</body>
+</html>

@@ -10,7 +10,8 @@ use Combust\Support\Uuid;
 final class EntryRepository
 {
     private const SELECT = 'SELECT id, vehicle_id AS vehicleId, date, odometer_reading AS odometerReading,
-        fuel_station AS fuelStation, amount_paid AS amountPaid, litres_filled AS litresFilled
+        fuel_station AS fuelStation, amount_paid AS amountPaid, litres_filled AS litresFilled,
+        is_full_tank AS isFullTank, missed_previous AS missedPrevious
         FROM fuel_entries';
 
     public function allForVehicle(string $vehicleId): array
@@ -32,8 +33,9 @@ final class EntryRepository
     {
         $id = Uuid::v4();
         $stmt = Database::connection()->prepare(
-            'INSERT INTO fuel_entries (id, vehicle_id, date, odometer_reading, fuel_station, amount_paid, litres_filled)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO fuel_entries
+                (id, vehicle_id, date, odometer_reading, fuel_station, amount_paid, litres_filled, is_full_tank, missed_previous)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $id,
@@ -43,6 +45,8 @@ final class EntryRepository
             $input['fuelStation'],
             $input['amountPaid'],
             $input['litresFilled'],
+            self::flag($input['isFullTank'] ?? true),
+            self::flag($input['missedPrevious'] ?? false),
         ]);
 
         /** @var array $entry */
@@ -69,7 +73,8 @@ final class EntryRepository
     {
         $stmt = Database::connection()->prepare(
             'UPDATE fuel_entries
-             SET date = ?, odometer_reading = ?, fuel_station = ?, amount_paid = ?, litres_filled = ?
+             SET date = ?, odometer_reading = ?, fuel_station = ?, amount_paid = ?, litres_filled = ?,
+                 is_full_tank = COALESCE(?, is_full_tank), missed_previous = COALESCE(?, missed_previous)
              WHERE id = ? AND vehicle_id = ?'
         );
         $stmt->execute([
@@ -78,6 +83,8 @@ final class EntryRepository
             $input['fuelStation'],
             $input['amountPaid'],
             $input['litresFilled'],
+            isset($input['isFullTank']) ? self::flag($input['isFullTank']) : null,
+            isset($input['missedPrevious']) ? self::flag($input['missedPrevious']) : null,
             $id,
             $vehicleId,
         ]);
@@ -121,6 +128,13 @@ final class EntryRepository
         $row['odometerReading'] = (float) $row['odometerReading'];
         $row['amountPaid'] = (float) $row['amountPaid'];
         $row['litresFilled'] = (float) $row['litresFilled'];
+        $row['isFullTank'] = (bool) $row['isFullTank'];
+        $row['missedPrevious'] = (bool) $row['missedPrevious'];
         return $row;
+    }
+
+    private static function flag(mixed $value): int
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
     }
 }

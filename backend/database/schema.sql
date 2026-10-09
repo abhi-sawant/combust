@@ -39,6 +39,8 @@ CREATE TABLE fuel_entries (
   fuel_station VARCHAR(255) NOT NULL,
   amount_paid DECIMAL(10, 2) NOT NULL,
   litres_filled DECIMAL(10, 3) NOT NULL,
+  is_full_tank TINYINT(1) NOT NULL DEFAULT 1,
+  missed_previous TINYINT(1) NOT NULL DEFAULT 0,
   CONSTRAINT fk_entries_vehicle FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
   INDEX idx_entries_vehicle_odometer (vehicle_id, odometer_reading)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
