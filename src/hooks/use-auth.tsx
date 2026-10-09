@@ -1,17 +1,35 @@
 import { useCallback, useEffect, useState } from "react"
 
 import { AuthContext, type AuthContextValue, type AuthUser } from "@/hooks/auth-context"
-import { apiRequest } from "@/lib/api-client"
-import { clearStoredToken, getStoredToken, setStoredToken } from "@/lib/auth-token"
+import { ApiError, apiRequest } from "@/lib/api-client"
+import {
+  clearLocalModeChosen,
+  clearStoredToken,
+  getStoredToken,
+  getStoredUser,
+  isLocalModeChosen,
+  setLocalModeChosen,
+  setStoredToken,
+  setStoredUser,
+} from "@/lib/auth-token"
+import { ACTIVE_VEHICLE_KEY } from "@/hooks/use-vehicles"
+import { prepareForAccount, resetSyncState } from "@/lib/sync"
 
 interface AuthResponse {
   token: string
   user: AuthUser
 }
 
+/** Runs before an account's session starts; wipes device data left over from a different account. */
+async function linkAccount(email: string) {
+  if (await prepareForAccount(email)) localStorage.removeItem(ACTIVE_VEHICLE_KEY)
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // Trust the cached user so the app opens instantly (and offline); /me re-checks it in the background.
+  const [user, setUser] = useState<AuthUser | null>(() => (getStoredToken() ? getStoredUser<AuthUser>() : null))
+  const [isLocalMode, setIsLocalMode] = useState(isLocalModeChosen)
+  const [isLoading, setIsLoading] = useState(() => getStoredToken() !== null && user === null)
 
   useEffect(() => {
     let cancelled = false
@@ -24,9 +42,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const { user } = await apiRequest<{ user: AuthUser }>("/me")
+        await linkAccount(user.email)
+        setStoredUser(user)
         if (!cancelled) setUser(user)
-      } catch {
-        clearStoredToken()
+      } catch (err) {
+        // Only an explicit rejection ends the session — being offline must not log anyone out.
+        if (err instanceof ApiError && err.status === 401) {
+          clearStoredToken()
+          if (!cancelled) setUser(null)
+        } else if (!cancelled) {
+          setUser((current) => current ?? { id: 0, name: "", email: "" })
+        }
       } finally {
         if (!cancelled) setIsLoading(false)
       }
@@ -49,7 +75,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: input,
         auth: false,
       })
+      await linkAccount(response.user.email)
       setStoredToken(response.token)
+      setStoredUser(response.user)
       setUser(response.user)
     },
     []
@@ -61,7 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       body: input,
       auth: false,
     })
+    await linkAccount(response.user.email)
     setStoredToken(response.token)
+    setStoredUser(response.user)
     setUser(response.user)
   }, [])
 
@@ -76,15 +106,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   )
 
+  /** Signs out of the cloud account, keeping the on-device data, and returns to the login page. */
   const signOut = useCallback(() => {
     clearStoredToken()
+    void resetSyncState()
+    clearLocalModeChosen()
+    setIsLocalMode(false)
     setUser(null)
+  }, [])
+
+  const continueWithoutAccount = useCallback(() => {
+    setLocalModeChosen()
+    setIsLocalMode(true)
   }, [])
 
   const value: AuthContextValue = {
     user,
     isLoading,
     isAuthenticated: user !== null,
+    isLocalMode,
+    continueWithoutAccount,
     signUpSendOtp,
     signUpVerify,
     signIn,

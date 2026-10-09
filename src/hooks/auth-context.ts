@@ -10,6 +10,9 @@ export interface AuthContextValue {
   user: AuthUser | null
   isLoading: boolean
   isAuthenticated: boolean
+  /** True once the user has chosen to use the app without a cloud account. */
+  isLocalMode: boolean
+  continueWithoutAccount: () => void
   signUpSendOtp: (email: string) => Promise<void>
   signUpVerify: (input: { name: string; email: string; password: string; otp: string }) => Promise<void>
   signIn: (input: { email: string; password: string }) => Promise<void>

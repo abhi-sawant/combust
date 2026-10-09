@@ -6,9 +6,24 @@ interface AuthShellProps {
   description: string
   children: React.ReactNode
   footer?: React.ReactNode
+  /** Renders just the form (no brand banner / full-page layout) for use inside a dialog. */
+  embedded?: boolean
 }
 
-export function AuthShell({ title, description, children, footer }: AuthShellProps) {
+export function AuthShell({ title, description, children, footer, embedded }: AuthShellProps) {
+  if (embedded) {
+    return (
+      <div className='flex flex-col gap-4'>
+        <div>
+          <h2 className='text-2xl font-bold'>{title}</h2>
+          <p className='mt-1 text-sm text-muted-foreground'>{description}</p>
+        </div>
+        {children}
+        {footer && <div className='text-center text-sm text-muted-foreground'>{footer}</div>}
+      </div>
+    )
+  }
+
   return (
     <div className='mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-4 p-4'>
       <div className='rounded-[32px] bg-field p-7'>

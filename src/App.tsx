@@ -19,6 +19,7 @@ import { VehicleSwitcherSheet } from "@/components/vehicles/vehicle-switcher-she
 import { useAuth } from "@/hooks/auth-context"
 import { EntriesProvider } from "@/hooks/use-entries"
 import { AuthProvider } from "@/hooks/use-auth"
+import { SyncProvider } from "@/hooks/use-sync"
 import { VehiclesProvider } from "@/hooks/use-vehicles"
 import { useVehicles } from "@/hooks/vehicles-context"
 
@@ -112,23 +113,26 @@ function AppContent() {
 }
 
 function AuthGate() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLocalMode, isLoading, continueWithoutAccount } = useAuth()
 
   if (isLoading) return null
 
-  if (!isAuthenticated) {
+  // Signed in to a cloud account, or chose to use the app on this device only.
+  if (!isAuthenticated && !isLocalMode) {
     return (
       <>
-        <AuthPage />
+        <AuthPage onContinueLocal={continueWithoutAccount} />
         <Toaster />
       </>
     )
   }
 
   return (
-    <VehiclesProvider>
-      <AppContent />
-    </VehiclesProvider>
+    <SyncProvider>
+      <VehiclesProvider>
+        <AppContent />
+      </VehiclesProvider>
+    </SyncProvider>
   )
 }
 

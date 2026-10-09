@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Laptop, Moon, Sun, Trash2 } from "lucide-react"
+import { Cloud, CloudOff, Laptop, Moon, RefreshCw, Sun, Trash2 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
 
@@ -14,11 +14,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { AuthPage } from "@/components/auth/auth-page"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { useAuth } from "@/hooks/auth-context"
+import { useSync } from "@/hooks/sync-context"
 import { ACTIVE_VEHICLE_KEY } from "@/hooks/use-vehicles"
 import { useUserName } from "@/hooks/use-user-name"
 import { clearAllData } from "@/lib/db"
@@ -40,6 +44,9 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
   const { theme, setTheme } = useTheme()
   const [localName, setLocalName] = useState(name)
   const [isClearing, setIsClearing] = useState(false)
+  const [signInOpen, setSignInOpen] = useState(false)
+  const { user, isAuthenticated, signOut } = useAuth()
+  const { status, lastSyncedAt, error: syncError, syncNow } = useSync()
 
   useEffect(() => {
     if (open) setLocalName(name)
@@ -56,6 +63,7 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     setIsClearing(true)
     try {
       await clearAllData()
+      if (isAuthenticated) await syncNow()
       localStorage.removeItem(ACTIVE_VEHICLE_KEY)
       toast.success("All data cleared")
       window.location.reload()
@@ -66,6 +74,7 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
   }
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom">
         <SheetHeader>
@@ -113,6 +122,55 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
           <Separator />
 
           <div className="flex flex-col gap-2.5">
+            <span className="text-sm font-medium">Cloud account</span>
+            {isAuthenticated ? (
+              <>
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Cloud className="size-4 shrink-0" />
+                  {user?.email ? `Syncing as ${user.email}` : "Signed in — syncing"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {status === "syncing"
+                    ? "Syncing…"
+                    : status === "error"
+                      ? `Couldn't sync (${syncError ?? "offline"}). Your data is safe on this device and will sync when possible.`
+                      : lastSyncedAt
+                        ? `Last synced ${new Date(lastSyncedAt).toLocaleString()}`
+                        : "Not synced yet"}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" disabled={status === "syncing"} onClick={() => void syncNow()}>
+                    <RefreshCw className={status === "syncing" ? "animate-spin" : undefined} />
+                    Sync now
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      signOut()
+                      toast.success("Signed out — your data stays on this device")
+                    }}
+                  >
+                    Sign out
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CloudOff className="size-4 shrink-0" />
+                  Your data is stored only on this device.
+                </p>
+                <Button variant="outline" onClick={() => setSignInOpen(true)}>
+                  <Cloud />
+                  Sign in to sync
+                </Button>
+              </>
+            )}
+          </div>
+
+          <Separator />
+
+          <div className="flex flex-col gap-2.5">
             <span className="text-sm font-medium">Data</span>
             <AlertDialog>
               <AlertDialogTrigger
@@ -130,8 +188,8 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Clear all data?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This permanently deletes every vehicle and fill-up entry on this device. This can&apos;t be
-                    undone.
+                    This permanently deletes every vehicle and fill-up entry on this device
+                    {isAuthenticated ? " and in your cloud account" : ""}. This can&apos;t be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -146,5 +204,16 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
         </div>
       </SheetContent>
     </Sheet>
+    <Dialog open={signInOpen && !isAuthenticated} onOpenChange={setSignInOpen}>
+      <DialogContent>
+        <DialogTitle className="sr-only">Cloud account</DialogTitle>
+        <DialogDescription className="sr-only">Sign in or create an account to sync your data.</DialogDescription>
+        <p className="text-sm text-muted-foreground">
+          Signing in uploads the data on this device to your account and brings in anything already stored there.
+        </p>
+        <AuthPage embedded />
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

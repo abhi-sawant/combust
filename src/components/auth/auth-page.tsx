@@ -9,12 +9,20 @@ import { Button } from "@/components/ui/button"
 
 type AuthView = "sign-in" | "sign-up" | "forgot-password"
 
-export function AuthPage() {
+interface AuthPageProps {
+  /** Shows a "continue without an account" link (login page only). */
+  onContinueLocal?: () => void
+  /** Renders inside a dialog rather than as the full-page login. */
+  embedded?: boolean
+}
+
+export function AuthPage({ onContinueLocal, embedded }: AuthPageProps = {}) {
   const [view, setView] = useState<AuthView>("sign-in")
 
   if (view === "sign-up") {
     return (
       <AuthShell
+        embedded={embedded}
         title="Create an account"
         description="Sign up to start tracking your fuel entries."
         footer={
@@ -34,6 +42,7 @@ export function AuthPage() {
   if (view === "forgot-password") {
     return (
       <AuthShell
+        embedded={embedded}
         title="Reset your password"
         description="Enter your email and we'll send you a one-time code."
         footer={
@@ -54,6 +63,7 @@ export function AuthPage() {
 
   return (
     <AuthShell
+        embedded={embedded}
       title="Sign in"
       description="Welcome back. Enter your details to continue."
       footer={
@@ -66,6 +76,16 @@ export function AuthPage() {
       }
     >
       <SignInForm onForgotPassword={() => setView("forgot-password")} />
+      {onContinueLocal && (
+        <div className="mt-4 flex flex-col items-center gap-1 border-t pt-4 text-center">
+          <Button type="button" variant="outline" className="w-full" onClick={onContinueLocal}>
+            Continue without an account
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Your data stays on this device and works offline. You can add a cloud account later in Settings.
+          </p>
+        </div>
+      )}
     </AuthShell>
   )
 }

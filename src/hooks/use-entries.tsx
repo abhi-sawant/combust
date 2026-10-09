@@ -4,6 +4,7 @@ import { EntriesContext, type EntriesContextValue } from "@/hooks/entries-contex
 import { useVehicles } from "@/hooks/vehicles-context"
 import { deriveEntries } from "@/lib/calculations"
 import { entriesRepository } from "@/lib/db"
+import { subscribeToChanges } from "@/lib/local-db"
 import type { FuelEntry, FuelEntryInput } from "@/types/entry"
 
 export function EntriesProvider({ children }: { children: React.ReactNode }) {
@@ -49,6 +50,12 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
       cancelled = true
     }
   }, [activeVehicleId])
+
+  useEffect(() => {
+    return subscribeToChanges((source) => {
+      if (source === "remote") void refresh()
+    })
+  }, [refresh])
 
   const addEntry = useCallback(
     async (input: FuelEntryInput) => {

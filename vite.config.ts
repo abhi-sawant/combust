@@ -27,7 +27,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // All data lives in IndexedDB — only the app shell (JS/CSS/HTML/icons) needs caching for offline use.
+        // Data lives in IndexedDB (synced to the cloud account when signed in) — only the app shell needs caching for offline use.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
       },
     }),

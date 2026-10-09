@@ -24,6 +24,7 @@ spl_autoload_register(function (string $class): void {
 use Combust\Controllers\AccountController;
 use Combust\Controllers\AuthController;
 use Combust\Controllers\EntriesController;
+use Combust\Controllers\SyncController;
 use Combust\Controllers\VehiclesController;
 use Combust\Router;
 use Combust\Support\Cors;
@@ -58,6 +59,7 @@ $router->post('/entries', [EntriesController::class, 'store']);
 $router->put('/entries/{id}', [EntriesController::class, 'update']);
 $router->delete('/entries/{id}', [EntriesController::class, 'destroy']);
 
+$router->post('/sync', [SyncController::class, 'sync']);
 $router->post('/account/reset-data', [AccountController::class, 'resetData']);
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { VehiclesContext, type VehiclesContextValue } from "@/hooks/vehicles-context"
 import { vehiclesRepository } from "@/lib/db"
+import { subscribeToChanges } from "@/lib/local-db"
 import type { Vehicle, VehicleInput } from "@/types/vehicle"
 
 export const ACTIVE_VEHICLE_KEY = "combust:active-vehicle-id"
@@ -51,6 +52,22 @@ export function VehiclesProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  // Sync pulled in changes from the cloud account: reload, and fall back if the active vehicle vanished.
+  useEffect(() => {
+    return subscribeToChanges((source) => {
+      if (source !== "remote") return
+      void vehiclesRepository.getAll().then((all) => {
+        setVehicles(all)
+        setActiveVehicleIdState((current) => {
+          if (current && all.some((v) => v.id === current)) return current
+          const next = all[0]?.id ?? null
+          if (next) localStorage.setItem(ACTIVE_VEHICLE_KEY, next)
+          return next
+        })
+      })
+    })
   }, [])
 
   const addVehicle = useCallback(

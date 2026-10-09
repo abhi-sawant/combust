@@ -28,7 +28,11 @@ CREATE TABLE vehicles (
   name VARCHAR(255) NOT NULL,
   plate VARCHAR(50) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_vehicles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  updated_at BIGINT NOT NULL DEFAULT 0,
+  deleted_at BIGINT NULL,
+  synced_at BIGINT NOT NULL DEFAULT 0,
+  CONSTRAINT fk_vehicles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_vehicles_user_synced (user_id, synced_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE fuel_entries (
@@ -41,6 +45,10 @@ CREATE TABLE fuel_entries (
   litres_filled DECIMAL(10, 3) NOT NULL,
   is_full_tank TINYINT(1) NOT NULL DEFAULT 1,
   missed_previous TINYINT(1) NOT NULL DEFAULT 0,
+  updated_at BIGINT NOT NULL DEFAULT 0,
+  deleted_at BIGINT NULL,
+  synced_at BIGINT NOT NULL DEFAULT 0,
+  INDEX idx_entries_synced (synced_at),
   CONSTRAINT fk_entries_vehicle FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
   INDEX idx_entries_vehicle_odometer (vehicle_id, odometer_reading)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

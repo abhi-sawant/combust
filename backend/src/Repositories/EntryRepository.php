@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Combust\Repositories;
 
 use Combust\Database;
+use Combust\Support\Clock;
 use Combust\Support\Uuid;
 
 final class EntryRepository
@@ -16,14 +17,14 @@ final class EntryRepository
 
     public function allForVehicle(string $vehicleId): array
     {
-        $stmt = Database::connection()->prepare(self::SELECT . ' WHERE vehicle_id = ? ORDER BY odometer_reading ASC');
+        $stmt = Database::connection()->prepare(self::SELECT . ' WHERE vehicle_id = ? AND deleted_at IS NULL ORDER BY odometer_reading ASC');
         $stmt->execute([$vehicleId]);
         return array_map(self::castRow(...), $stmt->fetchAll());
     }
 
     public function find(string $id): ?array
     {
-        $stmt = Database::connection()->prepare(self::SELECT . ' WHERE id = ? LIMIT 1');
+        $stmt = Database::connection()->prepare(self::SELECT . ' WHERE id = ? AND deleted_at IS NULL LIMIT 1');
         $stmt->execute([$id]);
         $row = $stmt->fetch();
         return $row ? self::castRow($row) : null;
@@ -32,10 +33,11 @@ final class EntryRepository
     public function create(string $vehicleId, array $input): array
     {
         $id = Uuid::v4();
+        $now = Clock::nowMs();
         $stmt = Database::connection()->prepare(
             'INSERT INTO fuel_entries
-                (id, vehicle_id, date, odometer_reading, fuel_station, amount_paid, litres_filled, is_full_tank, missed_previous)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                (id, vehicle_id, date, odometer_reading, fuel_station, amount_paid, litres_filled, is_full_tank, missed_previous, updated_at, synced_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $id,
@@ -47,6 +49,8 @@ final class EntryRepository
             $input['litresFilled'],
             self::flag($input['isFullTank'] ?? true),
             self::flag($input['missedPrevious'] ?? false),
+            $now,
+            $now,
         ]);
 
         /** @var array $entry */
@@ -74,8 +78,9 @@ final class EntryRepository
         $stmt = Database::connection()->prepare(
             'UPDATE fuel_entries
              SET date = ?, odometer_reading = ?, fuel_station = ?, amount_paid = ?, litres_filled = ?,
-                 is_full_tank = COALESCE(?, is_full_tank), missed_previous = COALESCE(?, missed_previous)
-             WHERE id = ? AND vehicle_id = ?'
+                 is_full_tank = COALESCE(?, is_full_tank), missed_previous = COALESCE(?, missed_previous),
+                 updated_at = ?, synced_at = ?
+             WHERE id = ? AND vehicle_id = ? AND deleted_at IS NULL'
         );
         $stmt->execute([
             $input['date'],
@@ -85,6 +90,8 @@ final class EntryRepository
             $input['litresFilled'],
             isset($input['isFullTank']) ? self::flag($input['isFullTank']) : null,
             isset($input['missedPrevious']) ? self::flag($input['missedPrevious']) : null,
+            Clock::nowMs(),
+            Clock::nowMs(),
             $id,
             $vehicleId,
         ]);
@@ -96,11 +103,13 @@ final class EntryRepository
     public function deleteForUser(string $id, int $userId): bool
     {
         $stmt = Database::connection()->prepare(
-            'DELETE fe FROM fuel_entries fe
+            'UPDATE fuel_entries fe
              JOIN vehicles v ON v.id = fe.vehicle_id
-             WHERE fe.id = ? AND v.user_id = ?'
+             SET fe.deleted_at = ?, fe.updated_at = ?, fe.synced_at = ?
+             WHERE fe.id = ? AND v.user_id = ? AND fe.deleted_at IS NULL'
         );
-        $stmt->execute([$id, $userId]);
+        $now = Clock::nowMs();
+        $stmt->execute([$now, $now, $now, $id, $userId]);
         return $stmt->rowCount() > 0;
     }
 
@@ -110,8 +119,8 @@ final class EntryRepository
         $stmt = Database::connection()->prepare(
             'SELECT v.id AS vehicleId, COUNT(fe.id) AS count
              FROM vehicles v
-             LEFT JOIN fuel_entries fe ON fe.vehicle_id = v.id
-             WHERE v.user_id = ?
+             LEFT JOIN fuel_entries fe ON fe.vehicle_id = v.id AND fe.deleted_at IS NULL
+             WHERE v.user_id = ? AND v.deleted_at IS NULL
              GROUP BY v.id'
         );
         $stmt->execute([$userId]);
