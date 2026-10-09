@@ -1,7 +1,8 @@
 import { sectorOf } from '@/lib/sector'
-import { formatDate, formatNumber } from '@/lib/format'
+import { formatNumber } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { DerivedEntry } from '@/types/stats'
+import { format, parseISO } from 'date-fns'
 
 interface MileageBarsProps {
   /** Entries with a mileage, oldest → newest. */
@@ -10,55 +11,63 @@ interface MileageBarsProps {
   bestId: string | null
 }
 
+const PLOT = 132 // px of bar area; the tallest bar fills it
+
 /**
- * One pill per fill-up on the hero field. The best fill glows in the flame gradient;
- * a dot at the top of each pill says above average (amber) or below (grey).
+ * One pill per fill-up on the hero field. Bars share a zero baseline and are scaled
+ * linearly, so height is proportional to km/l. Every bar prints its exact value; a dashed
+ * line marks the average. The best fill glows in the flame gradient.
  */
 export function MileageBars({ entries, average, bestId }: MileageBarsProps) {
-  const values = entries.map((e) => e.mileage!)
-  const lo = Math.min(...values) * 0.88
-  const hi = Math.max(...values)
-  const MIN = 26
-  const MAX = 160
-  const px = (m: number) => Math.round(MIN + ((m - lo) / Math.max(hi - lo, 0.01)) * (MAX - MIN))
+  const max = Math.max(...entries.map((e) => e.mileage!), average)
+  const px = (m: number) => Math.max(8, Math.round((m / max) * PLOT))
 
   return (
     <div
-      className='flex h-[190px] items-end gap-1.5 md:gap-2'
       role='img'
-      aria-label={`Mileage of the last ${entries.length} fill-ups against the ${formatNumber(average)} average`}>
-      {entries.map((e, i) => {
-        const sector = sectorOf(e, average, bestId)
-        const best = sector === 'best'
-        return (
-          <div key={e.id} className='group relative flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2'>
-            <span
-              className={cn(
-                'pointer-events-none absolute text-[11px] font-semibold whitespace-nowrap text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100',
-                best && 'opacity-100'
-              )}
-              style={{ bottom: px(e.mileage!) + 34 }}>
-              {formatNumber(e.mileage!, 1)}
-            </span>
-            <div
-              className={cn(
-                'relative w-full max-w-[26px] origin-bottom rounded-full shadow-card transition-colors motion-safe:animate-[bar-grow_0.9s_cubic-bezier(0.22,1,0.36,1)_both]',
-                best ? 'bg-linear-to-b from-flame-2 to-flame' : 'bg-card group-hover:bg-flame-2'
-              )}
-              style={{ height: px(e.mileage!), animationDelay: `${i * 40}ms` }}>
-              <i
+      aria-label={`Mileage of the last ${entries.length} fill-ups, ${entries
+        .map((e) => formatNumber(e.mileage!, 1))
+        .join(', ')} km/l, against the ${formatNumber(average)} average`}>
+      <div className='relative flex items-end gap-1 md:gap-2'>
+        <div
+          aria-hidden
+          className='pointer-events-none absolute inset-x-0 z-10 border-t border-dashed border-foreground/35'
+          style={{ bottom: 18 + px(average) }}
+        />
+        {entries.map((e, i) => {
+          const sector = sectorOf(e, average, bestId)
+          const best = sector === 'best'
+          const prev = entries[i - 1]
+          const d = parseISO(e.date)
+          const newMonth = !prev || format(parseISO(prev.date), 'MMM yyyy') !== format(d, 'MMM yyyy')
+          return (
+            <div key={e.id} className='flex min-w-0 flex-1 flex-col items-center justify-end'>
+              <span
                 className={cn(
-                  'absolute top-[5px] left-1/2 size-2 -translate-x-1/2 rounded-full',
-                  best ? 'bg-flame-foreground' : sector === 'up' ? 'bg-flame-2' : 'bg-muted-foreground/60'
+                  'mb-1.5 text-[10.5px] leading-none font-semibold tracking-tight tabular-nums md:text-xs',
+                  best ? 'text-flame-text' : 'text-foreground'
+                )}>
+                {formatNumber(e.mileage!, 1)}
+              </span>
+              <div
+                className={cn(
+                  'w-full max-w-[26px] origin-bottom rounded-full shadow-card motion-safe:animate-[bar-grow_0.9s_cubic-bezier(0.22,1,0.36,1)_both]',
+                  best ? 'bg-linear-to-b from-flame-2 to-flame' : sector === 'up' ? 'bg-flame-2' : 'bg-card'
                 )}
+                style={{ height: px(e.mileage!), animationDelay: `${i * 40}ms` }}
               />
+              <span className='mt-1.5 flex h-[12px] flex-col items-center text-[10px] leading-none whitespace-nowrap text-muted-foreground tabular-nums'>
+                {newMonth ? format(d, 'MMM') : format(d, 'd')}
+              </span>
             </div>
-            <span className={cn('text-[10.5px] whitespace-nowrap text-muted-foreground', i % 2 === 1 && 'max-md:hidden')}>
-              {formatDate(e.date).replace(/ \d{4}$/, '').split(' ').slice(-1)[0]}
-            </span>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
+      <p className='mt-3 flex items-center gap-2 text-[11px] text-muted-foreground'>
+        <span aria-hidden className='w-4 border-t border-dashed border-foreground/50' />
+        Average {formatNumber(average)} km/l
+        <span className='ml-auto'>Bars start at 0</span>
+      </p>
     </div>
   )
 }
