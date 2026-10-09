@@ -54,7 +54,7 @@ export function OverviewDashboard({ onAddEntry, onImportCsv, onViewAllEntries, o
   const average = stats.averageMileage
   const bestId = stats.bestMileageEntry?.id ?? null
   const recent = [...derivedEntries].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4)
-  const chartEntries = withMileage.slice(-12)
+  const chartEntries = withMileage
   const showChart = average !== null && chartEntries.length >= 2
 
   return (
@@ -66,30 +66,25 @@ export function OverviewDashboard({ onAddEntry, onImportCsv, onViewAllEntries, o
         className={
           'grid gap-8 rounded-[32px] bg-field p-6 md:p-10 ' + (showChart ? 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center lg:gap-10' : '')
         }>
-        <div>
+        <div className='min-w-0'>
           <h2 className='text-[15px] font-medium text-muted-foreground'>Average mileage</h2>
           <p className='mt-2.5 flex items-baseline gap-2.5 font-display'>
-            <span className='text-[clamp(76px,22vw,96px)] leading-[0.86] font-extrabold tracking-[-0.05em]'>
+            <span className='text-[clamp(52px,18vw,96px)] leading-[0.86] font-extrabold tracking-[-0.05em]'>
               {average !== null ? formatNumber(average) : '—'}
             </span>
             <span className='text-2xl font-semibold text-muted-foreground'>km/l</span>
           </p>
           {delta !== null && Math.abs(delta) >= 0.05 && (
             <p className='mt-5 max-w-[26ch] font-display text-[17px] leading-snug font-medium'>
-              Last fill-up was <span className='text-flame-text'>{formatNumber(Math.abs(delta))} {delta > 0 ? 'better' : 'lower'}</span>{' '}
+              Last fill-up was{' '}
+              <span className='text-flame-text'>
+                {formatNumber(Math.abs(delta))} {delta > 0 ? 'better' : 'lower'}
+              </span>{' '}
               than the one before.
             </p>
           )}
         </div>
-        {showChart && (
-          <div>
-            <div className='mb-4 flex justify-between text-[13px] font-medium text-muted-foreground'>
-              <span>Last {chartEntries.length} fill-ups</span>
-              {stats.bestMileageEntry && <span>Best {formatNumber(stats.bestMileageEntry.mileage!)}</span>}
-            </div>
-            <MileageBars entries={chartEntries} average={average} bestId={bestId} />
-          </div>
-        )}
+        {showChart && <MileageBars entries={chartEntries} average={average} />}
       </section>
 
       <dl className='grid grid-cols-2 gap-3 md:grid-cols-4'>
