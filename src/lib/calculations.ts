@@ -9,41 +9,64 @@ export function sortByOdometer<T extends { odometerReading: number }>(entries: T
 }
 
 /**
- * Attaches distance/mileage/cost-per-litre to each entry relative to the
- * next one by odometer order — the litres added at that later fill-up is
- * what quantifies the distance covered on the tank filled here. The
- * highest-odometer entry is "pending" (no later fill-up yet to measure
- * against) and never has mileage. An entry whose odometer reading is
- * overtaken by (or ties) its successor gets no distance/mileage figures
- * (they'd be meaningless), but its cost-per-litre is still computed.
+ * Attaches distance/mileage/cost-per-litre to each entry, measured per tank
+ * cycle: from one full fill to the next full fill, dividing the distance by
+ * *all* litres added after the first (the later full fill plus any partial
+ * fills in between). Only full-to-full cycles give an exact figure, because
+ * only then is the tank level known at both ends. The cycle's mileage lands
+ * on the entry that started it; partial fills have none of their own.
+ *
+ * A cycle is left unmeasured (and flagged) when it can't be trusted: a
+ * fill-up in it was never logged (`missedPrevious`) or odometer readings
+ * regress/tie. The latest full fill with no closing full fill yet is
+ * "pending". Cost-per-litre is always computed per entry.
  */
 export function deriveEntries(entries: FuelEntry[]): DerivedEntry[] {
-  const sorted = sortByOdometer(entries)
+  const derived: DerivedEntry[] = sortByOdometer(entries).map((entry) => ({
+    ...entry,
+    isPending: false,
+    isPartial: !entry.isFullTank,
+    hasGap: false,
+    isOdometerRegression: false,
+    distanceCovered: null,
+    mileage: null,
+    costPerLitre: entry.litresFilled > 0 ? entry.amountPaid / entry.litresFilled : null,
+  }))
 
-  return sorted.map((entry, index) => {
-    const next = index < sorted.length - 1 ? sorted[index + 1] : null
-    const isPending = next === null
-    const isOdometerRegression = next !== null && next.odometerReading <= entry.odometerReading
+  // The full fill that opened the tank cycle currently being measured, and the litres added since.
+  let anchor: DerivedEntry | null = null
+  let litresSinceAnchor = 0
 
-    const distanceCovered =
-      next && !isOdometerRegression ? next.odometerReading - entry.odometerReading : null
+  for (let i = 0; i < derived.length; i++) {
+    const entry = derived[i]
+    const previous = i > 0 ? derived[i - 1] : null
 
-    const mileage =
-      distanceCovered !== null && next!.litresFilled > 0
-        ? distanceCovered / next!.litresFilled
-        : null
+    const isRegression = previous !== null && entry.odometerReading <= previous.odometerReading
+    if (isRegression) previous!.isOdometerRegression = true
 
-    const costPerLitre = entry.litresFilled > 0 ? entry.amountPaid / entry.litresFilled : null
-
-    return {
-      ...entry,
-      isPending,
-      isOdometerRegression,
-      distanceCovered,
-      mileage,
-      costPerLitre,
+    if (anchor && (isRegression || entry.missedPrevious)) {
+      if (!anchor.isOdometerRegression) anchor.hasGap = true
+      anchor = null
     }
-  })
+
+    if (anchor) {
+      litresSinceAnchor += entry.litresFilled
+      if (entry.isFullTank) {
+        const distance = entry.odometerReading - anchor.odometerReading
+        anchor.distanceCovered = distance
+        anchor.mileage = litresSinceAnchor > 0 ? distance / litresSinceAnchor : null
+        anchor = entry
+        litresSinceAnchor = 0
+      }
+    } else if (entry.isFullTank) {
+      anchor = entry
+      litresSinceAnchor = 0
+    }
+  }
+
+  if (anchor) anchor.isPending = true
+
+  return derived
 }
 
 function average(values: number[]): number | null {

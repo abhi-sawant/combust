@@ -77,6 +77,21 @@ function parseFlexibleNumber(raw: string): number | null {
 
 export const REQUIRED_COLUMNS = ["date", "amount paid", "odometer reading", "fuel filled", "fuel station"]
 
+/** Optional columns; blank or absent means the default (full tank, no missed fill). */
+export const OPTIONAL_COLUMNS = ["full tank", "missed fill"]
+
+const TRUTHY = ["yes", "y", "true", "1"]
+const FALSY = ["no", "n", "false", "0"]
+
+/** Parses a yes/no style cell; blank falls back to `fallback`, unrecognised text yields null. */
+function parseFlexibleBoolean(raw: string, fallback: boolean): boolean | null {
+  const sanitized = sanitizeCell(raw).toLowerCase()
+  if (!sanitized) return fallback
+  if (TRUTHY.includes(sanitized)) return true
+  if (FALSY.includes(sanitized)) return false
+  return null
+}
+
 /**
  * Parses the CSV export format: Date, Amount Paid, Odometer Reading, Fuel
  * Filled, Fuel Station. Dates and numbers are sanitized defensively (mixed
@@ -108,6 +123,8 @@ export function parseFuelEntriesCsv(text: string): CsvImportResult {
   const odometerIdx = columnIndex("odometer reading")
   const litresIdx = columnIndex("fuel filled")
   const stationIdx = columnIndex("fuel station")
+  const fullTankIdx = columnIndex("full tank")
+  const missedFillIdx = columnIndex("missed fill")
 
   for (let i = 1; i < lines.length; i++) {
     const lineNumber = i + 1
@@ -118,6 +135,8 @@ export function parseFuelEntriesCsv(text: string): CsvImportResult {
     const odometerReading = parseFlexibleNumber(cells[odometerIdx] ?? "")
     const litresFilled = parseFlexibleNumber(cells[litresIdx] ?? "")
     const fuelStation = sanitizeCell(cells[stationIdx] ?? "")
+    const isFullTank = parseFlexibleBoolean(fullTankIdx === -1 ? "" : (cells[fullTankIdx] ?? ""), true)
+    const missedPrevious = parseFlexibleBoolean(missedFillIdx === -1 ? "" : (cells[missedFillIdx] ?? ""), false)
 
     const rowErrors: string[] = []
     if (!date) rowErrors.push("unparseable date")
@@ -125,6 +144,8 @@ export function parseFuelEntriesCsv(text: string): CsvImportResult {
     if (odometerReading === null || odometerReading <= 0) rowErrors.push("invalid odometer reading")
     if (litresFilled === null || litresFilled <= 0) rowErrors.push("invalid fuel filled")
     if (!fuelStation) rowErrors.push("missing fuel station")
+    if (isFullTank === null) rowErrors.push("full tank must be yes or no")
+    if (missedPrevious === null) rowErrors.push("missed fill must be yes or no")
 
     if (rowErrors.length > 0) {
       errors.push({ line: lineNumber, reason: rowErrors.join(", ") })
@@ -137,6 +158,8 @@ export function parseFuelEntriesCsv(text: string): CsvImportResult {
       odometerReading: odometerReading!,
       litresFilled: litresFilled!,
       fuelStation,
+      isFullTank: isFullTank!,
+      missedPrevious: missedPrevious!,
     })
   }
 

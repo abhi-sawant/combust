@@ -38,3 +38,17 @@ export function stationCode(name: string): string {
         : (words[0] ?? "").slice(0, 3)
   return (letters || "???").toUpperCase().slice(0, 3)
 }
+
+export const SECTOR_PIP: Record<Sector, string> = {
+  best: "bg-flame",
+  up: "bg-flame-2",
+  down: "bg-muted-foreground/50",
+  none: "bg-pip-off",
+}
+
+/** Heat pips (1–5): how far a fill-up sits above or below the average. The best fill is always full. */
+export function pipsOf(mileage: number, average: number | null, sector: Sector): number {
+  if (sector === "best") return 5
+  if (average === null || average <= 0) return 3
+  return Math.max(1, Math.min(5, Math.round(3 + 40 * (mileage / average - 1))))
+}

@@ -10,17 +10,33 @@ export interface EntriesRepository {
   delete(id: string): Promise<void>
 }
 
+/**
+ * Fills in the fill-flag defaults when the server doesn't send them (an API
+ * not yet upgraded), so existing entries are read as full-tank fills rather
+ * than silently becoming "partial".
+ */
+function withFlagDefaults(entry: FuelEntry): FuelEntry {
+  return {
+    ...entry,
+    isFullTank: entry.isFullTank ?? true,
+    missedPrevious: entry.missedPrevious ?? false,
+  }
+}
+
 class ApiEntriesRepository implements EntriesRepository {
   async getAll(vehicleId: string): Promise<FuelEntry[]> {
-    return apiRequest<FuelEntry[]>("/entries", { query: { vehicleId } })
+    const entries = await apiRequest<FuelEntry[]>("/entries", { query: { vehicleId } })
+    return entries.map(withFlagDefaults)
   }
 
   async add(entry: FuelEntryInput, vehicleId: string): Promise<FuelEntry> {
-    return apiRequest<FuelEntry>("/entries", { method: "POST", query: { vehicleId }, body: entry })
+    const created = await apiRequest<FuelEntry>("/entries", { method: "POST", query: { vehicleId }, body: entry })
+    return withFlagDefaults(created)
   }
 
   async update(id: string, entry: FuelEntryInput, vehicleId: string): Promise<FuelEntry> {
-    return apiRequest<FuelEntry>(`/entries/${id}`, { method: "PUT", query: { vehicleId }, body: entry })
+    const updated = await apiRequest<FuelEntry>(`/entries/${id}`, { method: "PUT", query: { vehicleId }, body: entry })
+    return withFlagDefaults(updated)
   }
 
   async delete(id: string): Promise<void> {
@@ -32,7 +48,8 @@ export const entriesRepository: EntriesRepository = new ApiEntriesRepository()
 
 /** Bulk-inserts entries (e.g. from CSV import) in a single request. */
 export async function bulkAddEntries(entries: FuelEntryInput[], vehicleId: string): Promise<FuelEntry[]> {
-  return apiRequest<FuelEntry[]>("/entries/bulk", { method: "POST", query: { vehicleId }, body: { entries } })
+  const created = await apiRequest<FuelEntry[]>("/entries/bulk", { method: "POST", query: { vehicleId }, body: { entries } })
+  return created.map(withFlagDefaults)
 }
 
 /** Storage contract for vehicles. */

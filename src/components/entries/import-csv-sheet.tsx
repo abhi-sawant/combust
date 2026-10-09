@@ -8,7 +8,7 @@ import { FieldDescription } from '@/components/ui/field'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useEntries } from '@/hooks/entries-context'
 import { useVehicles } from '@/hooks/vehicles-context'
-import { parseFuelEntriesCsv, REQUIRED_COLUMNS, type CsvImportError } from '@/lib/csv'
+import { OPTIONAL_COLUMNS, parseFuelEntriesCsv, REQUIRED_COLUMNS, type CsvImportError } from '@/lib/csv'
 import { bulkAddEntries } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import type { FuelEntryInput } from '@/types/entry'
@@ -123,6 +123,14 @@ export function ImportCsvSheet({ open, onOpenChange }: ImportCsvSheetProps) {
             <div className='flex flex-wrap gap-1.5'>
               {REQUIRED_COLUMNS.map((column) => (
                 <Badge key={column} variant='secondary' className='font-mono font-normal'>
+                  {titleCase(column)}
+                </Badge>
+              ))}
+            </div>
+            <span className='text-[13px] font-bold text-muted-foreground'>Optional (yes / no)</span>
+            <div className='flex flex-wrap gap-1.5'>
+              {OPTIONAL_COLUMNS.map((column) => (
+                <Badge key={column} variant='outline' className='font-mono font-normal'>
                   {titleCase(column)}
                 </Badge>
               ))}

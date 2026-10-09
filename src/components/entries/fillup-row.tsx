@@ -1,50 +1,78 @@
 import { Badge } from '@/components/ui/badge'
 import { formatAmount, formatDate, formatKm, formatMileage, formatNumber } from '@/lib/format'
-import { SECTOR_BAR, SECTOR_TEXT, stationCode, type Sector } from '@/lib/sector'
+import { pipsOf, SECTOR_PIP, stationCode, type Sector } from '@/lib/sector'
 import { cn } from '@/lib/utils'
 import type { DerivedEntry } from '@/types/stats'
 
-export function MileageCell({ entry, sector = 'none' }: { entry: DerivedEntry; sector?: Sector }) {
+export function MileageCell({ entry, sector = 'none', average = null }: { entry: DerivedEntry; sector?: Sector; average?: number | null }) {
   if (entry.isPending) {
     return <Badge variant='outline' className='border-dashed border-muted-foreground'>Pending</Badge>
   }
   if (entry.isOdometerRegression) {
     return <Badge variant='destructive'>Odometer regressed</Badge>
   }
+  if (entry.hasGap) {
+    return <Badge variant='warning'>Missed fill</Badge>
+  }
+  if (entry.isPartial) {
+    return <Badge variant='secondary'>Partial fill</Badge>
+  }
   if (entry.mileage === null) {
     return <span className='text-muted-foreground'>—</span>
   }
-  return <span className={cn('font-bold', SECTOR_TEXT[sector])}>{formatMileage(entry.mileage)}</span>
+  return (
+    <span className='inline-flex flex-col items-end gap-1.5'>
+      <span className='font-display font-bold'>{formatMileage(entry.mileage)}</span>
+      <HeatPips mileage={entry.mileage} sector={sector} average={average} />
+    </span>
+  )
+}
+
+/** Five short bars that fill with how well this fill-up did against the average. */
+export function HeatPips({ mileage, sector, average }: { mileage: number; sector: Sector; average: number | null }) {
+  const on = pipsOf(mileage, average, sector)
+  return (
+    <span aria-hidden className='flex gap-[3px]'>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <i key={i} className={cn('h-1 w-3 rounded-full', i <= on ? SECTOR_PIP[sector] : 'bg-pip-off')} />
+      ))}
+    </span>
+  )
 }
 
 /**
- * Timing-tower row shared by the Overview's "Recent fill-ups" and the mobile entries list:
- * sector chip + station code on the left, mileage in its sector colour on the right.
+ * Fill-up row shared by the Overview's "Recent fill-ups" and the mobile entries list:
+ * station chip + name on the left, mileage with its heat pips on the right.
  * Callers own any surrounding card chrome, click behaviour, and row actions.
  */
-export function FillupRow({ entry, sector = 'none' }: { entry: DerivedEntry; sector?: Sector }) {
+export function FillupRow({ entry, sector = 'none', average = null }: { entry: DerivedEntry; sector?: Sector; average?: number | null }) {
+  const hasMileage = entry.mileage !== null && !entry.isPending && !entry.isOdometerRegression && !entry.hasGap && !entry.isPartial
   return (
-    <div className='flex min-w-0 flex-1 items-center gap-3 p-3.5'>
-      <span aria-hidden className={cn('w-1.5 self-stretch rounded-[3px]', SECTOR_BAR[sector])} />
-      <span className='w-[3ch] shrink-0 font-display text-[26px] leading-none font-black tracking-wider'>
+    <div className='flex min-w-0 flex-1 items-center gap-3.5 px-4 py-3'>
+      <span
+        aria-hidden
+        className='grid size-11 shrink-0 place-items-center rounded-full bg-field font-display text-xs font-bold tracking-wider text-muted-foreground'>
         {stationCode(entry.fuelStation)}
       </span>
-      <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
-        <span className='truncate text-[15px] font-bold'>{entry.fuelStation}</span>
+      <div className='flex min-w-0 flex-1 flex-col'>
+        <span className='truncate text-[15px] font-semibold'>{entry.fuelStation}</span>
         <span className='truncate text-[13px] text-muted-foreground'>
-          {formatDate(entry.date)} · {formatNumber(entry.litresFilled)} L · {formatAmount(entry.amountPaid)}
+          {formatDate(entry.date)} · {formatNumber(entry.litresFilled)} L{entry.isPartial ? ' (partial)' : ''} · {formatAmount(entry.amountPaid)}
           {entry.costPerLitre !== null ? ` · ${formatAmount(entry.costPerLitre)}/L` : ''}
         </span>
       </div>
-      <div className='flex shrink-0 flex-col items-end gap-0.5'>
-        {entry.mileage !== null && !entry.isPending && !entry.isOdometerRegression ? (
-          <span className={cn('font-display text-[30px] leading-none font-extrabold', SECTOR_TEXT[sector])}>
-            {formatNumber(entry.mileage)}
-          </span>
+      <div className='flex shrink-0 flex-col items-end gap-1'>
+        {hasMileage ? (
+          <>
+            <span className='font-display text-[22px] leading-none font-bold tracking-tight'>{formatNumber(entry.mileage!)}</span>
+            <HeatPips mileage={entry.mileage!} sector={sector} average={average} />
+          </>
         ) : (
-          <MileageCell entry={entry} />
+          <>
+            <MileageCell entry={entry} />
+            <span className='text-xs text-muted-foreground'>{formatKm(entry.odometerReading)}</span>
+          </>
         )}
-        <span className='text-xs text-muted-foreground'>{formatKm(entry.odometerReading)}</span>
       </div>
     </div>
   )

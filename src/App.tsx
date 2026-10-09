@@ -1,7 +1,6 @@
 import { lazy, Suspense, useState } from "react"
 
 import { AppHeader } from "@/components/app-header"
-import { AppRail } from "@/components/app-rail"
 import { AuthPage } from "@/components/auth/auth-page"
 import { BottomTabBar } from "@/components/bottom-tab-bar"
 import { EntrySheet } from "@/components/entries/entry-sheet"
@@ -39,19 +38,15 @@ function AppShell() {
   const [tab, setTab] = useState("overview")
 
   return (
-    <div className="min-h-svh md:flex">
-      <AppRail
+    <div className="min-h-svh">
+      <AppHeader
         value={tab}
         onValueChange={setTab}
         onOpenImport={() => setImportOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
-      />
-      <div className="mx-auto flex min-h-svh w-full min-w-0 max-w-5xl flex-col gap-4 p-4 pb-28 md:p-7 md:pb-10">
-      <AppHeader
-        onOpenImport={() => setImportOpen(true)}
-        onOpenSettings={() => setSettingsOpen(true)}
         onAddEntry={() => setAddOpen(true)}
       />
+      <main className="mx-auto flex w-full min-w-0 max-w-[1080px] flex-col gap-4 px-4 pt-3 pb-32 md:px-8 md:pb-20">
 
       <Tabs value={tab} onValueChange={(value) => setTab(String(value))}>
         <TabsContent value="overview" className="flex flex-col gap-4">
@@ -82,7 +77,7 @@ function AppShell() {
           </ErrorBoundary>
         </TabsContent>
       </Tabs>
-      </div>
+      </main>
 
       <BottomTabBar value={tab} onValueChange={setTab} onAddEntry={() => setAddOpen(true)} />
 

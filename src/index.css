@@ -1,29 +1,29 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/hanken-grotesk";
-@import "@fontsource/big-shoulders-display/700";
-@import "@fontsource/big-shoulders-display/800";
-@import "@fontsource/big-shoulders-display/900";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/onest";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
   --font-heading: var(--font-display);
-  --font-sans: 'Hanken Grotesk Variable', system-ui, sans-serif;
-  /* Paddock has no monospace: figures are tabular numerals in the body face. */
-  --font-mono: 'Hanken Grotesk Variable', system-ui, sans-serif;
-  --color-lime: var(--lime);
-  --color-lime-foreground: var(--lime-foreground);
+  --font-sans: 'Onest Variable', system-ui, sans-serif;
+  /* Ember has no monospace: figures are tabular numerals in the body face. */
+  --font-mono: 'Onest Variable', system-ui, sans-serif;
+  --color-flame: var(--flame);
+  --color-flame-2: var(--flame-2);
+  --color-flame-text: var(--flame-text);
+  --color-flame-foreground: var(--flame-foreground);
+  --color-field: var(--field);
+  --color-pip-off: var(--pip-off);
   --color-best: var(--best);
   --color-up: var(--up);
   --color-down: var(--down);
   --color-bar-best: var(--bar-best);
   --color-bar-up: var(--bar-up);
   --color-bar-down: var(--bar-down);
-  --color-rail: var(--rail);
-  --color-rail-foreground: var(--rail-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -80,122 +80,133 @@
 }
 
 :root {
-  /* Paddock — daylight. Lime is the brand field; ink is the primary action. */
-  --lime: #c6ff1a;
-  --lime-foreground: #0b0b0c;
-  --rail: #0b0b0c;
-  --rail-foreground: #f2f4ea;
-  --background: #eceee4;
-  --foreground: #0d0d0e;
+  /* Ember — daylight. Lavender-grey paper, white cards, one flame accent used in small marks. */
+  --flame: #ff6b3d;
+  --flame-2: #ffb347;
+  --flame-text: #c4410f;
+  --flame-foreground: #ffffff;
+  --field: #e9e4f4;
+  --pip-off: #e2deeb;
+  --background: #f3f1f7;
+  --foreground: #1d1630;
   --card: #ffffff;
-  --card-foreground: #0d0d0e;
+  --card-foreground: #1d1630;
   --popover: #ffffff;
-  --popover-foreground: #0d0d0e;
-  --primary: #0d0d0e;
-  --primary-foreground: #eceee4;
-  --secondary: #e2e5d6;
-  --secondary-foreground: #0d0d0e;
-  --muted: #e2e5d6;
-  --muted-foreground: #5d6056;
-  --accent: #dff07e;
-  --accent-foreground: #1b2200;
-  --destructive: #c9301c;
+  --popover-foreground: #1d1630;
+  --primary: #1d1630;
+  --primary-foreground: #f3f1f7;
+  --secondary: #e9e4f4;
+  --secondary-foreground: #1d1630;
+  --muted: #e9e4f4;
+  --muted-foreground: #675f7c;
+  --accent: #e9e4f4;
+  --accent-foreground: #1d1630;
+  --destructive: #b3261e;
   --destructive-foreground: #ffffff;
-  --border: #d9dccf;
-  --input: #c7cbb9;
-  --ring: #7b2fe0;
-  --chart-1: #7b2fe0;
-  --chart-2: #0f9e45;
-  --chart-3: #c98f00;
-  --chart-4: #5d6056;
-  --chart-5: #0d0d0e;
+  --border: #e5e1ee;
+  --input: #d3cde2;
+  --ring: #ff6b3d;
+  --chart-1: #ff6b3d;
+  --chart-2: #6f5bd0;
+  --chart-3: #ffb347;
+  --chart-4: #675f7c;
+  --chart-5: #1d1630;
   --radius: 1rem;
-  --sidebar: #0b0b0c;
-  --sidebar-foreground: #f2f4ea;
-  --sidebar-primary: #c6ff1a;
-  --sidebar-primary-foreground: #0b0b0c;
-  --sidebar-accent: #1b1b1d;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #26262a;
-  --sidebar-ring: #c6ff1a;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1d1630;
+  --sidebar-primary: #ff6b3d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e9e4f4;
+  --sidebar-accent-foreground: #1d1630;
+  --sidebar-border: #e5e1ee;
+  --sidebar-ring: #ff6b3d;
 
-  /* Timing-board sectors: best fill, above average, below average */
-  --best: #7b2fe0;
-  --up: #0f9e45;
-  --down: #a87500;
-  --bar-best: #8a3ff5;
-  --bar-up: #19c25a;
-  --bar-down: #f2b705;
+  /* Fill-up verdicts: best fill, above average, below average */
+  --best: #c4410f;
+  --up: #8a5a00;
+  --down: #675f7c;
+  --bar-best: #ff6b3d;
+  --bar-up: #ffb347;
+  --bar-down: #a29bb5;
 
-  --warning-band: #fff1c2;
-  --warning-band-foreground: #5c4200;
+  --warning-band: #ffefc9;
+  --warning-band-foreground: #7a5200;
   --warning-band-accent: #c98f00;
 
-  --grad-primary: #0d0d0e;
-  --grad-primary-soft: #dff07e;
+  --grad-primary: #1d1630;
+  --grad-primary-soft: #e9e4f4;
   --grad-success: #0f9e45;
   --grad-success-soft: #d4f3de;
-  --grad-danger: #c9301c;
-  --grad-danger-soft: #fbe0da;
-  --grad-info: #7b2fe0;
+  --grad-danger: #b3261e;
+  --grad-danger-soft: #fde4e1;
+  --grad-info: #6f5bd0;
   --grad-warning: #c98f00;
   --grad-surface: #ffffff;
 
-  --card-shadow: 0 1px 0 rgba(13, 13, 14, 0.04);
-  --float-shadow: 0 18px 40px -18px rgba(13, 13, 14, 0.45);
+  --card-shadow: 0 1px 2px rgba(29, 22, 48, 0.04), 0 8px 24px -12px rgba(29, 22, 48, 0.12);
+  --float-shadow: 0 18px 40px -18px rgba(29, 22, 48, 0.4);
 }
 
 .dark {
-  /* Paddock — pit lane at night. */
-  --background: #09090a;
-  --foreground: #f3f4ee;
-  --card: #141416;
-  --card-foreground: #f3f4ee;
-  --popover: #1a1a1d;
-  --popover-foreground: #f3f4ee;
-  --primary: #c6ff1a;
-  --primary-foreground: #0b0b0c;
-  --secondary: #1f1f23;
-  --secondary-foreground: #f3f4ee;
-  --muted: #1f1f23;
-  --muted-foreground: #9a9d92;
-  --accent: #232d07;
-  --accent-foreground: #d6ff58;
-  --destructive: #ff6a55;
+  /* Ember — aubergine night. */
+  --flame: #ff7a4d;
+  --flame-2: #ffbe5c;
+  --flame-text: #ff9a73;
+  --flame-foreground: #1a0b05;
+  --field: #2a2038;
+  --pip-off: #322941;
+  --background: #130f1a;
+  --foreground: #f1edf8;
+  --card: #1c1626;
+  --card-foreground: #f1edf8;
+  --popover: #231b2f;
+  --popover-foreground: #f1edf8;
+  --primary: #f1edf8;
+  --primary-foreground: #130f1a;
+  --secondary: #2a2038;
+  --secondary-foreground: #f1edf8;
+  --muted: #2a2038;
+  --muted-foreground: #a79fbc;
+  --accent: #2a2038;
+  --accent-foreground: #f1edf8;
+  --destructive: #ff958b;
   --destructive-foreground: #1b0803;
-  --border: #26262a;
-  --input: #34343a;
-  --ring: #c6ff1a;
-  --chart-1: #b77bff;
-  --chart-2: #3be07a;
-  --chart-3: #ffd23f;
-  --chart-4: #9a9d92;
-  --chart-5: #f3f4ee;
-  --sidebar: #000000;
-  --sidebar-border: #26262a;
+  --border: #2b2338;
+  --input: #3d3350;
+  --ring: #ff7a4d;
+  --chart-1: #ff7a4d;
+  --chart-2: #a995ff;
+  --chart-3: #ffbe5c;
+  --chart-4: #a79fbc;
+  --chart-5: #f1edf8;
+  --sidebar: #1c1626;
+  --sidebar-foreground: #f1edf8;
+  --sidebar-accent: #2a2038;
+  --sidebar-accent-foreground: #f1edf8;
+  --sidebar-border: #2b2338;
 
-  --best: #b77bff;
-  --up: #3be07a;
-  --down: #ffd23f;
-  --bar-best: #b06cff;
-  --bar-up: #2bd96b;
-  --bar-down: #ffd23f;
+  --best: #ff9a73;
+  --up: #ffbe5c;
+  --down: #a79fbc;
+  --bar-best: #ff7a4d;
+  --bar-up: #ffbe5c;
+  --bar-down: #6a6180;
 
-  --warning-band: #2b2200;
-  --warning-band-foreground: #ffd23f;
-  --warning-band-accent: #ffd23f;
+  --warning-band: #2e2409;
+  --warning-band-foreground: #f5cd72;
+  --warning-band-accent: #f5cd72;
 
-  --grad-primary: #c6ff1a;
-  --grad-primary-soft: #232d07;
+  --grad-primary: #f1edf8;
+  --grad-primary-soft: #2a2038;
   --grad-success: #3be07a;
   --grad-success-soft: #0f2a19;
-  --grad-danger: #ff6a55;
-  --grad-danger-soft: #331511;
-  --grad-info: #b77bff;
-  --grad-warning: #ffd23f;
-  --grad-surface: #141416;
+  --grad-danger: #ff958b;
+  --grad-danger-soft: #32151a;
+  --grad-info: #a995ff;
+  --grad-warning: #ffbe5c;
+  --grad-surface: #1c1626;
 
-  --card-shadow: none;
+  --card-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02);
   --float-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.8);
 }
 
@@ -213,8 +224,8 @@
   }
 
   ::selection {
-    background: var(--lime);
-    color: #0b0b0c;
+    background: color-mix(in srgb, var(--flame) 35%, transparent);
+    color: var(--foreground);
   }
 
   /* All figures line up in columns. */

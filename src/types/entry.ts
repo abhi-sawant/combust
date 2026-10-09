@@ -13,6 +13,14 @@ export interface FuelEntry {
   amountPaid: number
   /** Litres of fuel filled. */
   litresFilled: number
+  /**
+   * True when the tank was filled until the pump clicked off. Mileage is only
+   * measured between two full fills, so partial fills simply add their litres
+   * to the tank in progress.
+   */
+  isFullTank: boolean
+  /** True when a fill-up before this one was never logged, so the distance since the previous entry can't be trusted. */
+  missedPrevious: boolean
 }
 
 /** Fields needed to create or edit an entry; `id`/`vehicleId` are assigned by the repository. */

@@ -70,7 +70,7 @@ export function EntriesTable() {
 
   function renderRowActions(entry: DerivedEntry, compact = false) {
     return (
-      <div className={compact ? 'flex gap-0.5' : 'grid grid-cols-2 w-full border-t'}>
+      <div className={compact ? 'flex gap-0.5' : 'grid w-full grid-cols-2 gap-1'}>
         <Button
           variant='ghost'
           size={compact ? 'icon-sm' : 'default'}
@@ -118,7 +118,7 @@ export function EntriesTable() {
   return (
     <>
       {/* Desktop / tablet: full table */}
-      <Card className='hidden sm:block'>
+      <Card className='hidden md:block'>
         <CardContent className='p-0'>
           <Table>
             <TableHeader>
@@ -155,7 +155,7 @@ export function EntriesTable() {
                     {entry.costPerLitre !== null ? formatAmount(entry.costPerLitre) : '—'}
                   </TableCell>
                   <TableCell className='text-right'>
-                    <MileageCell entry={entry} sector={sectorOf(entry, average, bestId)} />
+                    <MileageCell entry={entry} sector={sectorOf(entry, average, bestId)} average={average} />
                   </TableCell>
                   <TableCell>
                     <div className='flex justify-end gap-1'>{renderRowActions(entry, true)}</div>
@@ -168,23 +168,23 @@ export function EntriesTable() {
       </Card>
 
       {/* Mobile: grouped by month, matching the Overview screen's row style */}
-      <div className='flex flex-col gap-5 sm:hidden'>
+      <div className='flex flex-col gap-6 md:hidden'>
         {monthGroups.map((group) => (
           <div key={group.label} className='flex flex-col gap-2.5'>
-            <div className='flex items-baseline justify-between px-0.5'>
-              <span className='font-display text-xl leading-none font-extrabold tracking-wide uppercase'>
-                {group.label}
-              </span>
-              <span className='text-sm font-bold text-muted-foreground'>
-                {formatAmount(group.items.reduce((sum, e) => sum + e.amountPaid, 0))}
+            <div className='flex items-baseline justify-between px-2'>
+              <span className='font-display text-lg leading-none font-bold tracking-tight'>{group.label}</span>
+              <span className='text-sm font-medium text-muted-foreground'>
+                {formatAmount(group.items.reduce((sum, e) => sum + e.amountPaid, 0))} spent
               </span>
             </div>
-            {group.items.map((entry) => (
-              <div key={entry.id} className='overflow-hidden rounded-[20px] border border-border bg-card'>
-                <FillupRow entry={entry} sector={sectorOf(entry, average, bestId)} />
-                <div className='flex shrink-0 gap-0.5'>{renderRowActions(entry)}</div>
-              </div>
-            ))}
+            <div className='flex flex-col gap-1 rounded-[28px] bg-card p-2 shadow-card'>
+              {group.items.map((entry) => (
+                <div key={entry.id} className='overflow-hidden rounded-[20px] bg-card'>
+                  <FillupRow entry={entry} sector={sectorOf(entry, average, bestId)} average={average} />
+                  <div className='flex shrink-0 gap-0.5 px-2 pb-1'>{renderRowActions(entry)}</div>
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>

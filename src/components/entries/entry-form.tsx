@@ -9,6 +9,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Switch } from '@/components/ui/switch'
 import { StationCombobox } from '@/components/entries/station-combobox'
 import { useEntries } from '@/hooks/entries-context'
 import { getOdometerWarning } from '@/lib/calculations'
@@ -26,6 +27,8 @@ const entrySchema = z.object({
   fuelStation: z.string().trim().min(1, 'Fuel station is required'),
   amountPaid: positiveNumber('Amount paid'),
   litresFilled: positiveNumber('Litres filled'),
+  isFullTank: z.boolean(),
+  missedPrevious: z.boolean(),
 })
 
 type EntryFormValues = z.infer<typeof entrySchema>
@@ -42,6 +45,8 @@ function toDefaultValues(entry?: FuelEntry): EntryFormValues {
       fuelStation: entry.fuelStation,
       amountPaid: entry.amountPaid,
       litresFilled: entry.litresFilled,
+      isFullTank: entry.isFullTank,
+      missedPrevious: entry.missedPrevious,
     }
   }
   return {
@@ -50,6 +55,8 @@ function toDefaultValues(entry?: FuelEntry): EntryFormValues {
     fuelStation: '',
     amountPaid: undefined as unknown as number,
     litresFilled: undefined as unknown as number,
+    isFullTank: true,
+    missedPrevious: false,
   }
 }
 
@@ -79,6 +86,8 @@ export function EntryForm({ entry, onSaved, onCancel }: EntryFormProps) {
     typeof litresFilled === 'number' && litresFilled > 0 && typeof amountPaid === 'number' && amountPaid > 0
       ? amountPaid / litresFilled
       : null
+
+  const hasOtherEntries = entries.some((e) => e.id !== entry?.id)
 
   const quickStations = stationNames.slice(0, 3)
 
@@ -208,10 +217,47 @@ export function EntryForm({ entry, onSaved, onCancel }: EntryFormProps) {
           </Field>
         </div>
 
+        <div className='flex flex-col gap-3 rounded-xl border border-border p-3.5'>
+          <Controller
+            control={form.control}
+            name='isFullTank'
+            render={({ field }) => (
+              <div className='flex items-start justify-between gap-4'>
+                <div className='flex flex-col gap-0.5'>
+                  <FieldLabel htmlFor='isFullTank'>Filled to a full tank</FieldLabel>
+                  <p className='text-[13px] text-muted-foreground'>
+                    {field.value
+                      ? 'Fill until the pump clicks off — mileage is only accurate between full tanks.'
+                      : "Partial fills are saved, but mileage will be worked out at your next full tank."}
+                  </p>
+                </div>
+                <Switch id='isFullTank' checked={field.value} onCheckedChange={field.onChange} />
+              </div>
+            )}
+          />
+          {hasOtherEntries && (
+            <Controller
+              control={form.control}
+              name='missedPrevious'
+              render={({ field }) => (
+                <div className='flex items-start justify-between gap-4 border-t border-border pt-3'>
+                  <div className='flex flex-col gap-0.5'>
+                    <FieldLabel htmlFor='missedPrevious'>Missed logging a fill-up before this</FieldLabel>
+                    <p className='text-[13px] text-muted-foreground'>
+                      Skips the stretch since your last entry so it doesn&apos;t skew your mileage.
+                    </p>
+                  </div>
+                  <Switch id='missedPrevious' checked={field.value} onCheckedChange={field.onChange} />
+                </div>
+              )}
+            />
+          )}
+        </div>
+
         {costPerLitre !== null && (
-          <div className='flex items-baseline justify-between rounded-xl bg-lime px-3.5 py-3 text-lime-foreground'>
-            <span className='text-[13px] font-semibold opacity-75'>Works out to</span>
-            <span className='text-sm font-extrabold text-lime-foreground'>
+          <div className='flex items-baseline justify-between rounded-2xl bg-field px-3.5 py-3'>
+            <span className='text-[13px] text-muted-foreground'>Works out to</span>
+            <span className='font-display text-base font-bold'>
               {formatAmount(costPerLitre)} / litre
             </span>
           </div>

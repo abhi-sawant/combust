@@ -22,9 +22,9 @@ function StatCard({
         <CardDescription className="text-[13px] font-semibold">
           {label}
         </CardDescription>
-        <CardTitle className="text-4xl font-black normal-case">{value}</CardTitle>
+        <CardTitle className="text-4xl font-extrabold tracking-tight">{value}</CardTitle>
         <CardAction>
-          <span className="grid size-9 place-items-center rounded-full bg-lime text-lime-foreground">
+          <span className="grid size-9 place-items-center rounded-full bg-field text-flame-text">
             <Icon className="size-4" />
           </span>
         </CardAction>

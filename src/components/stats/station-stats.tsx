@@ -34,7 +34,7 @@ export function StationStats() {
   return (
     <>
       {/* Desktop / tablet: full table */}
-      <Card className="hidden sm:block">
+      <Card className="hidden md:block">
         <CardHeader>
           <CardTitle>By fuel station</CardTitle>
         </CardHeader>
@@ -79,8 +79,8 @@ export function StationStats() {
       </Card>
 
       {/* Mobile: stacked cards, mirroring entries-table's dual-layout pattern */}
-      <div className="flex flex-col gap-3 sm:hidden">
-        <p className="px-0.5 font-display text-xl leading-none font-extrabold tracking-wide uppercase">
+      <div className="flex flex-col gap-3 md:hidden">
+        <p className="px-0.5 font-display text-xl leading-none font-bold tracking-tight">
           By fuel station
         </p>
         {stations.map((station) => (
