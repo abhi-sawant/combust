@@ -1,11 +1,24 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
+import { readFileSync } from 'node:fs'
+
+// Repo-root VERSION is the single source of truth shared with the Android app.
+const appVersion = readFileSync(path.resolve(import.meta.dirname, '../VERSION'), 'utf8').trim()
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
+  test: {
+    // Fixed zone so fixture generation is reproducible and matches the Android :core tests.
+    env: { TZ: 'Asia/Kolkata' },
+    include: ['src/**/*.test.ts'],
+  },
   plugins: [
     react(),
     tailwindcss(),

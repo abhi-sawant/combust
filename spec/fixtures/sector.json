@@ -1,0 +1,1894 @@
+{
+  "cases": [
+    {
+      "name": "single-full",
+      "average": null,
+      "bestId": null,
+      "rows": [
+        {
+          "id": "e302",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "two-full",
+      "average": 50,
+      "bestId": "e303",
+      "rows": [
+        {
+          "id": "e303",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e304",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "partial-in-cycle",
+      "average": 50,
+      "bestId": "e305",
+      "rows": [
+        {
+          "id": "e305",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e306",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e307",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "missed-fill-gap",
+      "average": 44.44444444444444,
+      "bestId": "e309",
+      "rows": [
+        {
+          "id": "e308",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e309",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e310",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "odometer-regression",
+      "average": 66.96428571428572,
+      "bestId": "e313",
+      "rows": [
+        {
+          "id": "e311",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e312",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e313",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e314",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "partial-first",
+      "average": 42.857142857142854,
+      "bestId": "e316",
+      "rows": [
+        {
+          "id": "e315",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e316",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e317",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "zero-litres",
+      "average": 42.857142857142854,
+      "bestId": "e318",
+      "rows": [
+        {
+          "id": "e318",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e319",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "multi-station",
+      "average": 42.1031746031746,
+      "bestId": "e322",
+      "rows": [
+        {
+          "id": "e320",
+          "sector": "up",
+          "pips": 4
+        },
+        {
+          "id": "e321",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e322",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e323",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e324",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "unsorted-input",
+      "average": 66.96428571428572,
+      "bestId": "e326",
+      "rows": [
+        {
+          "id": "e326",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e327",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e325",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-0",
+      "average": 40.181142672955254,
+      "bestId": "e329",
+      "rows": [
+        {
+          "id": "e328",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e329",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e331",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e330",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e333",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e332",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e334",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e335",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-1",
+      "average": 35.69888300187114,
+      "bestId": "e336",
+      "rows": [
+        {
+          "id": "e336",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e337",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e338",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e339",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e340",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e341",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e342",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e343",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e344",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e345",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e346",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-2",
+      "average": 34.01105140383204,
+      "bestId": "e350",
+      "rows": [
+        {
+          "id": "e347",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e348",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e349",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e351",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e350",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e352",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e353",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e354",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e355",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e356",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e357",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-3",
+      "average": 40.85603112840467,
+      "bestId": "e358",
+      "rows": [
+        {
+          "id": "e358",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e359",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-4",
+      "average": 32.00776133530076,
+      "bestId": "e360",
+      "rows": [
+        {
+          "id": "e360",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e361",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e362",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e363",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e364",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e366",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e365",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e367",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e368",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-5",
+      "average": 26.698069537018686,
+      "bestId": "e369",
+      "rows": [
+        {
+          "id": "e369",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e370",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e371",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e372",
+          "sector": "up",
+          "pips": 3
+        },
+        {
+          "id": "e373",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e374",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e375",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e377",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e376",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e378",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-6",
+      "average": null,
+      "bestId": null,
+      "rows": [
+        {
+          "id": "e379",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e380",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e381",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e382",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-7",
+      "average": 37.13681241184767,
+      "bestId": "e386",
+      "rows": [
+        {
+          "id": "e383",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e384",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e385",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e386",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e387",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e388",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-8",
+      "average": 40.62668046528929,
+      "bestId": "e390",
+      "rows": [
+        {
+          "id": "e389",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e390",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e391",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e392",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e393",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e394",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e395",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e396",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-9",
+      "average": 44.05502359677929,
+      "bestId": "e398",
+      "rows": [
+        {
+          "id": "e397",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e398",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e399",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e400",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e401",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e402",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e403",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e405",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e404",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e406",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e407",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-10",
+      "average": 37.93775742724302,
+      "bestId": "e414",
+      "rows": [
+        {
+          "id": "e408",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e409",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e410",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e411",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e412",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e413",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e414",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e415",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e416",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e417",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e418",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-11",
+      "average": 28.050297057804517,
+      "bestId": "e419",
+      "rows": [
+        {
+          "id": "e419",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e420",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e421",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e422",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e423",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e424",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e425",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e426",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-12",
+      "average": 22.29895277252555,
+      "bestId": "e427",
+      "rows": [
+        {
+          "id": "e427",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e428",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e429",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e430",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e431",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e433",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e432",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e434",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e435",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-13",
+      "average": 17.259017477949538,
+      "bestId": "e439",
+      "rows": [
+        {
+          "id": "e436",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e438",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e437",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e439",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e441",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e440",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e442",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e443",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-14",
+      "average": 35.18822122150296,
+      "bestId": "e446",
+      "rows": [
+        {
+          "id": "e444",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e445",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e446",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e447",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-15",
+      "average": 28.51764211025275,
+      "bestId": "e452",
+      "rows": [
+        {
+          "id": "e448",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e449",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e450",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e451",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e452",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e453",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e454",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e455",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e456",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e457",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e458",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-16",
+      "average": 38.614900314795385,
+      "bestId": "e459",
+      "rows": [
+        {
+          "id": "e459",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e460",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-17",
+      "average": 30.535867969463624,
+      "bestId": "e466",
+      "rows": [
+        {
+          "id": "e461",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e462",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e463",
+          "sector": "down",
+          "pips": 2
+        },
+        {
+          "id": "e464",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e465",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e466",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e467",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e469",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e468",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e470",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e471",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-18",
+      "average": 41.44144144144144,
+      "bestId": "e472",
+      "rows": [
+        {
+          "id": "e472",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e473",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e474",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-19",
+      "average": 42.67100977198697,
+      "bestId": "e475",
+      "rows": [
+        {
+          "id": "e475",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e476",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-20",
+      "average": 30.093314652115712,
+      "bestId": "e479",
+      "rows": [
+        {
+          "id": "e477",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e478",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e479",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e480",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e481",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-21",
+      "average": 26.340140127078058,
+      "bestId": "e485",
+      "rows": [
+        {
+          "id": "e484",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e483",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e482",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e485",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e486",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e487",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e488",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e489",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e490",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e491",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e492",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-22",
+      "average": 42.181069958847736,
+      "bestId": "e495",
+      "rows": [
+        {
+          "id": "e493",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e494",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e495",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e496",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e497",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-23",
+      "average": 45.65966836714744,
+      "bestId": "e500",
+      "rows": [
+        {
+          "id": "e498",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e499",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e500",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e501",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e502",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e503",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-24",
+      "average": null,
+      "bestId": null,
+      "rows": [
+        {
+          "id": "e504",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e505",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-25",
+      "average": 44.10811917241281,
+      "bestId": "e508",
+      "rows": [
+        {
+          "id": "e506",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e507",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e508",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e509",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e510",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e511",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e512",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-26",
+      "average": null,
+      "bestId": null,
+      "rows": [
+        {
+          "id": "e513",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e514",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-27",
+      "average": 53.81641310771649,
+      "bestId": "e518",
+      "rows": [
+        {
+          "id": "e515",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e516",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e517",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e518",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e519",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e520",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e521",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-28",
+      "average": 19.53416020467136,
+      "bestId": "e524",
+      "rows": [
+        {
+          "id": "e522",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e523",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e524",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e525",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e526",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-29",
+      "average": 53.09006513491416,
+      "bestId": "e531",
+      "rows": [
+        {
+          "id": "e527",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e528",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e529",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e530",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e532",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e531",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e533",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-30",
+      "average": 31.34595647876943,
+      "bestId": "e535",
+      "rows": [
+        {
+          "id": "e534",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e535",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e536",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e537",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e538",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e539",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e540",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e541",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-31",
+      "average": 28.861570816234334,
+      "bestId": "e543",
+      "rows": [
+        {
+          "id": "e542",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e544",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e543",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e545",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e546",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-32",
+      "average": 20.14252929229244,
+      "bestId": "e552",
+      "rows": [
+        {
+          "id": "e547",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e548",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e549",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e550",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e551",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e552",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e553",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e554",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e555",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-33",
+      "average": 16.608117447917703,
+      "bestId": "e561",
+      "rows": [
+        {
+          "id": "e556",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e558",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e557",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e559",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e560",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e561",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e562",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-34",
+      "average": 8.881199538638985,
+      "bestId": "e564",
+      "rows": [
+        {
+          "id": "e563",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e564",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e565",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-35",
+      "average": 30.08452805732413,
+      "bestId": "e567",
+      "rows": [
+        {
+          "id": "e566",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e567",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e568",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e569",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e570",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e571",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-36",
+      "average": 20.309583199506427,
+      "bestId": "e573",
+      "rows": [
+        {
+          "id": "e572",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e573",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e574",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e575",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e576",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-37",
+      "average": 26.100677768680843,
+      "bestId": "e577",
+      "rows": [
+        {
+          "id": "e577",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e578",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e579",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e580",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e581",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e582",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e583",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e584",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e585",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e586",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-38",
+      "average": 46.391752577319586,
+      "bestId": "e587",
+      "rows": [
+        {
+          "id": "e587",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e588",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e589",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e590",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e591",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e592",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    },
+    {
+      "name": "random-39",
+      "average": 49.71210975880326,
+      "bestId": "e600",
+      "rows": [
+        {
+          "id": "e593",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e594",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e596",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e595",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e597",
+          "sector": "none",
+          "pips": null
+        },
+        {
+          "id": "e598",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e599",
+          "sector": "down",
+          "pips": 1
+        },
+        {
+          "id": "e600",
+          "sector": "best",
+          "pips": 5
+        },
+        {
+          "id": "e601",
+          "sector": "up",
+          "pips": 5
+        },
+        {
+          "id": "e602",
+          "sector": "none",
+          "pips": null
+        }
+      ]
+    }
+  ],
+  "stationCodes": [
+    {
+      "name": "Indian Oil",
+      "code": "INO"
+    },
+    {
+      "name": "HP",
+      "code": "HP"
+    },
+    {
+      "name": "Shell · Bandra",
+      "code": "SHE"
+    },
+    {
+      "name": "Bharat Petroleum Corp",
+      "code": "BPC"
+    },
+    {
+      "name": "reliance - nerul",
+      "code": "REL"
+    },
+    {
+      "name": "",
+      "code": "???"
+    },
+    {
+      "name": "  ",
+      "code": "???"
+    },
+    {
+      "name": "a b c d",
+      "code": "ABC"
+    },
+    {
+      "name": "Jio-bp (Thane)",
+      "code": "JIO"
+    },
+    {
+      "name": "X",
+      "code": "X"
+    }
+  ]
+}

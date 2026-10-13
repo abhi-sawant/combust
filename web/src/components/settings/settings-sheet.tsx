@@ -201,6 +201,7 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
               </AlertDialogContent>
             </AlertDialog>
           </div>
+          <p className="text-center text-xs text-muted-foreground">Combust v{__APP_VERSION__}</p>
         </div>
       </SheetContent>
     </Sheet>

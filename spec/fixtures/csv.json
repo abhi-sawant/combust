@@ -1,0 +1,145 @@
+[
+  {
+    "text": "Date,Amount Paid,Odometer Reading,Fuel Filled,Fuel Station\n2026/01/05,500,1000,5,Indian Oil\n",
+    "result": {
+      "rows": [
+        {
+          "date": "2026-01-05",
+          "amountPaid": 500,
+          "odometerReading": 1000,
+          "litresFilled": 5,
+          "fuelStation": "Indian Oil",
+          "isFullTank": true,
+          "missedPrevious": false
+        }
+      ],
+      "errors": []
+    }
+  },
+  {
+    "text": "Date,Amount Paid,Odometer Reading,Fuel Filled,Fuel Station,Full Tank,Missed Fill\n05/01/2026,\"1,250.50\",\"12,000\",10.5,\"Shell, Bandra\",no,yes\n",
+    "result": {
+      "rows": [
+        {
+          "date": "2026-01-05",
+          "amountPaid": 1250.5,
+          "odometerReading": 12000,
+          "litresFilled": 10.5,
+          "fuelStation": "Shell, Bandra",
+          "isFullTank": false,
+          "missedPrevious": true
+        }
+      ],
+      "errors": []
+    }
+  },
+  {
+    "text": "date,amount paid,odometer reading,fuel filled,fuel station\n﻿2026-01-05,₹ 500,1000,5,​HP\n13/01/2026,500,1100,5,HP\n01/13/2026,500,1200,5,HP\n",
+    "result": {
+      "rows": [
+        {
+          "date": "2026-01-05",
+          "amountPaid": 500,
+          "odometerReading": 1000,
+          "litresFilled": 5,
+          "fuelStation": "HP",
+          "isFullTank": true,
+          "missedPrevious": false
+        },
+        {
+          "date": "2026-01-13",
+          "amountPaid": 500,
+          "odometerReading": 1100,
+          "litresFilled": 5,
+          "fuelStation": "HP",
+          "isFullTank": true,
+          "missedPrevious": false
+        },
+        {
+          "date": "2026-01-13",
+          "amountPaid": 500,
+          "odometerReading": 1200,
+          "litresFilled": 5,
+          "fuelStation": "HP",
+          "isFullTank": true,
+          "missedPrevious": false
+        }
+      ],
+      "errors": []
+    }
+  },
+  {
+    "text": "Date,Amount Paid,Odometer Reading,Fuel Filled,Fuel Station,Full Tank\n2026-01-05,0,1000,5,HP\n2026-01-06,500,1000,5,\nbad,500,1000,5,HP\n2026-01-07,500,1000,5,HP,maybe\n",
+    "result": {
+      "rows": [],
+      "errors": [
+        {
+          "line": 2,
+          "reason": "invalid amount paid"
+        },
+        {
+          "line": 3,
+          "reason": "missing fuel station"
+        },
+        {
+          "line": 4,
+          "reason": "unparseable date"
+        },
+        {
+          "line": 5,
+          "reason": "full tank must be yes or no"
+        }
+      ]
+    }
+  },
+  {
+    "text": "Date,Amount\n2026-01-05,1\n",
+    "result": {
+      "rows": [],
+      "errors": [
+        {
+          "line": 1,
+          "reason": "Missing column(s): amount paid, odometer reading, fuel filled, fuel station"
+        }
+      ]
+    }
+  },
+  {
+    "text": "",
+    "result": {
+      "rows": [],
+      "errors": [
+        {
+          "line": 0,
+          "reason": "File is empty."
+        }
+      ]
+    }
+  },
+  {
+    "text": "Date,Amount Paid,Odometer Reading,Fuel Filled,Fuel Station\r\n2026-01-05,500,1000,5,\"Say \"\"Hi\"\" Oil\"\r\n\r\n2026-01-06,500,1100,5,HP\r\n",
+    "result": {
+      "rows": [
+        {
+          "date": "2026-01-05",
+          "amountPaid": 500,
+          "odometerReading": 1000,
+          "litresFilled": 5,
+          "fuelStation": "Say \"Hi\" Oil",
+          "isFullTank": true,
+          "missedPrevious": false
+        },
+        {
+          "date": "2026-01-06",
+          "amountPaid": 500,
+          "odometerReading": 1100,
+          "litresFilled": 5,
+          "fuelStation": "HP",
+          "isFullTank": true,
+          "missedPrevious": false
+        }
+      ],
+      "errors": []
+    }
+  }
+]
