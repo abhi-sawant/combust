@@ -6,7 +6,7 @@
       "bestId": null,
       "rows": [
         {
-          "id": "e302",
+          "id": "e1",
           "sector": "none",
           "pips": null
         }
@@ -15,15 +15,15 @@
     {
       "name": "two-full",
       "average": 50,
-      "bestId": "e303",
+      "bestId": "e2",
       "rows": [
         {
-          "id": "e303",
+          "id": "e2",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e304",
+          "id": "e3",
           "sector": "none",
           "pips": null
         }
@@ -32,20 +32,20 @@
     {
       "name": "partial-in-cycle",
       "average": 50,
-      "bestId": "e305",
+      "bestId": "e4",
       "rows": [
         {
-          "id": "e305",
+          "id": "e4",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e306",
+          "id": "e5",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e307",
+          "id": "e6",
           "sector": "none",
           "pips": null
         }
@@ -54,20 +54,20 @@
     {
       "name": "missed-fill-gap",
       "average": 44.44444444444444,
-      "bestId": "e309",
+      "bestId": "e8",
       "rows": [
         {
-          "id": "e308",
+          "id": "e7",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e309",
+          "id": "e8",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e310",
+          "id": "e9",
           "sector": "none",
           "pips": null
         }
@@ -76,25 +76,25 @@
     {
       "name": "odometer-regression",
       "average": 66.96428571428572,
-      "bestId": "e313",
+      "bestId": "e12",
       "rows": [
         {
-          "id": "e311",
+          "id": "e10",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e312",
+          "id": "e11",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e313",
+          "id": "e12",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e314",
+          "id": "e13",
           "sector": "none",
           "pips": null
         }
@@ -103,20 +103,20 @@
     {
       "name": "partial-first",
       "average": 42.857142857142854,
-      "bestId": "e316",
+      "bestId": "e15",
       "rows": [
         {
-          "id": "e315",
+          "id": "e14",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e316",
+          "id": "e15",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e317",
+          "id": "e16",
           "sector": "none",
           "pips": null
         }
@@ -125,15 +125,15 @@
     {
       "name": "zero-litres",
       "average": 42.857142857142854,
-      "bestId": "e318",
+      "bestId": "e17",
       "rows": [
         {
-          "id": "e318",
+          "id": "e17",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e319",
+          "id": "e18",
           "sector": "none",
           "pips": null
         }
@@ -142,30 +142,30 @@
     {
       "name": "multi-station",
       "average": 42.1031746031746,
-      "bestId": "e322",
+      "bestId": "e21",
       "rows": [
         {
-          "id": "e320",
+          "id": "e19",
           "sector": "up",
           "pips": 4
         },
         {
-          "id": "e321",
+          "id": "e20",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e322",
+          "id": "e21",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e323",
+          "id": "e22",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e324",
+          "id": "e23",
           "sector": "none",
           "pips": null
         }
@@ -174,20 +174,20 @@
     {
       "name": "unsorted-input",
       "average": 66.96428571428572,
-      "bestId": "e326",
+      "bestId": "e25",
       "rows": [
         {
-          "id": "e326",
+          "id": "e25",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e327",
+          "id": "e26",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e325",
+          "id": "e24",
           "sector": "none",
           "pips": null
         }
@@ -196,45 +196,45 @@
     {
       "name": "random-0",
       "average": 40.181142672955254,
-      "bestId": "e329",
+      "bestId": "e28",
       "rows": [
         {
-          "id": "e328",
+          "id": "e27",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e329",
+          "id": "e28",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e331",
+          "id": "e30",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e330",
+          "id": "e29",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e333",
+          "id": "e32",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e332",
+          "id": "e31",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e334",
+          "id": "e33",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e335",
+          "id": "e34",
           "sector": "none",
           "pips": null
         }
@@ -243,60 +243,60 @@
     {
       "name": "random-1",
       "average": 35.69888300187114,
-      "bestId": "e336",
+      "bestId": "e35",
       "rows": [
         {
-          "id": "e336",
+          "id": "e35",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e337",
+          "id": "e36",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e338",
+          "id": "e37",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e339",
+          "id": "e38",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e340",
+          "id": "e39",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e341",
+          "id": "e40",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e342",
+          "id": "e41",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e343",
+          "id": "e42",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e344",
+          "id": "e43",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e345",
+          "id": "e44",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e346",
+          "id": "e45",
           "sector": "none",
           "pips": null
         }
@@ -305,60 +305,60 @@
     {
       "name": "random-2",
       "average": 34.01105140383204,
-      "bestId": "e350",
+      "bestId": "e49",
       "rows": [
         {
-          "id": "e347",
+          "id": "e46",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e348",
+          "id": "e47",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e349",
+          "id": "e48",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e351",
+          "id": "e50",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e350",
+          "id": "e49",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e352",
+          "id": "e51",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e353",
+          "id": "e52",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e354",
+          "id": "e53",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e355",
+          "id": "e54",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e356",
+          "id": "e55",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e357",
+          "id": "e56",
           "sector": "none",
           "pips": null
         }
@@ -367,15 +367,15 @@
     {
       "name": "random-3",
       "average": 40.85603112840467,
-      "bestId": "e358",
+      "bestId": "e57",
       "rows": [
         {
-          "id": "e358",
+          "id": "e57",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e359",
+          "id": "e58",
           "sector": "none",
           "pips": null
         }
@@ -384,50 +384,50 @@
     {
       "name": "random-4",
       "average": 32.00776133530076,
-      "bestId": "e360",
+      "bestId": "e59",
       "rows": [
         {
-          "id": "e360",
+          "id": "e59",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e361",
+          "id": "e60",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e362",
+          "id": "e61",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e363",
+          "id": "e62",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e364",
+          "id": "e63",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e366",
+          "id": "e65",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e365",
+          "id": "e64",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e367",
+          "id": "e66",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e368",
+          "id": "e67",
           "sector": "none",
           "pips": null
         }
@@ -436,55 +436,55 @@
     {
       "name": "random-5",
       "average": 26.698069537018686,
-      "bestId": "e369",
+      "bestId": "e68",
       "rows": [
         {
-          "id": "e369",
+          "id": "e68",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e370",
+          "id": "e69",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e371",
+          "id": "e70",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e372",
+          "id": "e71",
           "sector": "up",
           "pips": 3
         },
         {
-          "id": "e373",
+          "id": "e72",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e374",
+          "id": "e73",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e375",
+          "id": "e74",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e377",
+          "id": "e76",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e376",
+          "id": "e75",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e378",
+          "id": "e77",
           "sector": "none",
           "pips": null
         }
@@ -496,22 +496,22 @@
       "bestId": null,
       "rows": [
         {
-          "id": "e379",
+          "id": "e78",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e380",
+          "id": "e79",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e381",
+          "id": "e80",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e382",
+          "id": "e81",
           "sector": "none",
           "pips": null
         }
@@ -520,35 +520,35 @@
     {
       "name": "random-7",
       "average": 37.13681241184767,
-      "bestId": "e386",
+      "bestId": "e85",
       "rows": [
         {
-          "id": "e383",
+          "id": "e82",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e384",
+          "id": "e83",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e385",
+          "id": "e84",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e386",
+          "id": "e85",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e387",
+          "id": "e86",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e388",
+          "id": "e87",
           "sector": "none",
           "pips": null
         }
@@ -557,45 +557,45 @@
     {
       "name": "random-8",
       "average": 40.62668046528929,
-      "bestId": "e390",
+      "bestId": "e89",
       "rows": [
         {
-          "id": "e389",
+          "id": "e88",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e390",
+          "id": "e89",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e391",
+          "id": "e90",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e392",
+          "id": "e91",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e393",
+          "id": "e92",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e394",
+          "id": "e93",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e395",
+          "id": "e94",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e396",
+          "id": "e95",
           "sector": "none",
           "pips": null
         }
@@ -604,60 +604,60 @@
     {
       "name": "random-9",
       "average": 44.05502359677929,
-      "bestId": "e398",
+      "bestId": "e97",
       "rows": [
         {
-          "id": "e397",
+          "id": "e96",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e398",
+          "id": "e97",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e399",
+          "id": "e98",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e400",
+          "id": "e99",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e401",
+          "id": "e100",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e402",
+          "id": "e101",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e403",
+          "id": "e102",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e405",
+          "id": "e104",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e404",
+          "id": "e103",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e406",
+          "id": "e105",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e407",
+          "id": "e106",
           "sector": "none",
           "pips": null
         }
@@ -666,60 +666,60 @@
     {
       "name": "random-10",
       "average": 37.93775742724302,
-      "bestId": "e414",
+      "bestId": "e113",
       "rows": [
         {
-          "id": "e408",
+          "id": "e107",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e409",
+          "id": "e108",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e410",
+          "id": "e109",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e411",
+          "id": "e110",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e412",
+          "id": "e111",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e413",
+          "id": "e112",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e414",
+          "id": "e113",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e415",
+          "id": "e114",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e416",
+          "id": "e115",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e417",
+          "id": "e116",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e418",
+          "id": "e117",
           "sector": "none",
           "pips": null
         }
@@ -728,45 +728,45 @@
     {
       "name": "random-11",
       "average": 28.050297057804517,
-      "bestId": "e419",
+      "bestId": "e118",
       "rows": [
         {
-          "id": "e419",
+          "id": "e118",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e420",
+          "id": "e119",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e421",
+          "id": "e120",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e422",
+          "id": "e121",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e423",
+          "id": "e122",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e424",
+          "id": "e123",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e425",
+          "id": "e124",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e426",
+          "id": "e125",
           "sector": "none",
           "pips": null
         }
@@ -775,50 +775,50 @@
     {
       "name": "random-12",
       "average": 22.29895277252555,
-      "bestId": "e427",
+      "bestId": "e126",
       "rows": [
         {
-          "id": "e427",
+          "id": "e126",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e428",
+          "id": "e127",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e429",
+          "id": "e128",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e430",
+          "id": "e129",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e431",
+          "id": "e130",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e433",
+          "id": "e132",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e432",
+          "id": "e131",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e434",
+          "id": "e133",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e435",
+          "id": "e134",
           "sector": "none",
           "pips": null
         }
@@ -827,45 +827,45 @@
     {
       "name": "random-13",
       "average": 17.259017477949538,
-      "bestId": "e439",
+      "bestId": "e138",
       "rows": [
         {
-          "id": "e436",
+          "id": "e135",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e438",
+          "id": "e137",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e437",
+          "id": "e136",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e439",
+          "id": "e138",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e441",
+          "id": "e140",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e440",
+          "id": "e139",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e442",
+          "id": "e141",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e443",
+          "id": "e142",
           "sector": "none",
           "pips": null
         }
@@ -874,25 +874,25 @@
     {
       "name": "random-14",
       "average": 35.18822122150296,
-      "bestId": "e446",
+      "bestId": "e145",
       "rows": [
         {
-          "id": "e444",
+          "id": "e143",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e445",
+          "id": "e144",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e446",
+          "id": "e145",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e447",
+          "id": "e146",
           "sector": "none",
           "pips": null
         }
@@ -901,60 +901,60 @@
     {
       "name": "random-15",
       "average": 28.51764211025275,
-      "bestId": "e452",
+      "bestId": "e151",
       "rows": [
         {
-          "id": "e448",
+          "id": "e147",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e449",
+          "id": "e148",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e450",
+          "id": "e149",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e451",
+          "id": "e150",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e452",
+          "id": "e151",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e453",
+          "id": "e152",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e454",
+          "id": "e153",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e455",
+          "id": "e154",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e456",
+          "id": "e155",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e457",
+          "id": "e156",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e458",
+          "id": "e157",
           "sector": "none",
           "pips": null
         }
@@ -963,15 +963,15 @@
     {
       "name": "random-16",
       "average": 38.614900314795385,
-      "bestId": "e459",
+      "bestId": "e158",
       "rows": [
         {
-          "id": "e459",
+          "id": "e158",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e460",
+          "id": "e159",
           "sector": "none",
           "pips": null
         }
@@ -980,60 +980,60 @@
     {
       "name": "random-17",
       "average": 30.535867969463624,
-      "bestId": "e466",
+      "bestId": "e165",
       "rows": [
         {
-          "id": "e461",
+          "id": "e160",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e462",
+          "id": "e161",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e463",
+          "id": "e162",
           "sector": "down",
           "pips": 2
         },
         {
-          "id": "e464",
+          "id": "e163",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e465",
+          "id": "e164",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e466",
+          "id": "e165",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e467",
+          "id": "e166",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e469",
+          "id": "e168",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e468",
+          "id": "e167",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e470",
+          "id": "e169",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e471",
+          "id": "e170",
           "sector": "none",
           "pips": null
         }
@@ -1042,20 +1042,20 @@
     {
       "name": "random-18",
       "average": 41.44144144144144,
-      "bestId": "e472",
+      "bestId": "e171",
       "rows": [
         {
-          "id": "e472",
+          "id": "e171",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e473",
+          "id": "e172",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e474",
+          "id": "e173",
           "sector": "none",
           "pips": null
         }
@@ -1064,15 +1064,15 @@
     {
       "name": "random-19",
       "average": 42.67100977198697,
-      "bestId": "e475",
+      "bestId": "e174",
       "rows": [
         {
-          "id": "e475",
+          "id": "e174",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e476",
+          "id": "e175",
           "sector": "none",
           "pips": null
         }
@@ -1081,30 +1081,30 @@
     {
       "name": "random-20",
       "average": 30.093314652115712,
-      "bestId": "e479",
+      "bestId": "e178",
       "rows": [
         {
-          "id": "e477",
+          "id": "e176",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e478",
+          "id": "e177",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e479",
+          "id": "e178",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e480",
+          "id": "e179",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e481",
+          "id": "e180",
           "sector": "none",
           "pips": null
         }
@@ -1113,60 +1113,60 @@
     {
       "name": "random-21",
       "average": 26.340140127078058,
-      "bestId": "e485",
+      "bestId": "e184",
       "rows": [
         {
-          "id": "e484",
+          "id": "e183",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e483",
+          "id": "e182",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e482",
+          "id": "e181",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e485",
+          "id": "e184",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e486",
+          "id": "e185",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e487",
+          "id": "e186",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e488",
+          "id": "e187",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e489",
+          "id": "e188",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e490",
+          "id": "e189",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e491",
+          "id": "e190",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e492",
+          "id": "e191",
           "sector": "none",
           "pips": null
         }
@@ -1175,30 +1175,30 @@
     {
       "name": "random-22",
       "average": 42.181069958847736,
-      "bestId": "e495",
+      "bestId": "e194",
       "rows": [
         {
-          "id": "e493",
+          "id": "e192",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e494",
+          "id": "e193",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e495",
+          "id": "e194",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e496",
+          "id": "e195",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e497",
+          "id": "e196",
           "sector": "none",
           "pips": null
         }
@@ -1207,35 +1207,35 @@
     {
       "name": "random-23",
       "average": 45.65966836714744,
-      "bestId": "e500",
+      "bestId": "e199",
       "rows": [
         {
-          "id": "e498",
+          "id": "e197",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e499",
+          "id": "e198",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e500",
+          "id": "e199",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e501",
+          "id": "e200",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e502",
+          "id": "e201",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e503",
+          "id": "e202",
           "sector": "none",
           "pips": null
         }
@@ -1247,12 +1247,12 @@
       "bestId": null,
       "rows": [
         {
-          "id": "e504",
+          "id": "e203",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e505",
+          "id": "e204",
           "sector": "none",
           "pips": null
         }
@@ -1261,40 +1261,40 @@
     {
       "name": "random-25",
       "average": 44.10811917241281,
-      "bestId": "e508",
+      "bestId": "e207",
       "rows": [
         {
-          "id": "e506",
+          "id": "e205",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e507",
+          "id": "e206",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e508",
+          "id": "e207",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e509",
+          "id": "e208",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e510",
+          "id": "e209",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e511",
+          "id": "e210",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e512",
+          "id": "e211",
           "sector": "none",
           "pips": null
         }
@@ -1306,12 +1306,12 @@
       "bestId": null,
       "rows": [
         {
-          "id": "e513",
+          "id": "e212",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e514",
+          "id": "e213",
           "sector": "none",
           "pips": null
         }
@@ -1320,40 +1320,40 @@
     {
       "name": "random-27",
       "average": 53.81641310771649,
-      "bestId": "e518",
+      "bestId": "e217",
       "rows": [
         {
-          "id": "e515",
+          "id": "e214",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e516",
+          "id": "e215",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e517",
+          "id": "e216",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e518",
+          "id": "e217",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e519",
+          "id": "e218",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e520",
+          "id": "e219",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e521",
+          "id": "e220",
           "sector": "none",
           "pips": null
         }
@@ -1362,30 +1362,30 @@
     {
       "name": "random-28",
       "average": 19.53416020467136,
-      "bestId": "e524",
+      "bestId": "e223",
       "rows": [
         {
-          "id": "e522",
+          "id": "e221",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e523",
+          "id": "e222",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e524",
+          "id": "e223",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e525",
+          "id": "e224",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e526",
+          "id": "e225",
           "sector": "none",
           "pips": null
         }
@@ -1394,40 +1394,40 @@
     {
       "name": "random-29",
       "average": 53.09006513491416,
-      "bestId": "e531",
+      "bestId": "e230",
       "rows": [
         {
-          "id": "e527",
+          "id": "e226",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e528",
+          "id": "e227",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e529",
+          "id": "e228",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e530",
+          "id": "e229",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e532",
+          "id": "e231",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e531",
+          "id": "e230",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e533",
+          "id": "e232",
           "sector": "none",
           "pips": null
         }
@@ -1436,45 +1436,45 @@
     {
       "name": "random-30",
       "average": 31.34595647876943,
-      "bestId": "e535",
+      "bestId": "e234",
       "rows": [
         {
-          "id": "e534",
+          "id": "e233",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e535",
+          "id": "e234",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e536",
+          "id": "e235",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e537",
+          "id": "e236",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e538",
+          "id": "e237",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e539",
+          "id": "e238",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e540",
+          "id": "e239",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e541",
+          "id": "e240",
           "sector": "none",
           "pips": null
         }
@@ -1483,30 +1483,30 @@
     {
       "name": "random-31",
       "average": 28.861570816234334,
-      "bestId": "e543",
+      "bestId": "e242",
       "rows": [
         {
-          "id": "e542",
+          "id": "e241",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e544",
+          "id": "e243",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e543",
+          "id": "e242",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e545",
+          "id": "e244",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e546",
+          "id": "e245",
           "sector": "none",
           "pips": null
         }
@@ -1515,50 +1515,50 @@
     {
       "name": "random-32",
       "average": 20.14252929229244,
-      "bestId": "e552",
+      "bestId": "e251",
       "rows": [
         {
-          "id": "e547",
+          "id": "e246",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e548",
+          "id": "e247",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e549",
+          "id": "e248",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e550",
+          "id": "e249",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e551",
+          "id": "e250",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e552",
+          "id": "e251",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e553",
+          "id": "e252",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e554",
+          "id": "e253",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e555",
+          "id": "e254",
           "sector": "none",
           "pips": null
         }
@@ -1567,40 +1567,40 @@
     {
       "name": "random-33",
       "average": 16.608117447917703,
-      "bestId": "e561",
+      "bestId": "e260",
       "rows": [
         {
-          "id": "e556",
+          "id": "e255",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e558",
+          "id": "e257",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e557",
+          "id": "e256",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e559",
+          "id": "e258",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e560",
+          "id": "e259",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e561",
+          "id": "e260",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e562",
+          "id": "e261",
           "sector": "none",
           "pips": null
         }
@@ -1609,20 +1609,20 @@
     {
       "name": "random-34",
       "average": 8.881199538638985,
-      "bestId": "e564",
+      "bestId": "e263",
       "rows": [
         {
-          "id": "e563",
+          "id": "e262",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e564",
+          "id": "e263",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e565",
+          "id": "e264",
           "sector": "none",
           "pips": null
         }
@@ -1631,35 +1631,35 @@
     {
       "name": "random-35",
       "average": 30.08452805732413,
-      "bestId": "e567",
+      "bestId": "e266",
       "rows": [
         {
-          "id": "e566",
+          "id": "e265",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e567",
+          "id": "e266",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e568",
+          "id": "e267",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e569",
+          "id": "e268",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e570",
+          "id": "e269",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e571",
+          "id": "e270",
           "sector": "none",
           "pips": null
         }
@@ -1668,30 +1668,30 @@
     {
       "name": "random-36",
       "average": 20.309583199506427,
-      "bestId": "e573",
+      "bestId": "e272",
       "rows": [
         {
-          "id": "e572",
+          "id": "e271",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e573",
+          "id": "e272",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e574",
+          "id": "e273",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e575",
+          "id": "e274",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e576",
+          "id": "e275",
           "sector": "none",
           "pips": null
         }
@@ -1700,55 +1700,55 @@
     {
       "name": "random-37",
       "average": 26.100677768680843,
-      "bestId": "e577",
+      "bestId": "e276",
       "rows": [
         {
-          "id": "e577",
+          "id": "e276",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e578",
+          "id": "e277",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e579",
+          "id": "e278",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e580",
+          "id": "e279",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e581",
+          "id": "e280",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e582",
+          "id": "e281",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e583",
+          "id": "e282",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e584",
+          "id": "e283",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e585",
+          "id": "e284",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e586",
+          "id": "e285",
           "sector": "none",
           "pips": null
         }
@@ -1757,35 +1757,35 @@
     {
       "name": "random-38",
       "average": 46.391752577319586,
-      "bestId": "e587",
+      "bestId": "e286",
       "rows": [
         {
-          "id": "e587",
+          "id": "e286",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e588",
+          "id": "e287",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e589",
+          "id": "e288",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e590",
+          "id": "e289",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e591",
+          "id": "e290",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e592",
+          "id": "e291",
           "sector": "none",
           "pips": null
         }
@@ -1794,55 +1794,55 @@
     {
       "name": "random-39",
       "average": 49.71210975880326,
-      "bestId": "e600",
+      "bestId": "e299",
       "rows": [
         {
-          "id": "e593",
+          "id": "e292",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e594",
+          "id": "e293",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e596",
+          "id": "e295",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e595",
+          "id": "e294",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e597",
+          "id": "e296",
           "sector": "none",
           "pips": null
         },
         {
-          "id": "e598",
+          "id": "e297",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e599",
+          "id": "e298",
           "sector": "down",
           "pips": 1
         },
         {
-          "id": "e600",
+          "id": "e299",
           "sector": "best",
           "pips": 5
         },
         {
-          "id": "e601",
+          "id": "e300",
           "sector": "up",
           "pips": 5
         },
         {
-          "id": "e602",
+          "id": "e301",
           "sector": "none",
           "pips": null
         }

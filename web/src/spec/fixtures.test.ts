@@ -73,6 +73,7 @@ function rng(seed: number) {
 }
 
 function scenarios(): { name: string; entries: FuelEntry[] }[] {
+  seq = 0 // stable ids regardless of test order
   const list: { name: string; entries: FuelEntry[] }[] = [
     { name: "empty", entries: [] },
     { name: "single-full", entries: [e(1000, 10, 1000)] },
@@ -192,6 +193,7 @@ describe("golden fixtures", () => {
   })
 
   it("odometer warning", () => {
+    seq = 0
     const entries = [e(1000, 10, 1000, { date: "2026-01-01" }), e(1500, 8, 800, { date: "2026-01-10" }), e(2500, 9, 900, { date: "2026-02-01" })]
     const probes = [500, 1000, 1200, 1500, 2000, 2500, 2600, 1234567]
     const cases = probes.flatMap((odometer) => [

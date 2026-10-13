@@ -1,7 +1,7 @@
 {
   "entries": [
     {
-      "id": "e603",
+      "id": "e1",
       "vehicleId": "v1",
       "date": "2026-01-01",
       "odometerReading": 1000,
@@ -12,7 +12,7 @@
       "missedPrevious": false
     },
     {
-      "id": "e604",
+      "id": "e2",
       "vehicleId": "v1",
       "date": "2026-01-10",
       "odometerReading": 1500,
@@ -23,7 +23,7 @@
       "missedPrevious": false
     },
     {
-      "id": "e605",
+      "id": "e3",
       "vehicleId": "v1",
       "date": "2026-02-01",
       "odometerReading": 2500,
@@ -42,7 +42,7 @@
     },
     {
       "odometer": 500,
-      "excludeId": "e604",
+      "excludeId": "e2",
       "warning": "Must be less than the next entry's reading of 1,000 km."
     },
     {
@@ -52,7 +52,7 @@
     },
     {
       "odometer": 1000,
-      "excludeId": "e604",
+      "excludeId": "e2",
       "warning": "Another entry on 2026-01-01 already has this exact odometer reading."
     },
     {
@@ -62,7 +62,7 @@
     },
     {
       "odometer": 1200,
-      "excludeId": "e604",
+      "excludeId": "e2",
       "warning": "Must be less than the next entry's reading of 2,500 km."
     },
     {
@@ -72,7 +72,7 @@
     },
     {
       "odometer": 1500,
-      "excludeId": "e604",
+      "excludeId": "e2",
       "warning": "Must be less than the next entry's reading of 2,500 km."
     },
     {
@@ -82,7 +82,7 @@
     },
     {
       "odometer": 2000,
-      "excludeId": "e604",
+      "excludeId": "e2",
       "warning": "Must be less than the next entry's reading of 2,500 km."
     },
     {
@@ -92,7 +92,7 @@
     },
     {
       "odometer": 2500,
-      "excludeId": "e604",
+      "excludeId": "e2",
       "warning": "Another entry on 2026-02-01 already has this exact odometer reading."
     },
     {
@@ -102,7 +102,7 @@
     },
     {
       "odometer": 2600,
-      "excludeId": "e604",
+      "excludeId": "e2",
       "warning": null
     },
     {
@@ -112,7 +112,7 @@
     },
     {
       "odometer": 1234567,
-      "excludeId": "e604",
+      "excludeId": "e2",
       "warning": null
     }
   ]
