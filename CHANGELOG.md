@@ -11,8 +11,11 @@ First versioned release, and the first with a native Android app alongside the w
 
 - **Android app.** A native Kotlin app with the same features and Ember look as the web app, running
   on the same backend: vehicles, fill-ups, Overview / Entries / Stats / Trends, CSV import, light and
-  dark themes, and optional cloud account with two-way sync.
-- **Version in Settings (web).** Settings now shows the app version.
+  dark themes, and an optional cloud account with two-way sync. Everything works offline.
+- **Update notifications (Android).** The app checks GitHub for a newer release when it opens and shows
+  what's new, with "Update", "Not now" and "Skip this version". Updating opens the release page, where the
+  signed APK is attached. Install it over the old one and your data stays.
+- **Version in Settings (both clients).** Settings shows the app version.
 
 ### Changed
 
