@@ -136,14 +136,15 @@ Both should return `403 Forbidden` (from our own `.htaccess` rules), never a `20
 
 ## 10. Deploy the frontend to `combust.slowatcoding.com`
 
-1. On your computer, in the project root, set the API URL and build:
+1. On your computer, in the `web/` folder, set the API URL and build:
 
    ```bash
+   cd web
    echo "VITE_API_URL=https://api.combust.slowatcoding.com" >> .env
    npm run build
    ```
 
-   This produces a `dist/` folder containing static HTML/JS/CSS.
+   This produces a `web/dist/` folder containing static HTML/JS/CSS.
 
 2. In cPanel, make sure `combust.slowatcoding.com` exists as a domain/subdomain (Domains) with its own document root, e.g. `combust_frontend`.
 3. Upload the **contents** of `dist/` (not the `dist` folder itself) into that document root, via File Manager (zip + extract, as in step 5) or `git`.
