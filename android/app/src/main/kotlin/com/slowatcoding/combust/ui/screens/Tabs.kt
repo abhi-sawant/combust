@@ -134,7 +134,7 @@ fun OverviewScreen(
                     "Log a fill-up right after you pay and Combust starts working out mileage from the second one on.",
                     style = EmberType.body15.copy(color = c.mutedForeground),
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     PillButton("Add first entry", onAddEntry, style = ButtonStyle.Flame, size = ButtonSize.Lg)
                     PillButton("Import from CSV", onImportCsv, style = ButtonStyle.Card, size = ButtonSize.Lg)
                 }

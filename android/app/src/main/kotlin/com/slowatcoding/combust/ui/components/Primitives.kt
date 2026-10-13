@@ -165,7 +165,7 @@ fun PillButton(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) Icon(icon, fg, size = 18.dp)
-        Text(text, style = EmberType.button.copy(color = fg))
+        Text(text, style = EmberType.button.copy(color = fg), maxLines = 1, softWrap = false)
     }
 }
 
