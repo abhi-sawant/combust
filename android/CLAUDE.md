@@ -11,6 +11,8 @@ Build with Android Studio's JDK: `export JAVA_HOME="/Applications/Android Studio
   providers), WorkManager `SyncWorker`. Manual DI via `CombustApp.controller`; no ViewModels/Hilt.
 - Design tokens: `ui/theme/Theme.kt` mirrors `web/src/index.css`. Never use raw hex or stock Material colours.
   Icons are generated from lucide-react (`ui/components/LucideIcons.kt`); fonts in `res/font`.
+- Update check: `AppUpdate.kt` (pure, tested) + `update/UpdateChecker.kt` + `UpdateDialog`; once per app open, shows the
+  GitHub release notes, "Skip this version" is remembered. The app does not install updates itself (sideloaded).
 - Version comes from the root `VERSION` (`versionCode = major*10000 + minor*100 + patch`).
 - API URL: `BuildConfig.API_URL` (default prod; `-PcombustApiUrl=...` to override).
 - Signing: gitignored `android/keystore.properties` (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`), keystore in

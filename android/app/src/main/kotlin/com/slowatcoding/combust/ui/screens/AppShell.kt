@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +46,7 @@ import com.slowatcoding.combust.ui.components.Icon
 import com.slowatcoding.combust.ui.components.Lucide
 import com.slowatcoding.combust.ui.components.LucideIcon
 import com.slowatcoding.combust.ui.components.PillButton
+import com.slowatcoding.combust.ui.components.UpdateDialog
 import com.slowatcoding.combust.ui.components.floating
 import com.slowatcoding.combust.ui.theme.Ember
 import com.slowatcoding.combust.ui.theme.EmberType
@@ -119,6 +121,10 @@ private fun AppShell(controller: AppController) {
 
     BackHandler(enabled = tab != Tab.Overview) { tab = Tab.Overview }
 
+    // Once per app open, only after the main UI is showing (never over auth or sync gates).
+    LaunchedEffect(Unit) { controller.checkForUpdate() }
+    val update by controller.availableUpdate.collectAsState()
+
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             Header(onImport = { importOpen = true }, onSettings = { settingsOpen = true })
@@ -163,6 +169,9 @@ private fun AppShell(controller: AppController) {
             onSubmit = { controller.updateEntry(e.id, it) },
             onDelete = { controller.deleteEntry(e.id) },
         )
+    }
+    update?.let { release ->
+        UpdateDialog(release, onNotNow = controller::dismissUpdate, onSkip = { controller.skipUpdate(release) })
     }
     if (importOpen) ImportCsvSheet(onDismiss = { importOpen = false }, onImport = controller::importEntries)
     if (vehicleOpen) VehicleSwitcherSheet(controller) { vehicleOpen = false }

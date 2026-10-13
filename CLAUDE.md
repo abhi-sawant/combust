@@ -28,6 +28,11 @@ It never commits, tags or pushes; afterwards: commit `release: X.Y.Z`, merge to 
 GitHub Release with the artifacts and the CHANGELOG section as notes. Signing config lives in the
 gitignored `android/keystore.properties`; never commit it, and always sign with the same keystore.
 
+The Android app checks `abhi-sawant/combust` releases/latest on each app open and shows an "Update available" dialog
+(Update opens the release page). So every release must be a published (not draft, not pre-release) GitHub Release
+with a SemVer tag `vX.Y.Z` (matching `VERSION`), the CHANGELOG section as its body, and the APK attached.
+The repo must stay public (the check is unauthenticated).
+
 ## Backend API (base URL `VITE_API_URL` / Android `BuildConfig.API_URL`)
 
 JSON; errors `{error, details?}`. Auth: `Authorization: Bearer <jwt>` (HS256, 30 days, no refresh).

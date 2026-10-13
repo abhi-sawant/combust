@@ -17,6 +17,8 @@ import com.slowatcoding.combust.core.ChangeSource
 import com.slowatcoding.combust.core.FuelEntry
 import com.slowatcoding.combust.core.FuelEntryInput
 import com.slowatcoding.combust.core.LocalData
+import com.slowatcoding.combust.core.ReleaseInfo
+import com.slowatcoding.combust.core.shouldPromptUpdate
 import com.slowatcoding.combust.core.SyncEngine
 import com.slowatcoding.combust.core.Vehicle
 import com.slowatcoding.combust.data.AuthUser
@@ -27,6 +29,8 @@ import com.slowatcoding.combust.data.ThemeChoice
 import com.slowatcoding.combust.net.ApiException
 import com.slowatcoding.combust.net.AuthResult
 import com.slowatcoding.combust.net.CombustApi
+import com.slowatcoding.combust.update.SkippedUpdateStore
+import com.slowatcoding.combust.update.UpdateChecker
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -362,6 +366,40 @@ class AppController(private val context: Context) {
         prefs.activeVehicleId = null
         _activeVehicleId.value = null
         refreshVehicles()
+    }
+
+    // --- App updates ---------------------------------------------------------------
+
+    private val updateChecker = UpdateChecker()
+    private val skippedUpdate = SkippedUpdateStore(context)
+    private var updateChecked = false
+
+    private val _availableUpdate = MutableStateFlow<ReleaseInfo?>(null)
+
+    /** A newer, not-skipped release to offer; the dialog shows while this is non-null. */
+    val availableUpdate: StateFlow<ReleaseInfo?> = _availableUpdate.asStateFlow()
+
+    /** Once per process (every app open), after the main UI is showing. Failures are silent. */
+    fun checkForUpdate() {
+        if (updateChecked) return
+        updateChecked = true
+        scope.launch {
+            val release = updateChecker.fetchLatest() ?: return@launch
+            if (shouldPromptUpdate(release, BuildConfig.VERSION_NAME, skippedUpdate.get())) {
+                _availableUpdate.value = release
+            }
+        }
+    }
+
+    /** "Not now": hide the dialog; the next app open asks again. */
+    fun dismissUpdate() {
+        _availableUpdate.value = null
+    }
+
+    /** "Skip this version": hide it and stay quiet until a newer release is published. */
+    fun skipUpdate(release: ReleaseInfo) {
+        skippedUpdate.set(release.version)
+        _availableUpdate.value = null
     }
 
     // --- Preferences -------------------------------------------------------------
