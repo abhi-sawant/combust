@@ -16,10 +16,14 @@ import {
   deriveEntries,
   getOdometerWarning,
   groupByMonth,
+  latestOdometer,
+  computeServiceStatus,
+  sortByDue,
 } from "@/lib/calculations"
 import { parseFuelEntriesCsv } from "@/lib/csv"
 import { pipsOf, sectorOf, stationCode } from "@/lib/sector"
 import type { FuelEntry } from "@/types/entry"
+import type { ServiceItem } from "@/types/service"
 
 const FIXTURE_DIR = resolve(__dirname, "../../../spec/fixtures")
 const UPDATE = process.env.UPDATE_FIXTURES === "1"
@@ -211,6 +215,47 @@ describe("golden fixtures", () => {
       { id: "d", date: "2025-03-01" },
     ]
     check("group-by-month", { rows, groups: groupByMonth(rows) })
+  })
+
+  it("service status", () => {
+    type Item = Pick<ServiceItem, "lastChangedDate" | "lastChangedOdometer" | "intervalKm" | "intervalMonths">
+    const item = (
+      lastChangedDate: string | null,
+      lastChangedOdometer: number | null,
+      intervalKm: number | null,
+      intervalMonths: number | null
+    ): Item => ({ lastChangedDate, lastChangedOdometer, intervalKm, intervalMonths })
+    const today = "2026-06-15"
+    const items: { name: string; item: Item; currentOdometer: number | null }[] = [
+      { name: "never-changed", item: item(null, null, 5000, 6), currentOdometer: 20000 },
+      { name: "no-interval", item: item("2026-01-01", 15000, null, null), currentOdometer: 20000 },
+      { name: "km-ok", item: item("2026-05-01", 18000, 5000, null), currentOdometer: 19000 },
+      { name: "km-due-soon", item: item("2026-05-01", 15500, 5000, null), currentOdometer: 20100 },
+      { name: "km-exactly-due", item: item("2026-05-01", 15000, 5000, null), currentOdometer: 20000 },
+      { name: "km-overdue", item: item("2026-05-01", 14000, 5000, null), currentOdometer: 20000 },
+      { name: "date-ok", item: item("2026-05-01", null, null, 12), currentOdometer: null },
+      { name: "date-due-soon", item: item("2025-12-20", null, null, 6), currentOdometer: null },
+      { name: "date-overdue", item: item("2025-01-10", null, null, 12), currentOdometer: null },
+      { name: "month-end-clamp", item: item("2025-08-31", null, null, 6), currentOdometer: null },
+      { name: "both-km-fine-date-overdue", item: item("2025-01-10", 19500, 5000, 12), currentOdometer: 20000 },
+      { name: "both-date-fine-km-overdue", item: item("2026-06-01", 10000, 5000, 12), currentOdometer: 20000 },
+      { name: "km-interval-without-current-odometer", item: item("2026-05-01", 15000, 5000, null), currentOdometer: null },
+      { name: "km-interval-without-last-odometer", item: item("2026-05-01", null, 5000, null), currentOdometer: 20000 },
+      { name: "km-unknown-date-due-soon", item: item("2025-12-20", 15000, 5000, 6), currentOdometer: null },
+    ]
+    const rows = items.map(({ name, item, currentOdometer }) => ({
+      name,
+      item,
+      currentOdometer,
+      status: computeServiceStatus(item, currentOdometer, today),
+    }))
+    const odometers = [[], [{ odometerReading: 1000 }], [{ odometerReading: 3000 }, { odometerReading: 1000 }, { odometerReading: 2000 }]]
+    check("service-status", {
+      today,
+      rows,
+      sortedNames: sortByDue(rows).map((r) => r.name),
+      latestOdometer: odometers.map((entries) => ({ entries, latest: latestOdometer(entries) })),
+    })
   })
 
   it("csv", () => {

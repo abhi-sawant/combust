@@ -3,10 +3,12 @@ import {
   localClearAll,
   localCountEntriesByVehicle,
   localEntries,
+  localServices,
   localVehicles,
 } from "@/lib/local-db"
 import { getStoredToken } from "@/lib/auth-token"
 import type { FuelEntry, FuelEntryInput } from "@/types/entry"
+import type { ServiceItem, ServiceItemInput } from "@/types/service"
 import type { Vehicle, VehicleInput } from "@/types/vehicle"
 
 /**
@@ -29,6 +31,17 @@ export async function bulkAddEntries(entries: FuelEntryInput[], vehicleId: strin
   return localBulkAddEntries(entries, vehicleId)
 }
 
+/** Storage contract for service items (periodic parts/services). */
+export interface ServicesRepository {
+  getAll(vehicleId: string): Promise<ServiceItem[]>
+  add(input: ServiceItemInput, vehicleId: string): Promise<ServiceItem>
+  addMany(inputs: ServiceItemInput[], vehicleId: string): Promise<ServiceItem[]>
+  update(id: string, input: ServiceItemInput): Promise<ServiceItem>
+  delete(id: string): Promise<void>
+}
+
+export const servicesRepository: ServicesRepository = localServices
+
 /** Storage contract for vehicles. */
 export interface VehiclesRepository {
   getAll(): Promise<Vehicle[]>
@@ -39,7 +52,7 @@ export interface VehiclesRepository {
 
 export const vehiclesRepository: VehiclesRepository = localVehicles
 
-/** Wipes all vehicles and fuel entries. Preferences (theme, name) are untouched. */
+/** Wipes all vehicles, fuel entries and service items. Preferences (theme, name) are untouched. */
 export async function clearAllData(): Promise<void> {
   // Signed in: keep tombstones so the deletion reaches the cloud account and other devices.
   await localClearAll(getStoredToken() !== null)

@@ -82,12 +82,14 @@ class SyncEngine(
 
         val dirtyVehicles = store.allVehicles().filter { it.dirty }
         val dirtyEntries = store.allEntries().filter { it.dirty }
+        val dirtyServices = store.allServices().filter { it.dirty }
 
         val response = api.sync(
             SyncRequest(
                 cursor = cursor,
                 vehicles = dirtyVehicles.map { it.toWire() },
                 entries = dirtyEntries.map { it.toWire() },
+                services = dirtyServices.map { it.toWire() },
             ),
         )
 
@@ -95,6 +97,7 @@ class SyncEngine(
             response,
             pushedVehicles = dirtyVehicles.associate { it.id to it.updatedAt },
             pushedEntries = dirtyEntries.associate { it.id to it.updatedAt },
+            pushedServices = dirtyServices.associate { it.id to it.updatedAt },
         )
 
         store.setMeta(CURSOR_KEY, response.cursor.toString())
@@ -105,6 +108,7 @@ class SyncEngine(
     private suspend fun markAllDirty() = store.transaction {
         store.putVehicles(store.allVehicles().map { it.copy(dirty = true) })
         store.putEntries(store.allEntries().map { it.copy(dirty = true) })
+        store.putServices(store.allServices().map { it.copy(dirty = true) })
     }
 
     /**
@@ -115,6 +119,7 @@ class SyncEngine(
         response: SyncResponse,
         pushedVehicles: Map<String, Long>,
         pushedEntries: Map<String, Long>,
+        pushedServices: Map<String, Long>,
     ): Boolean = store.transaction {
         var changed = false
 
@@ -132,6 +137,13 @@ class SyncEngine(
                 changed = true
             }
         }
+        for (remote in response.services) {
+            val current = store.service(remote.id)
+            if (current == null || remote.updatedAt > current.updatedAt) {
+                store.putServices(listOf(remote.toStored(dirty = false)))
+                changed = true
+            }
+        }
 
         for ((id, sentAt) in pushedVehicles) {
             val current = store.vehicle(id)
@@ -143,6 +155,12 @@ class SyncEngine(
             val current = store.entry(id)
             if (current != null && current.dirty && current.updatedAt == sentAt) {
                 store.putEntries(listOf(current.copy(dirty = false)))
+            }
+        }
+        for ((id, sentAt) in pushedServices) {
+            val current = store.service(id)
+            if (current != null && current.dirty && current.updatedAt == sentAt) {
+                store.putServices(listOf(current.copy(dirty = false)))
             }
         }
         changed

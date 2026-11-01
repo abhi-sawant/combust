@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { VehicleChip } from '@/components/vehicles/vehicle-chip'
 import { FillupRow } from '@/components/entries/fillup-row'
 import { MileageBars } from '@/components/overview/mileage-bars'
+import { DueCard } from '@/components/service/due-card'
 import { useEntries } from '@/hooks/entries-context'
 import { computeOverallStats } from '@/lib/calculations'
 import { formatAmount, formatKm, formatNumber } from '@/lib/format'
@@ -12,11 +13,18 @@ interface OverviewDashboardProps {
   onImportCsv: () => void
   onViewAllEntries: () => void
   onOpenVehicle: () => void
+  onOpenService: () => void
 }
 
 const sectionTitle = 'font-display text-[22px] leading-none font-bold tracking-tight'
 
-export function OverviewDashboard({ onAddEntry, onImportCsv, onViewAllEntries, onOpenVehicle }: OverviewDashboardProps) {
+export function OverviewDashboard({
+  onAddEntry,
+  onImportCsv,
+  onViewAllEntries,
+  onOpenVehicle,
+  onOpenService,
+}: OverviewDashboardProps) {
   const { derivedEntries, isLoading } = useEntries()
   const stats = computeOverallStats(derivedEntries)
 
@@ -100,6 +108,10 @@ export function OverviewDashboard({ onAddEntry, onImportCsv, onViewAllEntries, o
           </div>
         ))}
       </dl>
+
+      <div className='mt-5 empty:hidden'>
+        <DueCard onOpenService={onOpenService} />
+      </div>
 
       <section aria-label='Recent fill-ups' className='mt-5'>
         <div className='mb-3 flex items-baseline justify-between gap-2 px-1.5'>

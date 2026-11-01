@@ -58,14 +58,16 @@ final class VehicleRepository
         $stmt = Database::connection()->prepare('UPDATE vehicles SET deleted_at = ?, updated_at = ?, synced_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
         $now = Clock::nowMs();
         $stmt->execute([$now, $now, $now, $id, $userId]);
+        $this->tombstoneChildren('service_items', 'si', $userId, $now, $id);
         $this->tombstoneEntries($userId, $now, $id);
         return $stmt->rowCount() > 0;
     }
 
-    /** Tombstones all of the user's vehicles and entries so other devices learn of the reset on their next sync. */
+    /** Tombstones all of the user's vehicles, entries and services so other devices learn of the reset on their next sync. */
     public function resetForUser(int $userId): void
     {
         $now = Clock::nowMs();
+        $this->tombstoneChildren('service_items', 'si', $userId, $now);
         $this->tombstoneEntries($userId, $now);
         $stmt = Database::connection()->prepare(
             'UPDATE vehicles SET deleted_at = ?, updated_at = ?, synced_at = ? WHERE user_id = ? AND deleted_at IS NULL'
@@ -75,9 +77,14 @@ final class VehicleRepository
 
     private function tombstoneEntries(int $userId, int $now, ?string $vehicleId = null): void
     {
-        $sql = 'UPDATE fuel_entries fe JOIN vehicles v ON v.id = fe.vehicle_id
-                SET fe.deleted_at = ?, fe.updated_at = ?, fe.synced_at = ?
-                WHERE v.user_id = ? AND fe.deleted_at IS NULL';
+        $this->tombstoneChildren('fuel_entries', 'fe', $userId, $now, $vehicleId);
+    }
+
+    private function tombstoneChildren(string $table, string $alias, int $userId, int $now, ?string $vehicleId = null): void
+    {
+        $sql = "UPDATE $table $alias JOIN vehicles v ON v.id = $alias.vehicle_id
+                SET $alias.deleted_at = ?, $alias.updated_at = ?, $alias.synced_at = ?
+                WHERE v.user_id = ? AND $alias.deleted_at IS NULL";
         $params = [$now, $now, $now, $userId];
         if ($vehicleId !== null) {
             $sql .= ' AND v.id = ?';

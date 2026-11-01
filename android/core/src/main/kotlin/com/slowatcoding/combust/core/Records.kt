@@ -82,6 +82,7 @@ data class SyncRequest(
     val cursor: Long,
     val vehicles: List<WireVehicle>,
     val entries: List<WireEntry>,
+    val services: List<WireServiceItem>,
 )
 
 @Serializable
@@ -89,4 +90,49 @@ data class SyncResponse(
     val cursor: Long,
     val vehicles: List<WireVehicle> = emptyList(),
     val entries: List<WireEntry> = emptyList(),
+    /** Absent when talking to a backend that predates service items. */
+    val services: List<WireServiceItem> = emptyList(),
 )
+
+data class StoredServiceItem(
+    val id: String,
+    val vehicleId: String,
+    val name: String,
+    val lastChangedDate: String?,
+    val lastChangedOdometer: Double?,
+    val intervalKm: Double?,
+    val intervalMonths: Int?,
+    val notes: String?,
+    val updatedAt: Long,
+    val deletedAt: Long?,
+    val dirty: Boolean,
+) {
+    fun toItem() = ServiceItem(
+        id, vehicleId, name, lastChangedDate, lastChangedOdometer, intervalKm, intervalMonths, notes,
+    )
+
+    fun toWire() = WireServiceItem(
+        id, vehicleId, name, lastChangedDate, lastChangedOdometer, intervalKm, intervalMonths, notes,
+        updatedAt, deletedAt,
+    )
+}
+
+/** `POST /sync` service item shape. */
+@Serializable
+data class WireServiceItem(
+    val id: String,
+    val vehicleId: String,
+    val name: String,
+    val lastChangedDate: String? = null,
+    val lastChangedOdometer: Double? = null,
+    val intervalKm: Double? = null,
+    val intervalMonths: Int? = null,
+    val notes: String? = null,
+    val updatedAt: Long,
+    val deletedAt: Long? = null,
+) {
+    fun toStored(dirty: Boolean) = StoredServiceItem(
+        id, vehicleId, name, lastChangedDate, lastChangedOdometer, intervalKm, intervalMonths, notes,
+        updatedAt, deletedAt, dirty,
+    )
+}

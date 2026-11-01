@@ -11,6 +11,7 @@ import org.junit.Test
 class InMemoryStore : RecordStore {
     val vehicles = LinkedHashMap<String, StoredVehicle>()
     val entries = LinkedHashMap<String, StoredEntry>()
+    val services = LinkedHashMap<String, StoredServiceItem>()
     val meta = HashMap<String, String>()
     override suspend fun <R> transaction(block: suspend () -> R): R = block()
     override suspend fun allVehicles() = vehicles.values.toList()
@@ -20,7 +21,11 @@ class InMemoryStore : RecordStore {
     override suspend fun entriesForVehicle(vehicleId: String) = entries.values.filter { it.vehicleId == vehicleId }
     override suspend fun entry(id: String) = entries[id]
     override suspend fun putEntries(entries: List<StoredEntry>) { entries.forEach { this.entries[it.id] = it } }
-    override suspend fun clearRecords() { vehicles.clear(); entries.clear() }
+    override suspend fun allServices() = services.values.toList()
+    override suspend fun servicesForVehicle(vehicleId: String) = services.values.filter { it.vehicleId == vehicleId }
+    override suspend fun service(id: String) = services[id]
+    override suspend fun putServices(services: List<StoredServiceItem>) { services.forEach { this.services[it.id] = it } }
+    override suspend fun clearRecords() { vehicles.clear(); entries.clear(); services.clear() }
     override suspend fun getMeta(key: String) = meta[key]
     override suspend fun setMeta(key: String, value: String) { meta[key] = value }
     override suspend fun deleteMeta(key: String) { meta.remove(key) }
@@ -30,6 +35,7 @@ class InMemoryStore : RecordStore {
 class FakeServer(var now: Long = 1_000_000) : SyncApi {
     val vehicles = LinkedHashMap<String, Pair<WireVehicle, Long>>()
     val entries = LinkedHashMap<String, Pair<WireEntry, Long>>()
+    val services = LinkedHashMap<String, Pair<WireServiceItem, Long>>()
     var failNext = false
     var calls = 0
 
@@ -45,10 +51,15 @@ class FakeServer(var now: Long = 1_000_000) : SyncApi {
             val cur = entries[e.id]
             if (cur == null || e.updatedAt > cur.first.updatedAt) entries[e.id] = e to now
         }
+        for (s in request.services) {
+            val cur = services[s.id]
+            if (cur == null || s.updatedAt > cur.first.updatedAt) services[s.id] = s to now
+        }
         return SyncResponse(
             cursor = now,
             vehicles = vehicles.values.filter { it.second >= request.cursor }.map { it.first },
             entries = entries.values.filter { it.second >= request.cursor }.map { it.first },
+            services = services.values.filter { it.second >= request.cursor }.map { it.first },
         )
     }
 }
@@ -180,5 +191,52 @@ class SyncTest {
         a.local.clearAll(keepTombstones = true)
         a.sync.syncNow(); b.sync.syncNow()
         assertTrue(b.local.vehicles().isEmpty())
+    }
+
+    private fun service(name: String, km: Double? = 5000.0) =
+        ServiceItemInput(name, "2026-01-01", 1000.0, km, 6, null)
+
+    @Test
+    fun servicesSyncBetweenDevicesWithLastWriteWinsAndCascade() = runBlocking {
+        val server = FakeServer()
+        val a = Device(server, MutableClock(1000), "a")
+        val b = Device(server, MutableClock(1000), "b")
+        val v = a.local.addVehicle("Bike", null)
+        val oil = a.local.addService(service("Engine oil"), v.id)
+        val tyre = a.local.addService(service("Front tyre"), v.id)
+        a.sync.syncNow(); b.sync.syncNow()
+        assertEquals(listOf("Engine oil", "Front tyre"), b.local.services(v.id).map { it.name })
+
+        a.clock.t = 5000; a.local.updateService(oil.id, service("Oil A"))
+        b.clock.t = 6000; b.local.updateService(oil.id, service("Oil B", km = null))
+        a.sync.syncNow(); b.sync.syncNow(); a.sync.syncNow()
+        val oilNow = a.local.services(v.id).single { it.id == oil.id }
+        assertEquals("Oil B", oilNow.name)
+        assertNull(oilNow.intervalKm)
+        assertFalse(a.store.allServices().any { it.dirty })
+
+        b.clock.t = 7000; b.local.deleteService(tyre.id)
+        b.sync.syncNow(); a.sync.syncNow()
+        assertEquals(1, a.local.services(v.id).size)
+
+        a.clock.t = 8000; a.local.deleteVehicle(v.id)
+        a.sync.syncNow(); b.sync.syncNow()
+        assertTrue(b.local.services(v.id).isEmpty())
+        assertTrue(b.store.allServices().all { it.deletedAt != null })
+    }
+
+    @Test
+    fun responseWithoutServicesIsEmptyAndClearAllTombstonesServices() = runBlocking {
+        val parsed = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+            .decodeFromString<SyncResponse>("""{"cursor":5}""")
+        assertTrue(parsed.services.isEmpty())
+
+        val d = Device(FakeServer(), MutableClock(1000), "a")
+        val v = d.local.addVehicle("Bike", null)
+        d.local.addServices(listOf(service("A"), service("B")), v.id)
+        d.local.clearAll(keepTombstones = true)
+        assertTrue(d.store.allServices().all { it.deletedAt != null && it.dirty })
+        d.local.clearAll(keepTombstones = false)
+        assertTrue(d.store.allServices().isEmpty())
     }
 }

@@ -33,6 +33,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slowatcoding.combust.core.DerivedEntry
 import com.slowatcoding.combust.core.OverallStats
+import com.slowatcoding.combust.core.ServiceItem
+import com.slowatcoding.combust.core.ServiceListRow
+import com.slowatcoding.combust.core.ServiceStatus
+import com.slowatcoding.combust.core.ServiceStatusKind
+import com.slowatcoding.combust.core.describeLastChange
+import com.slowatcoding.combust.core.describeRemaining
 import com.slowatcoding.combust.core.TrendRange
 import com.slowatcoding.combust.core.Vehicle
 import com.slowatcoding.combust.core.computeOverallStats
@@ -112,6 +118,8 @@ fun OverviewScreen(
     onImportCsv: () -> Unit,
     onViewAll: () -> Unit,
     onOpenVehicle: () -> Unit,
+    serviceRows: List<ServiceListRow> = emptyList(),
+    onOpenService: () -> Unit = {},
 ) {
     val c = Ember.colors
     val stats = remember(derived) { computeOverallStats(derived) }
@@ -215,6 +223,8 @@ fun OverviewScreen(
                 }
             }
         }
+
+        DueCard(serviceRows, onOpenService)
     }
 }
 
@@ -300,13 +310,14 @@ private fun StatCard(icon: LucideIcon, label: String, value: String, detail: Str
 }
 
 @Composable
-fun StatsScreen(vehicle: Vehicle?, derived: List<DerivedEntry>, onOpenVehicle: () -> Unit) {
+fun StatsScreen(vehicle: Vehicle?, derived: List<DerivedEntry>, onOpenVehicle: () -> Unit, toggle: @Composable () -> Unit = {}) {
     val c = Ember.colors
     val stats: OverallStats = remember(derived) { computeOverallStats(derived) }
     val stations = remember(derived) { computeStationStats(derived) }
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         VehicleChip(vehicle, onOpenVehicle)
+        toggle()
         if (stats.entryCount == 0) {
             EmptyCard("Add a couple of fill-ups to see your stats.")
         } else {
@@ -358,13 +369,14 @@ private fun StationLine(label: String, value: String) {
 // --- Trends -------------------------------------------------------------------------------------
 
 @Composable
-fun TrendsScreen(vehicle: Vehicle?, derived: List<DerivedEntry>, onOpenVehicle: () -> Unit) {
+fun TrendsScreen(vehicle: Vehicle?, derived: List<DerivedEntry>, onOpenVehicle: () -> Unit, toggle: @Composable () -> Unit = {}) {
     val c = Ember.colors
     var range by remember { mutableStateOf(TrendRange.All) }
     val ranged = remember(derived, range) { filterByRange(derived, range, LocalDate.now()) { it.date } }
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         VehicleChip(vehicle, onOpenVehicle)
+        toggle()
         if (derived.size < 2) {
             EmptyCard("Trends will appear once you have at least two fill-ups.")
             return@Column
@@ -405,5 +417,153 @@ private fun ChartCard(title: String, subtitle: String, content: @Composable () -
             Text(subtitle, style = EmberType.body14.copy(color = c.mutedForeground))
         }
         content()
+    }
+}
+
+// --- Service ------------------------------------------------------------------------------------
+
+@Composable
+fun StatusBadge(status: ServiceStatus) {
+    when (status.status) {
+        ServiceStatusKind.Overdue -> Badge("Overdue", BadgeStyle.Destructive)
+        ServiceStatusKind.DueSoon -> Badge("Due soon", BadgeStyle.Warning)
+        ServiceStatusKind.Ok -> Badge("On track", BadgeStyle.Secondary)
+        ServiceStatusKind.Unknown -> Badge("No schedule", BadgeStyle.Outline)
+    }
+}
+
+/** Overview card listing items that are overdue or due soon; absent when nothing needs attention. */
+@Composable
+fun DueCard(rows: List<ServiceListRow>, onOpenService: () -> Unit) {
+    val c = Ember.colors
+    val attention = rows.filter { it.status.status == ServiceStatusKind.Overdue || it.status.status == ServiceStatusKind.DueSoon }
+    if (attention.isEmpty()) return
+    Column(Modifier.padding(top = 20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+            SectionTitle("Needs attention")
+            Row(
+                Modifier.clip(RoundedCornerShape(6.dp)).clickable(role = Role.Button, onClick = onOpenService).padding(2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Service", style = EmberType.body14Medium.copy(color = c.flameText))
+                Icon(Lucide.ChevronRight, c.flameText, size = 16.dp)
+            }
+        }
+        Column(Modifier.fillMaxWidth().emberCard().padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            attention.take(4).forEach { row ->
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(Radii.row)).clickable(role = Role.Button, onClick = onOpenService).padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.size(44.dp).background(c.field, CircleShape), contentAlignment = Alignment.Center) {
+                        Icon(Lucide.Wrench, c.mutedForeground, size = 20.dp)
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text(row.name, style = EmberType.body15Semi.copy(color = c.foreground), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(describeRemaining(row.status), style = EmberType.meta13.copy(color = c.mutedForeground), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    StatusBadge(row.status)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ServiceScreen(
+    vehicle: Vehicle?,
+    rows: List<ServiceListRow>,
+    currentOdometer: Double?,
+    isLoading: Boolean,
+    onOpenVehicle: () -> Unit,
+    onAdd: () -> Unit,
+    onPresets: () -> Unit,
+    onEdit: (ServiceItem) -> Unit,
+    onMarkChanged: suspend (ServiceItem) -> Unit,
+) {
+    val c = Ember.colors
+    val toast = LocalToaster.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        VehicleChip(vehicle, onOpenVehicle)
+        if (isLoading && rows.isEmpty()) return@Column
+        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+            Column(Modifier.weight(1f)) {
+                Text("Service", style = EmberType.sectionTitle.copy(color = c.foreground))
+                Text(
+                    if (currentOdometer != null) "Odometer ${formatKm(currentOdometer)} (from your latest fill-up)" else "Add a fill-up to track by distance",
+                    style = EmberType.meta13.copy(color = c.mutedForeground), modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            PillButton("Presets", onPresets, style = ButtonStyle.Card, icon = Lucide.ListPlus)
+            PillButton("Add item", onAdd, style = ButtonStyle.Flame, icon = Lucide.Plus)
+        }
+
+        if (rows.isEmpty()) {
+            Column(Modifier.fillMaxWidth().emberCard().padding(vertical = 32.dp, horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    "Track oil changes, filters, brake pads, tyres and more. Log when each was last changed and Combust tells you when it's due.",
+                    style = EmberType.body14.copy(color = c.mutedForeground), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                )
+                PillButton("Add common parts", onPresets, style = ButtonStyle.Flame)
+            }
+        } else {
+            Column(Modifier.fillMaxWidth().emberCard().padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                rows.forEach { row ->
+                    val item = row.item
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+                            Column(Modifier.weight(1f)) {
+                                Text(item.name, style = EmberType.body15Semi.copy(color = c.foreground), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(describeLastChange(item), style = EmberType.meta13.copy(color = c.mutedForeground))
+                            }
+                            StatusBadge(row.status)
+                        }
+                        if (row.status.status != ServiceStatusKind.Unknown) {
+                            val next = row.status.nextDueOdometer?.let { " · next at ${formatKm(it)}" } ?: ""
+                            val text = androidx.compose.ui.text.buildAnnotatedString {
+                                pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, color = c.foreground))
+                                append(describeRemaining(row.status))
+                                pop()
+                                pushStyle(androidx.compose.ui.text.SpanStyle(color = c.mutedForeground))
+                                append(next)
+                                pop()
+                            }
+                            Text(text, style = EmberType.meta13)
+                        }
+                        item.notes?.let { Text(it, style = EmberType.meta13.copy(color = c.mutedForeground)) }
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            PillButton(
+                                "Changed today",
+                                { scope.launch { onMarkChanged(item); toast("${item.name} marked as changed") } },
+                                style = ButtonStyle.Outline, size = ButtonSize.Sm, icon = Lucide.Check,
+                            )
+                            PillButton("Edit", { onEdit(item) }, style = ButtonStyle.Ghost, size = ButtonSize.Sm, icon = Lucide.Pencil)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Summary / Trends switch inside the Stats tab (Trends no longer has its own tab). */
+@Composable
+fun StatsViewToggle(trends: Boolean, onChange: (Boolean) -> Unit) {
+    val c = Ember.colors
+    Row(Modifier.emberCard(CircleShape).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+        listOf(false to "Summary", true to "Trends").forEach { (isTrends, label) ->
+            val on = trends == isTrends
+            Text(
+                label,
+                style = EmberType.body14Medium.copy(color = if (on) c.primaryForeground else c.mutedForeground),
+                modifier = Modifier.clip(CircleShape).background(if (on) c.primary else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
+                    .clickable(role = Role.Tab) { onChange(isTrends) }.padding(horizontal = 16.dp, vertical = 6.dp),
+            )
+        }
     }
 }

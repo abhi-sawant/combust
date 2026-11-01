@@ -11,6 +11,7 @@ import {
   setMeta,
 } from "@/lib/local-db"
 import type { FuelEntry } from "@/types/entry"
+import type { ServiceItem } from "@/types/service"
 import type { Vehicle } from "@/types/vehicle"
 
 type Stamped<T> = T & { updatedAt: number; deletedAt: number | null }
@@ -19,6 +20,8 @@ interface SyncResponse {
   cursor: number
   vehicles: Stamped<Vehicle>[]
   entries: Stamped<FuelEntry>[]
+  /** Absent when talking to a backend that predates service items. */
+  services?: Stamped<ServiceItem>[]
 }
 
 const CURSOR_KEY = "syncCursor"
@@ -81,9 +84,10 @@ async function runSync(): Promise<void> {
     cursor = 0
   }
 
-  const { vehicles, entries } = await getAllRecords()
+  const { vehicles, entries, services } = await getAllRecords()
   const dirtyVehicles = vehicles.filter((v) => v.dirty)
   const dirtyEntries = entries.filter((e) => e.dirty)
+  const dirtyServices = services.filter((s) => s.dirty)
 
   const strip = <T extends { dirty: boolean }>(record: T): Omit<T, "dirty"> => {
     const copy: Partial<T> = { ...record }
@@ -93,14 +97,21 @@ async function runSync(): Promise<void> {
 
   const response = await apiRequest<SyncResponse>("/sync", {
     method: "POST",
-    body: { cursor, vehicles: dirtyVehicles.map(strip), entries: dirtyEntries.map(strip) },
+    body: {
+      cursor,
+      vehicles: dirtyVehicles.map(strip),
+      entries: dirtyEntries.map(strip),
+      services: dirtyServices.map(strip),
+    },
   })
 
   const changed = await applySyncResult({
     remoteVehicles: response.vehicles,
     remoteEntries: response.entries,
+    remoteServices: response.services ?? [],
     pushedVehicles: new Map(dirtyVehicles.map((v) => [v.id, v.updatedAt])),
     pushedEntries: new Map(dirtyEntries.map((e) => [e.id, e.updatedAt])),
+    pushedServices: new Map(dirtyServices.map((s) => [s.id, s.updatedAt])),
   })
 
   await setMeta(CURSOR_KEY, response.cursor)

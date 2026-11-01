@@ -188,4 +188,39 @@ class FixturesTest {
             assertEquals(expErrors, result.errors.map { it.line to it.reason })
         }
     }
+
+    @Test
+    fun serviceStatus() {
+        val root = fixture("service-status")
+        val today = root.str("today")
+        val rows = root.jsonObject["rows"]!!.jsonArray.map { row ->
+            val name = row.str("name")
+            val it = row.jsonObject["item"]!!
+            val item = ServiceItem(
+                id = name, vehicleId = "v", name = name,
+                lastChangedDate = it.strOrNull("lastChangedDate"),
+                lastChangedOdometer = it.dblOrNull("lastChangedOdometer"),
+                intervalKm = it.dblOrNull("intervalKm"),
+                intervalMonths = it.dblOrNull("intervalMonths")?.toInt(),
+            )
+            val got = computeServiceStatus(item, row.dblOrNull("currentOdometer"), today)
+            val exp = row.jsonObject["status"]!!
+            assertEquals("$name status", exp.str("status"), got.status.name.replaceFirstChar { c -> c.lowercase() })
+            assertNear("$name nextDueOdometer", exp.dblOrNull("nextDueOdometer"), got.nextDueOdometer)
+            assertEquals("$name nextDueDate", exp.strOrNull("nextDueDate"), got.nextDueDate)
+            assertNear("$name kmRemaining", exp.dblOrNull("kmRemaining"), got.kmRemaining)
+            assertNear("$name daysRemaining", exp.dblOrNull("daysRemaining"), got.daysRemaining?.toDouble())
+            ServiceListRow(item, got)
+        }
+        assertEquals(
+            root.jsonObject["sortedNames"]!!.jsonArray.map { it.jsonPrimitive.content },
+            sortByDue(rows).map { it.name },
+        )
+        for (c in root.jsonObject["latestOdometer"]!!.jsonArray) {
+            val entries = c.jsonObject["entries"]!!.jsonArray.mapIndexed { i, e ->
+                FuelEntry("e$i", "v", "2026-01-01", e.dblOrNull("odometerReading")!!, "", 0.0, 0.0)
+            }
+            assertNear("latestOdometer", c.dblOrNull("latest"), latestOdometer(entries))
+        }
+    }
 }

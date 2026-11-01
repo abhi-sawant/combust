@@ -44,7 +44,7 @@ You should now have three pieces of information noted down: the full database na
 5. Scroll down and click **Go**.
 6. You should see a success message and 4 new tables listed in the sidebar: `users`, `otp_codes`, `vehicles`, `fuel_entries`.
 
-> **Upgrading an existing database?** Don't re-import `schema.sql` (it would fail on existing tables). Instead, run the files in [`backend/database/migrations/`](database/migrations) in order from phpMyAdmin's **SQL** tab. `001_add_fill_flags.sql` adds partial-fill support; existing entries keep their current mileage.
+> **Upgrading an existing database?** Don't re-import `schema.sql` (it would fail on existing tables). Instead, run the files in [`backend/database/migrations/`](database/migrations) in order from phpMyAdmin's **SQL** tab. `001_add_fill_flags.sql` adds partial-fill support; existing entries keep their current mileage. `003_service_items.sql` adds the `service_items` table for the service / part-replacement tracker (needed before clients that send `services` can sync).
 
 ## 4. Create the `api.combust.slowatcoding.com` subdomain
 

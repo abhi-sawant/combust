@@ -13,6 +13,9 @@ Build with Android Studio's JDK: `export JAVA_HOME="/Applications/Android Studio
   Icons are generated from lucide-react (`ui/components/LucideIcons.kt`); fonts in `res/font`.
 - Update check: `AppUpdate.kt` (pure, tested) + `update/UpdateChecker.kt` + `UpdateDialog`; once per app open, shows the
   GitHub release notes, "Skip this version" is remembered. The app does not install updates itself (sideloaded).
+- Service tracker: `ServiceItem` in `:core` (`computeServiceStatus`/`sortByDue`/`planServiceReminders`), Room table `services`
+  (DB v2, `MIGRATION_1_2`), `ServiceReminderWorker` (daily, independent of sign-in; last-notified status per item in `meta`
+  under `serviceNotified:`). Always bump the Room version with a real `Migration` and commit the new `schemas/*.json`.
 - Version comes from the root `VERSION` (`versionCode = major*10000 + minor*100 + patch`).
 - API URL: `BuildConfig.API_URL` (default prod; `-PcombustApiUrl=...` to override).
 - Signing: gitignored `android/keystore.properties` (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`), keystore in

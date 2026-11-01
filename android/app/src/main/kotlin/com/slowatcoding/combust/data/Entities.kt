@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.slowatcoding.combust.core.StoredEntry
+import com.slowatcoding.combust.core.StoredServiceItem
 import com.slowatcoding.combust.core.StoredVehicle
 
 @Entity(tableName = "vehicles")
@@ -48,4 +49,29 @@ fun StoredVehicle.toRow() = VehicleRow(id, name, plate, createdAt, updatedAt, de
 fun StoredEntry.toRow() = EntryRow(
     id, vehicleId, date, odometerReading, fuelStation, amountPaid, litresFilled,
     isFullTank, missedPrevious, updatedAt, deletedAt, dirty,
+)
+
+@Entity(tableName = "services", indices = [Index("vehicleId")])
+data class ServiceRow(
+    @PrimaryKey val id: String,
+    val vehicleId: String,
+    val name: String,
+    val lastChangedDate: String?,
+    val lastChangedOdometer: Double?,
+    val intervalKm: Double?,
+    val intervalMonths: Int?,
+    val notes: String?,
+    val updatedAt: Long,
+    val deletedAt: Long?,
+    val dirty: Boolean,
+) {
+    fun toStored() = StoredServiceItem(
+        id, vehicleId, name, lastChangedDate, lastChangedOdometer, intervalKm, intervalMonths, notes,
+        updatedAt, deletedAt, dirty,
+    )
+}
+
+fun StoredServiceItem.toRow() = ServiceRow(
+    id, vehicleId, name, lastChangedDate, lastChangedOdometer, intervalKm, intervalMonths, notes,
+    updatedAt, deletedAt, dirty,
 )
