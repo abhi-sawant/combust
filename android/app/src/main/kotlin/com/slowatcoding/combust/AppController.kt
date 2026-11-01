@@ -18,6 +18,13 @@ import com.slowatcoding.combust.core.FuelEntry
 import com.slowatcoding.combust.core.FuelEntryInput
 import com.slowatcoding.combust.core.LocalData
 import com.slowatcoding.combust.core.ReleaseInfo
+import com.slowatcoding.combust.core.ServiceItem
+import com.slowatcoding.combust.core.ServiceItemInput
+import com.slowatcoding.combust.core.ServiceListRow
+import com.slowatcoding.combust.core.ReminderDue
+import com.slowatcoding.combust.core.computeServiceStatus
+import com.slowatcoding.combust.core.latestOdometer
+import com.slowatcoding.combust.core.planServiceReminders
 import com.slowatcoding.combust.core.shouldPromptUpdate
 import com.slowatcoding.combust.core.SyncEngine
 import com.slowatcoding.combust.core.Vehicle
@@ -66,6 +73,7 @@ data class SyncUi(
 
 private const val PERIODIC_SYNC_MS = 5 * 60 * 1000L
 private const val DEBOUNCE_MS = 2000L
+private const val NOTIFIED_PREFIX = "serviceNotified:"
 
 /**
  * Owns the app's data, auth session and sync, and exposes them as flows for Compose. Plays the role
@@ -105,6 +113,17 @@ class AppController(private val context: Context) {
     private val _entriesLoading = MutableStateFlow(true)
     val entriesLoading: StateFlow<Boolean> = _entriesLoading.asStateFlow()
 
+    private val _services = MutableStateFlow<List<ServiceItem>>(emptyList())
+    val services: StateFlow<List<ServiceItem>> = _services.asStateFlow()
+    private val _servicesLoading = MutableStateFlow(true)
+    val servicesLoading: StateFlow<Boolean> = _servicesLoading.asStateFlow()
+
+    private val _openServiceRequests = MutableStateFlow(0)
+
+    /** Bumped each time a reminder notification asks to open the Service tab. */
+    val openServiceRequests: StateFlow<Int> = _openServiceRequests.asStateFlow()
+    fun requestOpenServiceTab() = _openServiceRequests.update { it + 1 }
+
     private val _theme = MutableStateFlow(prefs.theme)
     val theme: StateFlow<ThemeChoice> = _theme.asStateFlow()
     private val _userName = MutableStateFlow(prefs.userName)
@@ -119,6 +138,8 @@ class AppController(private val context: Context) {
         scope.launch { local.changes.collect { onDataChanged(it) } }
         scope.launch { bootstrapAuth() }
         registerSyncTriggers()
+        // Independent of the account: reminders keep working in local mode and after sign-out.
+        scheduleServiceReminders()
         if (_auth.value.isAuthenticated) startAccountSession()
     }
 
@@ -279,6 +300,12 @@ class AppController(private val context: Context) {
         })
     }
 
+    private fun scheduleServiceReminders() {
+        val request = PeriodicWorkRequestBuilder<ServiceReminderWorker>(1, TimeUnit.DAYS).build()
+        WorkManager.getInstance(context)
+            .enqueueUniquePeriodicWork(ServiceReminderWorker.NAME, ExistingPeriodicWorkPolicy.KEEP, request)
+    }
+
     private fun scheduleBackgroundSync() {
         val request = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
@@ -319,6 +346,13 @@ class AppController(private val context: Context) {
         val id = _activeVehicleId.value
         _entries.value = if (id == null) emptyList() else local.entries(id)
         _entriesLoading.value = false
+        refreshServices()
+    }
+
+    private suspend fun refreshServices() {
+        val id = _activeVehicleId.value
+        _services.value = if (id == null) emptyList() else local.services(id)
+        _servicesLoading.value = false
     }
 
     fun setActiveVehicle(id: String) {
@@ -354,6 +388,65 @@ class AppController(private val context: Context) {
         val vehicleId = _activeVehicleId.value ?: return
         local.bulkAddEntries(rows, vehicleId)
         refreshEntries()
+    }
+
+    // --- Service items ----------------------------------------------------------------
+
+    suspend fun addService(input: ServiceItemInput) {
+        val vehicleId = _activeVehicleId.value ?: return
+        local.addService(input, vehicleId)
+        refreshServices()
+    }
+
+    suspend fun addServices(inputs: List<ServiceItemInput>) {
+        val vehicleId = _activeVehicleId.value ?: return
+        local.addServices(inputs, vehicleId)
+        refreshServices()
+    }
+
+    suspend fun updateService(id: String, input: ServiceItemInput) {
+        local.updateService(id, input)
+        refreshServices()
+    }
+
+    suspend fun deleteService(id: String) {
+        local.deleteService(id)
+        refreshServices()
+    }
+
+    /** "Changed today": stamps today's date and the vehicle's current odometer onto the item. */
+    suspend fun markServiceChangedToday(item: ServiceItem) {
+        updateService(
+            item.id,
+            ServiceItemInput(
+                name = item.name,
+                lastChangedDate = java.time.LocalDate.now().toString(),
+                lastChangedOdometer = latestOdometer(_entries.value) ?: item.lastChangedOdometer,
+                intervalKm = item.intervalKm,
+                intervalMonths = item.intervalMonths,
+                notes = item.notes,
+            ),
+        )
+    }
+
+    /**
+     * Daily reminder check across every vehicle: returns items that newly became due soon / overdue
+     * and records them as notified. Works in local mode and after sign-out.
+     */
+    suspend fun collectServiceReminders(canNotify: Boolean): List<ReminderDue> {
+        // Without permission nothing is recorded, so items still notify once it is granted.
+        if (!canNotify) return emptyList()
+        val today = java.time.LocalDate.now().toString()
+        val rows = local.vehicles().flatMap { vehicle ->
+            val odometer = latestOdometer(local.entries(vehicle.id))
+            local.services(vehicle.id).map { ServiceListRow(it, computeServiceStatus(it, odometer, today)) }
+        }
+        val lastNotified = store.allMetaWithPrefix(NOTIFIED_PREFIX)
+            .mapKeys { it.key.removePrefix(NOTIFIED_PREFIX) }
+        val (due, next) = planServiceReminders(rows, lastNotified)
+        for (id in lastNotified.keys - next.keys) store.deleteMeta(NOTIFIED_PREFIX + id)
+        for ((id, status) in next) if (lastNotified[id] != status) store.setMeta(NOTIFIED_PREFIX + id, status)
+        return due
     }
 
     suspend fun countEntriesByVehicle(): Map<String, Int> = local.countEntriesByVehicle()

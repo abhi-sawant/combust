@@ -1,5 +1,6 @@
 package com.slowatcoding.combust
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,10 +14,16 @@ import com.slowatcoding.combust.ui.screens.AppRoot
 import com.slowatcoding.combust.ui.theme.CombustTheme
 
 class MainActivity : ComponentActivity() {
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_OPEN_SERVICE, false)) (application as CombustApp).controller.requestOpenServiceTab()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val controller = (application as CombustApp).controller
+        if (intent?.getBooleanExtra(EXTRA_OPEN_SERVICE, false) == true) controller.requestOpenServiceTab()
         setContent {
             val theme by controller.theme.collectAsState()
             CombustTheme(theme) {

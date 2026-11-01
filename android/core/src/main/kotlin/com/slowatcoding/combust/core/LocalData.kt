@@ -112,6 +112,70 @@ class LocalData(
         dirty = true,
     )
 
+    // --- Service items -------------------------------------------------------
+
+    suspend fun services(vehicleId: String): List<ServiceItem> =
+        store.servicesForVehicle(vehicleId)
+            .filter { it.deletedAt == null }
+            .map { it.toItem() }
+            .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+
+    suspend fun addService(input: ServiceItemInput, vehicleId: String): ServiceItem {
+        val record = input.toStored(newId(), vehicleId, clock.nowMs())
+        store.putServices(listOf(record))
+        notifyChange(ChangeSource.Local)
+        return record.toItem()
+    }
+
+    /** Adds several items in one transaction (e.g. picked from the presets). */
+    suspend fun addServices(inputs: List<ServiceItemInput>, vehicleId: String): List<ServiceItem> {
+        val now = clock.nowMs()
+        val records = inputs.map { it.toStored(newId(), vehicleId, now) }
+        store.transaction { store.putServices(records) }
+        notifyChange(ChangeSource.Local)
+        return records.map { it.toItem() }
+    }
+
+    suspend fun updateService(id: String, input: ServiceItemInput): ServiceItem {
+        val existing = store.service(id)
+        if (existing == null || existing.deletedAt != null) error("Service item not found")
+        val record = existing.copy(
+            name = input.name,
+            lastChangedDate = input.lastChangedDate,
+            lastChangedOdometer = input.lastChangedOdometer,
+            intervalKm = input.intervalKm,
+            intervalMonths = input.intervalMonths,
+            notes = input.notes,
+            updatedAt = nextStamp(existing.updatedAt),
+            dirty = true,
+        )
+        store.putServices(listOf(record))
+        notifyChange(ChangeSource.Local)
+        return record.toItem()
+    }
+
+    suspend fun deleteService(id: String) {
+        val existing = store.service(id) ?: return
+        if (existing.deletedAt != null) return
+        val now = nextStamp(existing.updatedAt)
+        store.putServices(listOf(existing.copy(deletedAt = now, updatedAt = now, dirty = true)))
+        notifyChange(ChangeSource.Local)
+    }
+
+    private fun ServiceItemInput.toStored(id: String, vehicleId: String, now: Long) = StoredServiceItem(
+        id = id,
+        vehicleId = vehicleId,
+        name = name,
+        lastChangedDate = lastChangedDate,
+        lastChangedOdometer = lastChangedOdometer,
+        intervalKm = intervalKm,
+        intervalMonths = intervalMonths,
+        notes = notes,
+        updatedAt = now,
+        deletedAt = null,
+        dirty = true,
+    )
+
     // --- Vehicles ------------------------------------------------------------
 
     suspend fun vehicles(): List<Vehicle> =
@@ -150,7 +214,7 @@ class LocalData(
         return record.toVehicle()
     }
 
-    /** Tombstones the vehicle and all of its entries with one stamp. */
+    /** Tombstones the vehicle and all of its entries and service items with one stamp. */
     suspend fun deleteVehicle(id: String) {
         val existing = store.vehicle(id) ?: return
         if (existing.deletedAt != null) return
@@ -159,6 +223,10 @@ class LocalData(
             store.putVehicles(listOf(existing.copy(deletedAt = now, updatedAt = now, dirty = true)))
             store.putEntries(
                 store.entriesForVehicle(id).filter { it.deletedAt == null }
+                    .map { it.copy(deletedAt = now, updatedAt = now, dirty = true) },
+            )
+            store.putServices(
+                store.servicesForVehicle(id).filter { it.deletedAt == null }
                     .map { it.copy(deletedAt = now, updatedAt = now, dirty = true) },
             )
         }
@@ -172,7 +240,7 @@ class LocalData(
         store.allEntries().filter { it.deletedAt == null }.groupingBy { it.vehicleId }.eachCount()
 
     /**
-     * Wipes every vehicle and entry. With [keepTombstones] the records are tombstoned instead so the
+     * Wipes every vehicle, entry and service item. With [keepTombstones] the records are tombstoned instead so the
      * deletion syncs to the cloud account; otherwise the tables are emptied outright.
      */
     suspend fun clearAll(keepTombstones: Boolean) {
@@ -185,6 +253,10 @@ class LocalData(
                 )
                 store.putEntries(
                     store.allEntries().filter { it.deletedAt == null }
+                        .map { it.copy(deletedAt = now, updatedAt = now, dirty = true) },
+                )
+                store.putServices(
+                    store.allServices().filter { it.deletedAt == null }
                         .map { it.copy(deletedAt = now, updatedAt = now, dirty = true) },
                 )
             } else {

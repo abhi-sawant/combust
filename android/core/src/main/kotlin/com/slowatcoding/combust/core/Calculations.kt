@@ -2,6 +2,7 @@ package com.slowatcoding.combust.core
 
 import java.text.NumberFormat
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -193,3 +194,49 @@ fun getOdometerWarning(
     }
     return null
 }
+
+/** An item becomes "due soon" once this many km or days remain. */
+const val SERVICE_DUE_SOON_KM = 500.0
+const val SERVICE_DUE_SOON_DAYS = 30
+
+/** The vehicle's current odometer: the highest reading among its fuel entries, or null with none. */
+fun latestOdometer(entries: List<FuelEntry>): Double? = entries.maxOfOrNull { it.odometerReading }
+
+/**
+ * How due a service item is. Due when either interval is reached: `intervalKm` after the last change
+ * odometer, `intervalMonths` after the last change date. A dimension that can't be computed is
+ * ignored; with neither the status is Unknown. Passed (< 0 remaining) is overdue; <= 500 km or
+ * <= 30 days is due soon. Port of `computeServiceStatus` in `web/src/lib/calculations.ts`.
+ */
+fun computeServiceStatus(
+    item: ServiceItem,
+    currentOdometer: Double?,
+    today: String,
+): ServiceStatus {
+    val nextDueOdometer =
+        if (item.intervalKm != null && item.lastChangedOdometer != null) item.lastChangedOdometer + item.intervalKm else null
+    val nextDue =
+        if (item.intervalMonths != null && item.lastChangedDate != null) {
+            LocalDate.parse(item.lastChangedDate).plusMonths(item.intervalMonths.toLong())
+        } else null
+
+    val kmRemaining = if (nextDueOdometer != null && currentOdometer != null) nextDueOdometer - currentOdometer else null
+    val daysRemaining = nextDue?.let { ChronoUnit.DAYS.between(LocalDate.parse(today), it).toInt() }
+
+    val status = when {
+        kmRemaining == null && daysRemaining == null -> ServiceStatusKind.Unknown
+        (kmRemaining ?: 0.0) < 0 || (daysRemaining ?: 0) < 0 -> ServiceStatusKind.Overdue
+        (kmRemaining != null && kmRemaining <= SERVICE_DUE_SOON_KM) ||
+            (daysRemaining != null && daysRemaining <= SERVICE_DUE_SOON_DAYS) -> ServiceStatusKind.DueSoon
+        else -> ServiceStatusKind.Ok
+    }
+    return ServiceStatus(status, nextDueOdometer, nextDue?.toString(), kmRemaining, daysRemaining)
+}
+
+/** Most urgent first: overdue, due soon, ok, unknown; then fewest days left, fewest km left, then name. */
+fun sortByDue(rows: List<ServiceListRow>): List<ServiceListRow> =
+    rows.sortedWith(
+        compareBy<ServiceListRow>({ it.status.status.ordinal }, { it.status.daysRemaining?.toDouble() ?: Double.POSITIVE_INFINITY },
+            { it.status.kmRemaining ?: Double.POSITIVE_INFINITY })
+            .thenComparator { a, b -> a.name.compareTo(b.name, ignoreCase = true) },
+    )

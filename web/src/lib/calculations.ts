@@ -1,6 +1,7 @@
-import { format, parseISO, subMonths } from "date-fns"
+import { addMonths, differenceInCalendarDays, format, parseISO, subMonths } from "date-fns"
 
 import type { FuelEntry } from "@/types/entry"
+import type { ServiceItem, ServiceStatus } from "@/types/service"
 import type { DerivedEntry, OverallStats, StationStats } from "@/types/stats"
 
 /** Entries ordered by odometer reading — the true chronological axis mileage math depends on. */
@@ -207,4 +208,61 @@ export function getOdometerWarning(
   }
 
   return null
+}
+
+/** An item becomes "due soon" once this many km or days remain. */
+export const SERVICE_DUE_SOON_KM = 500
+export const SERVICE_DUE_SOON_DAYS = 30
+
+/** The vehicle's current odometer: the highest reading among its fuel entries, or null with none. */
+export function latestOdometer(entries: { odometerReading: number }[]): number | null {
+  return entries.length === 0 ? null : Math.max(...entries.map((e) => e.odometerReading))
+}
+
+/**
+ * How due a service item is. Due when either interval is reached: `intervalKm` after the last change
+ * odometer, `intervalMonths` after the last change date. `today` is "yyyy-MM-dd". A dimension that
+ * can't be computed (no interval, no last change, no current odometer) is ignored; with neither the
+ * status is "unknown". Passed (< 0 remaining) is overdue; ≤ 500 km or ≤ 30 days is due soon.
+ */
+export function computeServiceStatus(
+  item: Pick<ServiceItem, "lastChangedDate" | "lastChangedOdometer" | "intervalKm" | "intervalMonths">,
+  currentOdometer: number | null,
+  today: string
+): ServiceStatus {
+  const nextDueOdometer =
+    item.intervalKm !== null && item.lastChangedOdometer !== null ? item.lastChangedOdometer + item.intervalKm : null
+  const nextDueDate =
+    item.intervalMonths !== null && item.lastChangedDate !== null
+      ? format(addMonths(parseISO(item.lastChangedDate), item.intervalMonths), "yyyy-MM-dd")
+      : null
+
+  const kmRemaining = nextDueOdometer !== null && currentOdometer !== null ? nextDueOdometer - currentOdometer : null
+  const daysRemaining = nextDueDate !== null ? differenceInCalendarDays(parseISO(nextDueDate), parseISO(today)) : null
+
+  let status: ServiceStatus["status"]
+  if (kmRemaining === null && daysRemaining === null) status = "unknown"
+  else if ((kmRemaining ?? 0) < 0 || (daysRemaining ?? 0) < 0) status = "overdue"
+  else if (
+    (kmRemaining !== null && kmRemaining <= SERVICE_DUE_SOON_KM) ||
+    (daysRemaining !== null && daysRemaining <= SERVICE_DUE_SOON_DAYS)
+  )
+    status = "dueSoon"
+  else status = "ok"
+
+  return { status, nextDueOdometer, nextDueDate, kmRemaining, daysRemaining }
+}
+
+const STATUS_RANK = { overdue: 0, dueSoon: 1, ok: 2, unknown: 3 } as const
+
+/** Most urgent first: overdue, due soon, ok, unknown; then fewest days left, fewest km left, then name. */
+export function sortByDue<T extends { name: string; status: ServiceStatus }>(rows: T[]): T[] {
+  const nullsLast = (n: number | null) => n ?? Number.POSITIVE_INFINITY
+  return [...rows].sort(
+    (a, b) =>
+      STATUS_RANK[a.status.status] - STATUS_RANK[b.status.status] ||
+      nullsLast(a.status.daysRemaining) - nullsLast(b.status.daysRemaining) ||
+      nullsLast(a.status.kmRemaining) - nullsLast(b.status.kmRemaining) ||
+      a.name.localeCompare(b.name)
+  )
 }

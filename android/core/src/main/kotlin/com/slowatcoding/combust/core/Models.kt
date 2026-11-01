@@ -83,3 +83,44 @@ data class StationStats(
     val averageCostPerLitre: Double?,
     val totalAmountSpent: Double,
 )
+
+/** A part or service replaced periodically. Mirrors `web/src/types/service.ts`. */
+@Serializable
+data class ServiceItem(
+    val id: String,
+    val vehicleId: String,
+    val name: String,
+    /** `yyyy-MM-dd` of the last change, or null if never logged. */
+    val lastChangedDate: String? = null,
+    val lastChangedOdometer: Double? = null,
+    val intervalKm: Double? = null,
+    val intervalMonths: Int? = null,
+    val notes: String? = null,
+)
+
+/** Fields needed to create or edit an item; id/vehicleId are assigned by the repository. */
+data class ServiceItemInput(
+    val name: String,
+    val lastChangedDate: String? = null,
+    val lastChangedOdometer: Double? = null,
+    val intervalKm: Double? = null,
+    val intervalMonths: Int? = null,
+    val notes: String? = null,
+)
+
+enum class ServiceStatusKind { Overdue, DueSoon, Ok, Unknown }
+
+/** Derived due-ness of a service item; never stored or synced. */
+data class ServiceStatus(
+    val status: ServiceStatusKind,
+    val nextDueOdometer: Double?,
+    val nextDueDate: String?,
+    val kmRemaining: Double?,
+    val daysRemaining: Int?,
+)
+
+/** A service item with its derived status, as listed in the UI. */
+data class ServiceListRow(val item: ServiceItem, val status: ServiceStatus) {
+    val id: String get() = item.id
+    val name: String get() = item.name
+}

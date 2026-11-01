@@ -15,10 +15,17 @@ Vehicle: `{ id, name, plate?, createdAt (ISO-8601 UTC), updatedAt, deletedAt }`
 Entry: `{ id, vehicleId, date ("yyyy-MM-dd"), odometerReading, fuelStation, amountPaid,
 litresFilled, isFullTank, missedPrevious, updatedAt, deletedAt }`
 
+Service item (a part or service that is replaced periodically, e.g. engine oil, front brake pads):
+`{ id, vehicleId, name, lastChangedDate ("yyyy-MM-dd" or null), lastChangedOdometer (km or null),
+intervalKm (int or null), intervalMonths (int or null), notes (string or null), updatedAt, deletedAt }`.
+Only the *last* change is stored; recording a new change overwrites it. Due-ness is derived on the client
+(`computeServiceStatus`), never stored.
+
 ## `POST /sync` (Bearer JWT)
 
-Request: `{ cursor: <epoch ms>, vehicles: [...], entries: [...] }` — at most 5000 records in total.
-Response: `{ cursor: <server epoch ms>, vehicles: [...], entries: [...] }` including tombstones.
+Request: `{ cursor: <epoch ms>, vehicles: [...], entries: [...], services: [...] }` — at most 5000 records
+in total. A missing `services` key (older clients) is treated as empty.
+Response: `{ cursor: <server epoch ms>, vehicles: [...], entries: [...], services: [...] }` including tombstones.
 
 Server: upserts each record only if it is new or `incoming.updatedAt > stored.updatedAt`, then returns
 every record of the user with `synced_at >= cursor` (inclusive on purpose; clients apply idempotently).
@@ -27,7 +34,8 @@ Invalid rows are skipped silently.
 ## Client rules
 
 - **Stamps:** add → `updatedAt = now`. Update/delete → `max(now, previous.updatedAt + 1)`. Delete sets
-  `deletedAt = updatedAt`. Deleting a vehicle tombstones the vehicle and its live entries with one stamp.
+  `deletedAt = updatedAt`. Deleting a vehicle tombstones the vehicle and its live entries and service items
+  with one stamp.
 - **First sync with an account** (no cursor): mark everything dirty and use `cursor = 0`.
 - **Apply remote:** overwrite a local record when it is missing or `remote.updatedAt > local.updatedAt`
   (store with `dirty = false`). After pushing, clear `dirty` only if `local.updatedAt` still equals the

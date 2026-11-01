@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -38,6 +40,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slowatcoding.combust.AppController
 import com.slowatcoding.combust.core.FuelEntry
+import com.slowatcoding.combust.core.ServiceItem
+import com.slowatcoding.combust.core.ServiceListRow
+import com.slowatcoding.combust.core.ServiceStatusKind
+import com.slowatcoding.combust.core.computeServiceStatus
+import com.slowatcoding.combust.core.latestOdometer
+import com.slowatcoding.combust.core.sortByDue
+import com.slowatcoding.combust.rememberNotificationPermissionRequest
 import com.slowatcoding.combust.core.deriveEntries
 import com.slowatcoding.combust.ui.components.BrandMark
 import com.slowatcoding.combust.ui.components.ButtonSize
@@ -54,8 +63,8 @@ import com.slowatcoding.combust.ui.theme.EmberType
 private enum class Tab(val label: String, val icon: LucideIcon) {
     Overview("Overview", Lucide.Gauge),
     Entries("Entries", Lucide.List),
+    Service("Service", Lucide.Wrench),
     Stats("Stats", Lucide.BarChart),
-    Trends("Trends", Lucide.TrendingUp),
 }
 
 /** Decides what the signed-in/local user sees: sync gates, onboarding, or the app proper. */
@@ -118,6 +127,24 @@ private fun AppShell(controller: AppController) {
     var vehicleOpen by rememberSaveable { mutableStateOf(false) }
     var settingsOpen by rememberSaveable { mutableStateOf(false) }
     var editing by remember { mutableStateOf<FuelEntry?>(null) }
+    var statsTrends by rememberSaveable { mutableStateOf(false) }
+    var serviceAddOpen by rememberSaveable { mutableStateOf(false) }
+    var presetsOpen by rememberSaveable { mutableStateOf(false) }
+    var editingService by remember { mutableStateOf<ServiceItem?>(null) }
+
+    val services by controller.services.collectAsState()
+    val servicesLoading by controller.servicesLoading.collectAsState()
+    val currentOdometer = remember(entries) { latestOdometer(entries) }
+    val serviceRows = remember(services, currentOdometer) {
+        val today = java.time.LocalDate.now().toString()
+        sortByDue(services.map { ServiceListRow(it, computeServiceStatus(it, currentOdometer, today)) })
+    }
+    val overdueCount = serviceRows.count { it.status.status == ServiceStatusKind.Overdue }
+    val requestNotifications = rememberNotificationPermissionRequest(controller.prefs)
+
+    // A reminder notification was tapped: jump to the Service tab.
+    val openService by controller.openServiceRequests.collectAsState()
+    LaunchedEffect(openService) { if (openService > 0) tab = Tab.Service }
 
     BackHandler(enabled = tab != Tab.Overview) { tab = Tab.Overview }
 
@@ -141,18 +168,27 @@ private fun AppShell(controller: AppController) {
                         vehicle, derived, entriesLoading,
                         onAddEntry = { addOpen = true }, onImportCsv = { importOpen = true },
                         onViewAll = { tab = Tab.Entries }, onOpenVehicle = { vehicleOpen = true },
+                        serviceRows = serviceRows, onOpenService = { tab = Tab.Service },
                     )
                     Tab.Entries -> EntriesScreen(
                         vehicle, derived, entriesLoading, onOpenVehicle = { vehicleOpen = true },
                         onEdit = { d -> editing = d.entry }, onDelete = controller::deleteEntry,
                     )
-                    Tab.Stats -> StatsScreen(vehicle, derived) { vehicleOpen = true }
-                    Tab.Trends -> TrendsScreen(vehicle, derived) { vehicleOpen = true }
+                    Tab.Service -> ServiceScreen(
+                        vehicle, serviceRows, currentOdometer, servicesLoading, onOpenVehicle = { vehicleOpen = true },
+                        onAdd = { serviceAddOpen = true }, onPresets = { presetsOpen = true },
+                        onEdit = { editingService = it }, onMarkChanged = controller::markServiceChangedToday,
+                    )
+                    Tab.Stats -> if (statsTrends) {
+                        TrendsScreen(vehicle, derived, { vehicleOpen = true }) { StatsViewToggle(true) { statsTrends = it } }
+                    } else {
+                        StatsScreen(vehicle, derived, { vehicleOpen = true }) { StatsViewToggle(false) { statsTrends = it } }
+                    }
                 }
             }
         }
 
-        BottomTabBar(tab, { tab = it }, onAdd = { addOpen = true }, modifier = Modifier.align(Alignment.BottomCenter))
+        BottomTabBar(tab, { tab = it }, onAdd = { addOpen = true }, overdueCount = overdueCount, modifier = Modifier.align(Alignment.BottomCenter))
     }
 
     if (addOpen) {
@@ -168,6 +204,25 @@ private fun AppShell(controller: AppController) {
             onDismiss = { editing = null },
             onSubmit = { controller.updateEntry(e.id, it) },
             onDelete = { controller.deleteEntry(e.id) },
+        )
+    }
+    if (serviceAddOpen) {
+        ServiceSheet(
+            item = null, onDismiss = { serviceAddOpen = false },
+            onSubmit = { controller.addService(it) }, onDelete = {}, onSavedWithInterval = requestNotifications,
+        )
+    }
+    editingService?.let { s ->
+        ServiceSheet(
+            item = s, onDismiss = { editingService = null },
+            onSubmit = { controller.updateService(s.id, it) },
+            onDelete = { controller.deleteService(s.id) }, onSavedWithInterval = requestNotifications,
+        )
+    }
+    if (presetsOpen) {
+        PresetSheet(
+            existingNames = services.map { it.name }, onDismiss = { presetsOpen = false },
+            onAdd = controller::addServices, onSavedWithInterval = requestNotifications,
         )
     }
     update?.let { release ->
@@ -199,7 +254,7 @@ private fun Header(onImport: () -> Unit, onSettings: () -> Unit) {
 
 /** Floating pill navigation: 2 tabs, a round flame add button, 2 tabs. */
 @Composable
-private fun BottomTabBar(selected: Tab, onSelect: (Tab) -> Unit, onAdd: () -> Unit, modifier: Modifier = Modifier) {
+private fun BottomTabBar(selected: Tab, onSelect: (Tab) -> Unit, onAdd: () -> Unit, overdueCount: Int, modifier: Modifier = Modifier) {
     val c = Ember.colors
     Row(
         modifier
@@ -226,7 +281,17 @@ private fun BottomTabBar(selected: Tab, onSelect: (Tab) -> Unit, onAdd: () -> Un
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                Icon(t.icon, tint, size = 21.dp, strokeWidth = 1.9f)
+                Box {
+                    Icon(t.icon, tint, size = 21.dp, strokeWidth = 1.9f)
+                    if (t == Tab.Service && overdueCount > 0) {
+                        Box(
+                            Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-4).dp).defaultMinSize(minWidth = 14.dp, minHeight = 14.dp)
+                                .background(c.flame, CircleShape).padding(horizontal = 3.dp)
+                                .semantics { contentDescription = "$overdueCount need attention" },
+                            contentAlignment = Alignment.Center,
+                        ) { Text(overdueCount.toString(), style = EmberType.tab10.copy(fontSize = 9.sp, color = c.flameForeground)) }
+                    }
+                }
                 Text(t.label, style = EmberType.tab10.copy(fontSize = 10.5.sp, color = tint))
             }
         }
@@ -243,7 +308,7 @@ private fun BottomTabBar(selected: Tab, onSelect: (Tab) -> Unit, onAdd: () -> Un
                 contentAlignment = Alignment.Center,
             ) { Icon(Lucide.Plus, c.flameForeground, size = 24.dp, strokeWidth = 2.6f) }
         }
+        item(Tab.Service)
         item(Tab.Stats)
-        item(Tab.Trends)
     }
 }

@@ -1,6 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb"
 
 import type { FuelEntry, FuelEntryInput } from "@/types/entry"
+import type { ServiceItem, ServiceItemInput } from "@/types/service"
 import type { Vehicle, VehicleInput } from "@/types/vehicle"
 
 /** Sync bookkeeping stored next to every record. */
@@ -15,21 +16,28 @@ export interface SyncFields {
 
 export type StoredVehicle = Vehicle & SyncFields
 export type StoredEntry = FuelEntry & SyncFields
+export type StoredService = ServiceItem & SyncFields
 
 interface CombustDB extends DBSchema {
   vehicles: { key: string; value: StoredVehicle }
   entries: { key: string; value: StoredEntry; indexes: { vehicleId: string } }
+  services: { key: string; value: StoredService; indexes: { vehicleId: string } }
   meta: { key: string; value: unknown }
 }
 
 let dbPromise: Promise<IDBPDatabase<CombustDB>> | null = null
 
 function getDb() {
-  dbPromise ??= openDB<CombustDB>("combust", 1, {
-    upgrade(db) {
-      db.createObjectStore("vehicles", { keyPath: "id" })
-      db.createObjectStore("entries", { keyPath: "id" }).createIndex("vehicleId", "vehicleId")
-      db.createObjectStore("meta")
+  dbPromise ??= openDB<CombustDB>("combust", 2, {
+    upgrade(db, oldVersion) {
+      if (oldVersion < 1) {
+        db.createObjectStore("vehicles", { keyPath: "id" })
+        db.createObjectStore("entries", { keyPath: "id" }).createIndex("vehicleId", "vehicleId")
+        db.createObjectStore("meta")
+      }
+      if (oldVersion < 2) {
+        db.createObjectStore("services", { keyPath: "id" }).createIndex("vehicleId", "vehicleId")
+      }
     },
   })
   return dbPromise
@@ -77,6 +85,14 @@ function stripEntry(stored: StoredEntry): FuelEntry {
   delete entry.deletedAt
   delete entry.dirty
   return entry as FuelEntry
+}
+
+function stripService(stored: StoredService): ServiceItem {
+  const item: Partial<StoredService> = { ...stored }
+  delete item.updatedAt
+  delete item.deletedAt
+  delete item.dirty
+  return item as ServiceItem
 }
 
 // --- Entries -----------------------------------------------------------------
@@ -150,6 +166,71 @@ export async function localBulkAddEntries(entries: FuelEntryInput[], vehicleId: 
   return records.map(stripEntry)
 }
 
+// --- Service items -----------------------------------------------------------
+
+class LocalServicesRepository {
+  async getAll(vehicleId: string): Promise<ServiceItem[]> {
+    const all = await (await getDb()).getAllFromIndex("services", "vehicleId", vehicleId)
+    return all
+      .filter(live)
+      .map(stripService)
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  async add(input: ServiceItemInput, vehicleId: string): Promise<ServiceItem> {
+    const record: StoredService = {
+      ...input,
+      id: crypto.randomUUID(),
+      vehicleId,
+      updatedAt: Date.now(),
+      deletedAt: null,
+      dirty: true,
+    }
+    await (await getDb()).put("services", record)
+    notifyChange("local")
+    return stripService(record)
+  }
+
+  /** Adds several items in one transaction (e.g. picked from the presets). */
+  async addMany(inputs: ServiceItemInput[], vehicleId: string): Promise<ServiceItem[]> {
+    const db = await getDb()
+    const tx = db.transaction("services", "readwrite")
+    const now = Date.now()
+    const records: StoredService[] = inputs.map((input) => ({
+      ...input,
+      id: crypto.randomUUID(),
+      vehicleId,
+      updatedAt: now,
+      deletedAt: null,
+      dirty: true,
+    }))
+    await Promise.all([...records.map((record) => tx.store.put(record)), tx.done])
+    notifyChange("local")
+    return records.map(stripService)
+  }
+
+  async update(id: string, input: ServiceItemInput): Promise<ServiceItem> {
+    const db = await getDb()
+    const existing = await db.get("services", id)
+    if (!existing || existing.deletedAt !== null) throw new Error("Service item not found")
+    const record: StoredService = { ...existing, ...input, updatedAt: nextStamp(existing.updatedAt), dirty: true }
+    await db.put("services", record)
+    notifyChange("local")
+    return stripService(record)
+  }
+
+  async delete(id: string): Promise<void> {
+    const db = await getDb()
+    const existing = await db.get("services", id)
+    if (!existing || existing.deletedAt !== null) return
+    const now = nextStamp(existing.updatedAt)
+    await db.put("services", { ...existing, deletedAt: now, updatedAt: now, dirty: true })
+    notifyChange("local")
+  }
+}
+
+export const localServices = new LocalServicesRepository()
+
 // --- Vehicles ----------------------------------------------------------------
 
 class LocalVehiclesRepository {
@@ -186,12 +267,12 @@ class LocalVehiclesRepository {
     return stripVehicle(record)
   }
 
-  /** Tombstones the vehicle and all of its entries. */
+  /** Tombstones the vehicle and all of its entries and service items. */
   async delete(id: string): Promise<void> {
     const db = await getDb()
     const existing = await db.get("vehicles", id)
     if (!existing || existing.deletedAt !== null) return
-    const tx = db.transaction(["vehicles", "entries"], "readwrite")
+    const tx = db.transaction(["vehicles", "entries", "services"], "readwrite")
     const now = nextStamp(existing.updatedAt)
     const writes: Promise<unknown>[] = [
       tx.objectStore("vehicles").put({ ...existing, deletedAt: now, updatedAt: now, dirty: true }),
@@ -199,6 +280,11 @@ class LocalVehiclesRepository {
     for (const entry of await tx.objectStore("entries").index("vehicleId").getAll(id)) {
       if (entry.deletedAt === null) {
         writes.push(tx.objectStore("entries").put({ ...entry, deletedAt: now, updatedAt: now, dirty: true }))
+      }
+    }
+    for (const item of await tx.objectStore("services").index("vehicleId").getAll(id)) {
+      if (item.deletedAt === null) {
+        writes.push(tx.objectStore("services").put({ ...item, deletedAt: now, updatedAt: now, dirty: true }))
       }
     }
     await Promise.all([...writes, tx.done])
@@ -221,12 +307,12 @@ export async function localCountEntriesByVehicle(): Promise<Record<string, numbe
 }
 
 /**
- * Wipes every vehicle and entry. With `keepTombstones` the records are tombstoned instead so the
- * deletion syncs to the cloud account; otherwise the stores are emptied outright.
+ * Wipes every vehicle, entry and service item. With `keepTombstones` the records are tombstoned
+ * instead so the deletion syncs to the cloud account; otherwise the stores are emptied outright.
  */
 export async function localClearAll(keepTombstones: boolean): Promise<void> {
   const db = await getDb()
-  const tx = db.transaction(["vehicles", "entries"], "readwrite")
+  const tx = db.transaction(["vehicles", "entries", "services"], "readwrite")
   if (keepTombstones) {
     const now = Date.now()
     const writes: Promise<unknown>[] = []
@@ -236,27 +322,44 @@ export async function localClearAll(keepTombstones: boolean): Promise<void> {
     for (const e of await tx.objectStore("entries").getAll()) {
       if (e.deletedAt === null) writes.push(tx.objectStore("entries").put({ ...e, deletedAt: now, updatedAt: now, dirty: true }))
     }
+    for (const s of await tx.objectStore("services").getAll()) {
+      if (s.deletedAt === null) writes.push(tx.objectStore("services").put({ ...s, deletedAt: now, updatedAt: now, dirty: true }))
+    }
     await Promise.all([...writes, tx.done])
   } else {
-    await Promise.all([tx.objectStore("vehicles").clear(), tx.objectStore("entries").clear(), tx.done])
+    await Promise.all([
+      tx.objectStore("vehicles").clear(),
+      tx.objectStore("entries").clear(),
+      tx.objectStore("services").clear(),
+      tx.done,
+    ])
   }
   notifyChange("local")
 }
 
 // --- Sync access -------------------------------------------------------------
 
-export async function getAllRecords(): Promise<{ vehicles: StoredVehicle[]; entries: StoredEntry[] }> {
+export async function getAllRecords(): Promise<{
+  vehicles: StoredVehicle[]
+  entries: StoredEntry[]
+  services: StoredService[]
+}> {
   const db = await getDb()
-  return { vehicles: await db.getAll("vehicles"), entries: await db.getAll("entries") }
+  return {
+    vehicles: await db.getAll("vehicles"),
+    entries: await db.getAll("entries"),
+    services: await db.getAll("services"),
+  }
 }
 
 /** Marks every record dirty — used when linking to a cloud account for the first time. */
 export async function markAllDirty(): Promise<void> {
   const db = await getDb()
-  const tx = db.transaction(["vehicles", "entries"], "readwrite")
+  const tx = db.transaction(["vehicles", "entries", "services"], "readwrite")
   const writes: Promise<unknown>[] = []
   for (const v of await tx.objectStore("vehicles").getAll()) writes.push(tx.objectStore("vehicles").put({ ...v, dirty: true }))
   for (const e of await tx.objectStore("entries").getAll()) writes.push(tx.objectStore("entries").put({ ...e, dirty: true }))
+  for (const s of await tx.objectStore("services").getAll()) writes.push(tx.objectStore("services").put({ ...s, dirty: true }))
   await Promise.all([...writes, tx.done])
 }
 
@@ -267,13 +370,16 @@ export async function markAllDirty(): Promise<void> {
 export async function applySyncResult(input: {
   remoteVehicles: (Vehicle & { updatedAt: number; deletedAt: number | null })[]
   remoteEntries: (FuelEntry & { updatedAt: number; deletedAt: number | null })[]
+  remoteServices: (ServiceItem & { updatedAt: number; deletedAt: number | null })[]
   pushedVehicles: Map<string, number>
   pushedEntries: Map<string, number>
+  pushedServices: Map<string, number>
 }): Promise<boolean> {
   const db = await getDb()
-  const tx = db.transaction(["vehicles", "entries"], "readwrite")
+  const tx = db.transaction(["vehicles", "entries", "services"], "readwrite")
   const vehicles = tx.objectStore("vehicles")
   const entries = tx.objectStore("entries")
+  const services = tx.objectStore("services")
   let changed = false
 
   for (const remote of input.remoteVehicles) {
@@ -290,6 +396,13 @@ export async function applySyncResult(input: {
       changed = true
     }
   }
+  for (const remote of input.remoteServices) {
+    const local = await services.get(remote.id)
+    if (!local || remote.updatedAt > local.updatedAt) {
+      await services.put({ ...remote, dirty: false })
+      changed = true
+    }
+  }
 
   for (const [id, sentAt] of input.pushedVehicles) {
     const local = await vehicles.get(id)
@@ -298,6 +411,10 @@ export async function applySyncResult(input: {
   for (const [id, sentAt] of input.pushedEntries) {
     const local = await entries.get(id)
     if (local?.dirty && local.updatedAt === sentAt) await entries.put({ ...local, dirty: false })
+  }
+  for (const [id, sentAt] of input.pushedServices) {
+    const local = await services.get(id)
+    if (local?.dirty && local.updatedAt === sentAt) await services.put({ ...local, dirty: false })
   }
 
   await tx.done

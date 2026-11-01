@@ -51,6 +51,11 @@ import com.slowatcoding.combust.SyncStatus
 import com.slowatcoding.combust.core.FuelEntry
 import com.slowatcoding.combust.core.FuelEntryInput
 import com.slowatcoding.combust.core.OPTIONAL_COLUMNS
+import com.slowatcoding.combust.core.SERVICE_PRESETS
+import com.slowatcoding.combust.core.ServiceItem
+import com.slowatcoding.combust.core.ServiceItemInput
+import com.slowatcoding.combust.core.ServicePreset
+import com.slowatcoding.combust.core.formatNumber
 import com.slowatcoding.combust.core.REQUIRED_COLUMNS
 import com.slowatcoding.combust.core.CsvImportError
 import com.slowatcoding.combust.core.formatAmount
@@ -600,6 +605,235 @@ fun SettingsSheet(controller: AppController, onDismiss: () -> Unit) {
                 )
                 AuthPage(controller, embedded = true)
             }
+        }
+    }
+}
+
+// --- Service items --------------------------------------------------------------------------------
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EmberDatePickerDialog(initial: String, onPick: (String) -> Unit, onDismiss: () -> Unit) {
+    val c = Ember.colors
+    val state = rememberDatePickerState(initialSelectedDateMillis = LocalDate.parse(initial).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli())
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        colors = DatePickerDefaults.colors(containerColor = c.card),
+        confirmButton = {
+            PillButton("OK", {
+                state.selectedDateMillis?.let { onPick(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()) }
+                onDismiss()
+            }, style = ButtonStyle.Ink)
+        },
+        dismissButton = { PillButton("Cancel", onDismiss, style = ButtonStyle.Ghost) },
+    ) {
+        DatePicker(
+            state,
+            colors = DatePickerDefaults.colors(
+                containerColor = c.card,
+                selectedDayContainerColor = c.primary,
+                selectedDayContentColor = c.primaryForeground,
+                todayDateBorderColor = c.flame,
+                todayContentColor = c.flameText,
+            ),
+        )
+    }
+}
+
+/** Add/edit sheet for a service item; `item` is null when adding. */
+@Composable
+fun ServiceSheet(
+    item: ServiceItem?,
+    onDismiss: () -> Unit,
+    onSubmit: suspend (ServiceItemInput) -> Unit,
+    onDelete: suspend () -> Unit,
+    onSavedWithInterval: () -> Unit,
+) {
+    val c = Ember.colors
+    val toast = LocalToaster.current
+    val scope = rememberCoroutineScope()
+
+    var name by remember { mutableStateOf(item?.name ?: "") }
+    var date by remember { mutableStateOf(item?.lastChangedDate) }
+    var odometer by remember { mutableStateOf(item?.lastChangedOdometer?.let(::plain) ?: "") }
+    var intervalKm by remember { mutableStateOf(item?.intervalKm?.let(::plain) ?: "") }
+    var intervalMonths by remember { mutableStateOf(item?.intervalMonths?.toString() ?: "") }
+    var notes by remember { mutableStateOf(item?.notes ?: "") }
+    var errors by remember { mutableStateOf(emptyMap<String, String>()) }
+    var busy by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
+
+    fun submit() {
+        val e = mutableMapOf<String, String>()
+        val odo = odometer.trim().toDoubleOrNull()
+        val km = intervalKm.trim().toDoubleOrNull()
+        val months = intervalMonths.trim().toIntOrNull()
+        if (name.isBlank()) e["name"] = "Name is required"
+        if (odometer.isNotBlank() && (odo == null || odo < 0)) e["odometer"] = "Odometer cannot be negative"
+        if (intervalKm.isNotBlank() && (km == null || km <= 0 || km % 1.0 != 0.0)) e["km"] = "Interval must be a whole number above 0"
+        if (intervalMonths.isNotBlank() && (months == null || months <= 0)) e["months"] = "Interval must be a whole number above 0"
+        errors = e
+        if (e.isNotEmpty() || busy) return
+        busy = true
+        scope.launch {
+            try {
+                onSubmit(ServiceItemInput(name.trim(), date, odo, km, months, notes.trim().ifEmpty { null }))
+                toast(if (item != null) "Item updated" else "Item added")
+                if (km != null || months != null) onSavedWithInterval()
+                onDismiss()
+            } catch (ex: Exception) {
+                toast(ex.message ?: "Couldn't save item")
+            } finally {
+                busy = false
+            }
+        }
+    }
+
+    EmberSheet(
+        onDismiss = onDismiss,
+        title = if (item != null) "Edit service item" else "Add service item",
+        subtitle = "Due when either interval is reached. Leave both empty to just keep a record.",
+    ) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            EmberTextField(name, { name = it }, label = "Part or service", placeholder = "e.g. Engine oil", error = errors["name"])
+
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                FieldLabel("Last changed on")
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    PillButton(
+                        date?.let(::longDate) ?: "Not set", { showDatePicker = true }, Modifier.weight(1f),
+                        style = ButtonStyle.Outline, icon = Lucide.Calendar,
+                    )
+                    if (date != null) PillButton("Clear", { date = null }, style = ButtonStyle.Ghost)
+                }
+            }
+
+            EmberTextField(
+                odometer, { odometer = it }, label = "Odometer then (km)", error = errors["odometer"],
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                EmberTextField(
+                    intervalKm, { intervalKm = it }, Modifier.weight(1f), label = "Repeat every (km)", error = errors["km"],
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+                EmberTextField(
+                    intervalMonths, { intervalMonths = it }, Modifier.weight(1f), label = "Every (months)", error = errors["months"],
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+            }
+            EmberTextField(
+                notes, { notes = it }, label = "Notes", placeholder = "Brand, grade, workshop…",
+                singleLine = false, height = 80.dp,
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                PillButton("Cancel", onDismiss, Modifier.weight(1f), style = ButtonStyle.Outline, size = ButtonSize.Lg)
+                PillButton(if (item != null) "Save changes" else "Add item", ::submit, Modifier.weight(1f), size = ButtonSize.Lg, enabled = !busy)
+            }
+            if (item != null) {
+                PillButton("Delete this item", { confirmDelete = true }, Modifier.fillMaxWidth(), style = ButtonStyle.Destructive, size = ButtonSize.Lg, icon = Lucide.Trash)
+            }
+        }
+    }
+
+    if (showDatePicker) {
+        EmberDatePickerDialog(date ?: LocalDate.now().toString(), { date = it }, { showDatePicker = false })
+    }
+    if (confirmDelete && item != null) {
+        ConfirmDialog(
+            title = "Delete this item?",
+            message = "This removes ${item.name} and its change history. This can't be undone.",
+            confirmText = "Delete",
+            onConfirm = {
+                confirmDelete = false
+                scope.launch { onDelete(); toast("Item deleted"); onDismiss() }
+            },
+            onDismiss = { confirmDelete = false },
+        )
+    }
+}
+
+private fun intervalText(preset: ServicePreset): String {
+    val parts = listOfNotNull(
+        preset.intervalKm?.let { "${formatNumber(it, 0)} km" },
+        preset.intervalMonths?.let { "$it mo" },
+    )
+    return if (parts.isEmpty()) "No interval" else parts.joinToString(" or ")
+}
+
+/** Pick common parts to start tracking; each becomes a normal, editable item. */
+@Composable
+fun PresetSheet(
+    existingNames: List<String>,
+    onDismiss: () -> Unit,
+    onAdd: suspend (List<ServiceItemInput>) -> Unit,
+    onSavedWithInterval: () -> Unit,
+) {
+    val c = Ember.colors
+    val toast = LocalToaster.current
+    val scope = rememberCoroutineScope()
+    val taken = remember(existingNames) { existingNames.map { it.trim().lowercase() }.toSet() }
+    val available = remember(taken) { SERVICE_PRESETS.filter { it.name.lowercase() !in taken } }
+    var picked by remember { mutableStateOf(emptySet<String>()) }
+    var busy by remember { mutableStateOf(false) }
+
+    EmberSheet(
+        onDismiss = onDismiss,
+        title = "Add common parts",
+        subtitle = "Pick what applies to this vehicle. You can edit the intervals and log last-changed details afterwards.",
+    ) {
+        if (available.isEmpty()) {
+            Text("You're already tracking every preset.", style = EmberType.body14.copy(color = c.mutedForeground), modifier = Modifier.padding(vertical = 16.dp))
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                available.forEach { preset ->
+                    val on = preset.name in picked
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .selectableTile(on, RoundedCornerShape(Radii.input)) { picked = if (on) picked - preset.name else picked + preset.name }
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            Modifier.size(20.dp).clip(CircleShape)
+                                .background(if (on) c.flame else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
+                                .border(1.dp, if (on) c.flame else c.border, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) { if (on) Icon(Lucide.Check, c.flameForeground, size = 14.dp, strokeWidth = 3f) }
+                        Column {
+                            Text(preset.name, style = EmberType.body15Semi.copy(color = c.foreground))
+                            Text("Every ${intervalText(preset)}", style = EmberType.meta13.copy(color = c.mutedForeground))
+                        }
+                    }
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            PillButton("Cancel", onDismiss, Modifier.weight(1f), style = ButtonStyle.Outline, size = ButtonSize.Lg)
+            PillButton(
+                if (picked.isEmpty()) "Add selected" else "Add ${picked.size} selected",
+                {
+                    val chosen = available.filter { it.name in picked }
+                    busy = true
+                    scope.launch {
+                        try {
+                            onAdd(chosen.map { it.toInput() })
+                            toast(if (chosen.size == 1) "Item added" else "${chosen.size} items added")
+                            if (chosen.any { it.intervalKm != null || it.intervalMonths != null }) onSavedWithInterval()
+                            onDismiss()
+                        } catch (ex: Exception) {
+                            toast(ex.message ?: "Couldn't add items")
+                        } finally {
+                            busy = false
+                        }
+                    }
+                },
+                Modifier.weight(1f), size = ButtonSize.Lg, enabled = picked.isNotEmpty() && !busy,
+            )
         }
     }
 }

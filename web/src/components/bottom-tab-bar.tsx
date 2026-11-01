@@ -7,10 +7,11 @@ interface BottomTabBarProps {
   value: string
   onValueChange: (value: string) => void
   onAddEntry: () => void
+  badges?: Partial<Record<string, number>>
 }
 
 /** Mobile-only floating pill navigation; the header's pill nav replaces it from `md` up. */
-export function BottomTabBar({ value, onValueChange, onAddEntry }: BottomTabBarProps) {
+export function BottomTabBar({ value, onValueChange, onAddEntry, badges }: BottomTabBarProps) {
   const tab = (item: (typeof NAV_ITEMS)[number]) => {
     const Icon = item.icon
     const active = item.value === value
@@ -25,7 +26,17 @@ export function BottomTabBar({ value, onValueChange, onAddEntry }: BottomTabBarP
           active ? "text-flame-text" : "text-muted-foreground"
         )}
       >
-        <Icon className="size-[21px]" strokeWidth={1.9} />
+        <span className="relative">
+          <Icon className="size-[21px]" strokeWidth={1.9} />
+          {!!badges?.[item.value] && (
+            <span
+              aria-label={`${badges[item.value]} need attention`}
+              className="absolute -top-1 -right-2 grid min-w-3.5 place-items-center rounded-full bg-flame px-0.5 text-[9px] leading-[14px] font-bold text-flame-foreground"
+            >
+              {badges[item.value]}
+            </span>
+          )}
+        </span>
         {item.label}
       </button>
     )

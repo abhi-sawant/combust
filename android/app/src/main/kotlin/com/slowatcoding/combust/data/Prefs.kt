@@ -40,6 +40,11 @@ class Prefs(context: Context) {
         get() = sp.getString("user-name", "") ?: ""
         set(value) = sp.edit { if (value.isBlank()) remove("user-name") else putString("user-name", value.trim()) }
 
+    /** Whether the POST_NOTIFICATIONS prompt was already shown (asked once, when reminders first matter). */
+    var notificationPermissionAsked: Boolean
+        get() = sp.getBoolean("notification-permission-asked", false)
+        set(value) = sp.edit { putBoolean("notification-permission-asked", value) }
+
     var theme: ThemeChoice
         get() = runCatching { ThemeChoice.valueOf(sp.getString("theme", null) ?: "System") }.getOrDefault(ThemeChoice.System)
         set(value) = sp.edit { putString("theme", value.name) }

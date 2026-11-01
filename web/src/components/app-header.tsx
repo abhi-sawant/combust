@@ -1,4 +1,4 @@
-import { BarChart3, Gauge, List, Plus, Settings, TrendingUp, Upload } from 'lucide-react'
+import { BarChart3, Gauge, List, Plus, Settings, Upload, Wrench } from 'lucide-react'
 
 import { BrandMark } from '@/components/brand-mark'
 import { Button } from '@/components/ui/button'
@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils'
 export const NAV_ITEMS = [
   { value: 'overview', label: 'Overview', icon: Gauge },
   { value: 'entries', label: 'Entries', icon: List },
+  { value: 'service', label: 'Service', icon: Wrench },
   { value: 'stats', label: 'Stats', icon: BarChart3 },
-  { value: 'trends', label: 'Trends', icon: TrendingUp },
 ] as const
 
 interface AppHeaderProps {
@@ -17,10 +17,12 @@ interface AppHeaderProps {
   onOpenImport: () => void
   onOpenSettings: () => void
   onAddEntry: () => void
+  /** Small count badge per tab value (e.g. overdue service items). */
+  badges?: Partial<Record<string, number>>
 }
 
 /** Sticky top bar: brand, pill navigation (md and up), and the global actions. Below md the bottom tab bar navigates. */
-export function AppHeader({ value, onValueChange, onOpenImport, onOpenSettings, onAddEntry }: AppHeaderProps) {
+export function AppHeader({ value, onValueChange, onOpenImport, onOpenSettings, onAddEntry, badges }: AppHeaderProps) {
   return (
     <header className='sticky top-0 z-30 bg-background/85 backdrop-blur-md'>
       <div className='mx-auto grid h-16 w-full max-w-[1080px] grid-cols-[1fr_auto] items-center gap-3 px-4 md:h-[76px] md:grid-cols-[1fr_auto_1fr] md:px-8'>
@@ -43,6 +45,11 @@ export function AppHeader({ value, onValueChange, onOpenImport, onOpenSettings, 
                 v === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               )}>
               {label}
+              {!!badges?.[v] && (
+                <span className='ml-1.5 inline-grid min-w-4 place-items-center rounded-full bg-flame px-1 text-[10px] leading-4 font-bold text-flame-foreground'>
+                  {badges[v]}
+                </span>
+              )}
             </button>
           ))}
         </nav>

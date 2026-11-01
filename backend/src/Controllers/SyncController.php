@@ -30,7 +30,11 @@ final class SyncController
 
         $vehicles = $data['vehicles'] ?? [];
         $entries = $data['entries'] ?? [];
-        if (!is_array($vehicles) || !is_array($entries) || count($vehicles) + count($entries) > self::MAX_RECORDS) {
+        $services = $data['services'] ?? [];
+        if (
+            !is_array($vehicles) || !is_array($entries) || !is_array($services)
+            || count($vehicles) + count($entries) + count($services) > self::MAX_RECORDS
+        ) {
             Response::error('Invalid sync payload', 422);
         }
 
@@ -47,6 +51,12 @@ final class SyncController
         foreach ($entries as $e) {
             if (is_array($e)) {
                 $this->upsertEntry($db, $userId, $e, $serverNow);
+            }
+        }
+
+        foreach ($services as $s) {
+            if (is_array($s)) {
+                $this->upsertService($db, $userId, $s, $serverNow);
             }
         }
 
@@ -67,12 +77,22 @@ final class SyncController
              WHERE v.user_id = ? AND fe.synced_at >= ?'
         );
         $pulledEntries->execute([$userId, $cursor]);
+
+        $pulledServices = $db->prepare(
+            'SELECT si.id, si.vehicle_id AS vehicleId, si.name, si.last_changed_date AS lastChangedDate,
+                    si.last_changed_odometer AS lastChangedOdometer, si.interval_km AS intervalKm,
+                    si.interval_months AS intervalMonths, si.notes, si.updated_at AS updatedAt, si.deleted_at AS deletedAt
+             FROM service_items si JOIN vehicles v ON v.id = si.vehicle_id
+             WHERE v.user_id = ? AND si.synced_at >= ?'
+        );
+        $pulledServices->execute([$userId, $cursor]);
         $db->commit();
 
         Response::json([
             'cursor' => $serverNow,
             'vehicles' => array_map(self::castVehicle(...), $pulledVehicles->fetchAll()),
             'entries' => array_map(self::castEntry(...), $pulledEntries->fetchAll()),
+            'services' => array_map(self::castService(...), $pulledServices->fetchAll()),
         ]);
     }
 
@@ -173,6 +193,79 @@ final class SyncController
         )->execute([...$fields, $id]);
     }
 
+    private function upsertService(PDO $db, int $userId, array $s, int $serverNow): void
+    {
+        $id = (string) ($s['id'] ?? '');
+        $vehicleId = (string) ($s['vehicleId'] ?? '');
+        $name = mb_substr(trim((string) ($s['name'] ?? '')), 0, 255);
+        $updatedAt = (int) ($s['updatedAt'] ?? 0);
+        $date = $s['lastChangedDate'] ?? null;
+        if (
+            !preg_match(self::UUID, $id) || !preg_match(self::UUID, $vehicleId) || $name === '' || $updatedAt <= 0
+            || ($date !== null && (!is_string($date) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)))
+        ) {
+            return;
+        }
+        $odometer = self::optionalNumber($s['lastChangedOdometer'] ?? null, false);
+        $intervalKm = self::optionalNumber($s['intervalKm'] ?? null, true);
+        $intervalMonths = self::optionalNumber($s['intervalMonths'] ?? null, true);
+        if ($odometer === false || $intervalKm === false || $intervalMonths === false) {
+            return;
+        }
+
+        $owner = $db->prepare('SELECT user_id FROM vehicles WHERE id = ?');
+        $owner->execute([$vehicleId]);
+        $ownerId = $owner->fetchColumn();
+        if ($ownerId === false || (int) $ownerId !== $userId) {
+            return;
+        }
+
+        $notes = isset($s['notes']) ? trim((string) $s['notes']) : '';
+        $deletedAt = isset($s['deletedAt']) ? (int) $s['deletedAt'] : null;
+        $fields = [
+            $vehicleId, $name, $date, $odometer, $intervalKm, $intervalMonths,
+            $notes === '' ? null : $notes, $updatedAt, $deletedAt, $serverNow,
+        ];
+
+        $stmt = $db->prepare(
+            'SELECT si.updated_at, v.user_id FROM service_items si JOIN vehicles v ON v.id = si.vehicle_id
+             WHERE si.id = ? FOR UPDATE'
+        );
+        $stmt->execute([$id]);
+        $existing = $stmt->fetch();
+
+        if ($existing === false) {
+            $db->prepare(
+                'INSERT INTO service_items (vehicle_id, name, last_changed_date, last_changed_odometer, interval_km,
+                    interval_months, notes, updated_at, deleted_at, synced_at, id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            )->execute([...$fields, $id]);
+            return;
+        }
+
+        if ((int) $existing['user_id'] !== $userId || $updatedAt <= (int) $existing['updated_at']) {
+            return;
+        }
+
+        $db->prepare(
+            'UPDATE service_items SET vehicle_id = ?, name = ?, last_changed_date = ?, last_changed_odometer = ?,
+                interval_km = ?, interval_months = ?, notes = ?, updated_at = ?, deleted_at = ?, synced_at = ?
+             WHERE id = ?'
+        )->execute([...$fields, $id]);
+    }
+
+    /** null → null, non-negative number → value (int when $integer), anything else → false (invalid). */
+    private static function optionalNumber(mixed $v, bool $integer): int|float|null|false
+    {
+        if ($v === null || $v === '') {
+            return null;
+        }
+        if (!is_numeric($v) || (float) $v < 0) {
+            return false;
+        }
+        return $integer ? (int) round((float) $v) : (float) $v;
+    }
+
     /** Client ISO timestamp → UTC DATETIME string (falls back to now). */
     private static function toDateTime(mixed $iso): string
     {
@@ -199,6 +292,16 @@ final class SyncController
         $row['litresFilled'] = (float) $row['litresFilled'];
         $row['isFullTank'] = (bool) $row['isFullTank'];
         $row['missedPrevious'] = (bool) $row['missedPrevious'];
+        $row['updatedAt'] = (int) $row['updatedAt'];
+        $row['deletedAt'] = $row['deletedAt'] === null ? null : (int) $row['deletedAt'];
+        return $row;
+    }
+
+    private static function castService(array $row): array
+    {
+        $row['lastChangedOdometer'] = $row['lastChangedOdometer'] === null ? null : (float) $row['lastChangedOdometer'];
+        $row['intervalKm'] = $row['intervalKm'] === null ? null : (int) $row['intervalKm'];
+        $row['intervalMonths'] = $row['intervalMonths'] === null ? null : (int) $row['intervalMonths'];
         $row['updatedAt'] = (int) $row['updatedAt'];
         $row['deletedAt'] = $row['deletedAt'] === null ? null : (int) $row['deletedAt'];
         return $row;

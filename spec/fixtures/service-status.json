@@ -1,0 +1,305 @@
+{
+  "today": "2026-06-15",
+  "rows": [
+    {
+      "name": "never-changed",
+      "item": {
+        "lastChangedDate": null,
+        "lastChangedOdometer": null,
+        "intervalKm": 5000,
+        "intervalMonths": 6
+      },
+      "currentOdometer": 20000,
+      "status": {
+        "status": "unknown",
+        "nextDueOdometer": null,
+        "nextDueDate": null,
+        "kmRemaining": null,
+        "daysRemaining": null
+      }
+    },
+    {
+      "name": "no-interval",
+      "item": {
+        "lastChangedDate": "2026-01-01",
+        "lastChangedOdometer": 15000,
+        "intervalKm": null,
+        "intervalMonths": null
+      },
+      "currentOdometer": 20000,
+      "status": {
+        "status": "unknown",
+        "nextDueOdometer": null,
+        "nextDueDate": null,
+        "kmRemaining": null,
+        "daysRemaining": null
+      }
+    },
+    {
+      "name": "km-ok",
+      "item": {
+        "lastChangedDate": "2026-05-01",
+        "lastChangedOdometer": 18000,
+        "intervalKm": 5000,
+        "intervalMonths": null
+      },
+      "currentOdometer": 19000,
+      "status": {
+        "status": "ok",
+        "nextDueOdometer": 23000,
+        "nextDueDate": null,
+        "kmRemaining": 4000,
+        "daysRemaining": null
+      }
+    },
+    {
+      "name": "km-due-soon",
+      "item": {
+        "lastChangedDate": "2026-05-01",
+        "lastChangedOdometer": 15500,
+        "intervalKm": 5000,
+        "intervalMonths": null
+      },
+      "currentOdometer": 20100,
+      "status": {
+        "status": "dueSoon",
+        "nextDueOdometer": 20500,
+        "nextDueDate": null,
+        "kmRemaining": 400,
+        "daysRemaining": null
+      }
+    },
+    {
+      "name": "km-exactly-due",
+      "item": {
+        "lastChangedDate": "2026-05-01",
+        "lastChangedOdometer": 15000,
+        "intervalKm": 5000,
+        "intervalMonths": null
+      },
+      "currentOdometer": 20000,
+      "status": {
+        "status": "dueSoon",
+        "nextDueOdometer": 20000,
+        "nextDueDate": null,
+        "kmRemaining": 0,
+        "daysRemaining": null
+      }
+    },
+    {
+      "name": "km-overdue",
+      "item": {
+        "lastChangedDate": "2026-05-01",
+        "lastChangedOdometer": 14000,
+        "intervalKm": 5000,
+        "intervalMonths": null
+      },
+      "currentOdometer": 20000,
+      "status": {
+        "status": "overdue",
+        "nextDueOdometer": 19000,
+        "nextDueDate": null,
+        "kmRemaining": -1000,
+        "daysRemaining": null
+      }
+    },
+    {
+      "name": "date-ok",
+      "item": {
+        "lastChangedDate": "2026-05-01",
+        "lastChangedOdometer": null,
+        "intervalKm": null,
+        "intervalMonths": 12
+      },
+      "currentOdometer": null,
+      "status": {
+        "status": "ok",
+        "nextDueOdometer": null,
+        "nextDueDate": "2027-05-01",
+        "kmRemaining": null,
+        "daysRemaining": 320
+      }
+    },
+    {
+      "name": "date-due-soon",
+      "item": {
+        "lastChangedDate": "2025-12-20",
+        "lastChangedOdometer": null,
+        "intervalKm": null,
+        "intervalMonths": 6
+      },
+      "currentOdometer": null,
+      "status": {
+        "status": "dueSoon",
+        "nextDueOdometer": null,
+        "nextDueDate": "2026-06-20",
+        "kmRemaining": null,
+        "daysRemaining": 5
+      }
+    },
+    {
+      "name": "date-overdue",
+      "item": {
+        "lastChangedDate": "2025-01-10",
+        "lastChangedOdometer": null,
+        "intervalKm": null,
+        "intervalMonths": 12
+      },
+      "currentOdometer": null,
+      "status": {
+        "status": "overdue",
+        "nextDueOdometer": null,
+        "nextDueDate": "2026-01-10",
+        "kmRemaining": null,
+        "daysRemaining": -156
+      }
+    },
+    {
+      "name": "month-end-clamp",
+      "item": {
+        "lastChangedDate": "2025-08-31",
+        "lastChangedOdometer": null,
+        "intervalKm": null,
+        "intervalMonths": 6
+      },
+      "currentOdometer": null,
+      "status": {
+        "status": "overdue",
+        "nextDueOdometer": null,
+        "nextDueDate": "2026-02-28",
+        "kmRemaining": null,
+        "daysRemaining": -107
+      }
+    },
+    {
+      "name": "both-km-fine-date-overdue",
+      "item": {
+        "lastChangedDate": "2025-01-10",
+        "lastChangedOdometer": 19500,
+        "intervalKm": 5000,
+        "intervalMonths": 12
+      },
+      "currentOdometer": 20000,
+      "status": {
+        "status": "overdue",
+        "nextDueOdometer": 24500,
+        "nextDueDate": "2026-01-10",
+        "kmRemaining": 4500,
+        "daysRemaining": -156
+      }
+    },
+    {
+      "name": "both-date-fine-km-overdue",
+      "item": {
+        "lastChangedDate": "2026-06-01",
+        "lastChangedOdometer": 10000,
+        "intervalKm": 5000,
+        "intervalMonths": 12
+      },
+      "currentOdometer": 20000,
+      "status": {
+        "status": "overdue",
+        "nextDueOdometer": 15000,
+        "nextDueDate": "2027-06-01",
+        "kmRemaining": -5000,
+        "daysRemaining": 351
+      }
+    },
+    {
+      "name": "km-interval-without-current-odometer",
+      "item": {
+        "lastChangedDate": "2026-05-01",
+        "lastChangedOdometer": 15000,
+        "intervalKm": 5000,
+        "intervalMonths": null
+      },
+      "currentOdometer": null,
+      "status": {
+        "status": "unknown",
+        "nextDueOdometer": 20000,
+        "nextDueDate": null,
+        "kmRemaining": null,
+        "daysRemaining": null
+      }
+    },
+    {
+      "name": "km-interval-without-last-odometer",
+      "item": {
+        "lastChangedDate": "2026-05-01",
+        "lastChangedOdometer": null,
+        "intervalKm": 5000,
+        "intervalMonths": null
+      },
+      "currentOdometer": 20000,
+      "status": {
+        "status": "unknown",
+        "nextDueOdometer": null,
+        "nextDueDate": null,
+        "kmRemaining": null,
+        "daysRemaining": null
+      }
+    },
+    {
+      "name": "km-unknown-date-due-soon",
+      "item": {
+        "lastChangedDate": "2025-12-20",
+        "lastChangedOdometer": 15000,
+        "intervalKm": 5000,
+        "intervalMonths": 6
+      },
+      "currentOdometer": null,
+      "status": {
+        "status": "dueSoon",
+        "nextDueOdometer": 20000,
+        "nextDueDate": "2026-06-20",
+        "kmRemaining": null,
+        "daysRemaining": 5
+      }
+    }
+  ],
+  "sortedNames": [
+    "both-km-fine-date-overdue",
+    "date-overdue",
+    "month-end-clamp",
+    "both-date-fine-km-overdue",
+    "km-overdue",
+    "date-due-soon",
+    "km-unknown-date-due-soon",
+    "km-exactly-due",
+    "km-due-soon",
+    "date-ok",
+    "km-ok",
+    "km-interval-without-current-odometer",
+    "km-interval-without-last-odometer",
+    "never-changed",
+    "no-interval"
+  ],
+  "latestOdometer": [
+    {
+      "entries": [],
+      "latest": null
+    },
+    {
+      "entries": [
+        {
+          "odometerReading": 1000
+        }
+      ],
+      "latest": 1000
+    },
+    {
+      "entries": [
+        {
+          "odometerReading": 3000
+        },
+        {
+          "odometerReading": 1000
+        },
+        {
+          "odometerReading": 2000
+        }
+      ],
+      "latest": 3000
+    }
+  ]
+}
