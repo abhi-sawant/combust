@@ -3,11 +3,11 @@
 Combust follows [Semantic Versioning](https://semver.org). The repo-root `VERSION` file is the single
 source of truth for both clients; see "Releasing" in [CLAUDE.md](CLAUDE.md).
 
-## Unreleased
+## 1.1.0 — 2026-11-01
 
 ### Added
 
-- **Service tracker.** Track periodic parts and services per vehicle (engine oil, filters, brake pads, tyres,
+- **Service tracker (both clients).** Track periodic parts and services per vehicle (engine oil, filters, brake pads, tyres,
   battery, ...). Each item stores the date and odometer of its last change plus an optional interval in km
   and/or months; it is overdue or due soon when either is reached. Pick from common presets or add your own,
   and tap "Changed today" to log a replacement. A new Service tab (the Trends charts now live under Stats),
