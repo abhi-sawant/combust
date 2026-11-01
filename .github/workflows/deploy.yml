@@ -1,0 +1,54 @@
+name: Deploy web
+
+# Builds the PWA (web/) and uploads web/dist to the cPanel host over FTPS on every push to main
+# that touches the web app. The backend and Android app are not deployed from here.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'VERSION'
+      - 'spec/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      # Includes the golden-fixture and VERSION/package.json checks, so a stale spec blocks the deploy.
+      - run: npm test
+
+      # `tsc -b && vite build`. web/.env is gitignored, so CI must supply VITE_API_URL (the app throws without it).
+      # Override with a repository variable of the same name; defaults to the production API.
+      - run: npm run build
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://api.combust.slowatcoding.com' }}
+
+      # Only changed files are uploaded; the action keeps its state in .ftp-deploy-sync-state.json on the server.
+      # The app is a single page with no client-side routes, so no SPA rewrite rules are needed.
+      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./web/dist/
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
