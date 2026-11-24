@@ -28,6 +28,13 @@ It never commits, tags or pushes; afterwards: commit `release: X.Y.Z`, merge to 
 GitHub Release with the artifacts and the CHANGELOG section as notes. Signing config lives in the
 gitignored `android/keystore.properties`; never commit it, and always sign with the same keystore.
 
+CI does the publishing: `.github/workflows/release.yml` runs on every push to `main` that changes `VERSION`. If tag
+`vX.Y.Z` doesn't exist yet it tests, builds and signs everything, verifies the APK certificate, and creates the GitHub
+Release (CHANGELOG section as body, APK + web zip + backend zip + checksums attached). So after the `release: X.Y.Z`
+commit is merged to `main`, no manual tag or release is needed. `deploy.yml` ships the web build to cPanel over FTPS.
+Required repo secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`
+(release) and `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `FTP_SERVER_DIR` (deploy).
+
 The Android app checks `abhi-sawant/combust` releases/latest on each app open and shows an "Update available" dialog
 (Update opens the release page). So every release must be a published (not draft, not pre-release) GitHub Release
 with a SemVer tag `vX.Y.Z` (matching `VERSION`), the CHANGELOG section as its body, and the APK attached.
