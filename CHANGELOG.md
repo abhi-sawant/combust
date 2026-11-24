@@ -3,6 +3,14 @@
 Combust follows [Semantic Versioning](https://semver.org). The repo-root `VERSION` file is the single
 source of truth for both clients; see "Releasing" in [CLAUDE.md](CLAUDE.md).
 
+## 1.1.1 — 2026-11-24
+
+### Changed
+
+- **Automated releases (maintenance).** Pushing a new `VERSION` to `main` now builds, signs and publishes the GitHub
+  Release (APK, web zip, backend zip and checksums) from CI. There are no changes to the web app, the Android app, the
+  backend or the sync format in this release.
+
 ## 1.1.0 — 2026-11-01
 
 ### Added
